@@ -3,6 +3,7 @@
 require 'yaml'
 require 'fileutils'
 require 'optparse'
+require 'set'
 
 Dir[File.join(File.dirname(__FILE__), "lib", "*.rb")].each do |libf|
   load libf
@@ -20,6 +21,7 @@ class MapCompiler
     @cdata = POTChunkData.new(@cell_x, @cell_y, true)
     
     @palette = @config['palette']
+    resolve_palette_references
   end
 
   def compile(out_dir)
@@ -58,6 +60,37 @@ class MapCompiler
   end
 
   private
+  def resolve_palette_references
+    # Resolve symbol references: if a palette value is a string that matches
+    # another palette key, replace it with that key's value (recursively)
+    @palette.each do |key, value|
+      if value.is_a?(String) && @palette.key?(value)
+        @palette[key] = resolve_reference(value)
+      elsif value.is_a?(Array)
+        @palette[key] = value.map do |v|
+          if v.is_a?(String) && @palette.key?(v)
+            resolve_reference(v)
+          else
+            v
+          end
+        end
+      end
+    end
+  end
+  
+  def resolve_reference(symbol, visited = Set.new)
+    # Prevent infinite loops
+    return @palette[symbol] if visited.include?(symbol)
+    visited.add(symbol)
+    
+    value = @palette[symbol]
+    if value.is_a?(String) && @palette.key?(value)
+      resolve_reference(value, visited)
+    else
+      value
+    end
+  end
+  
   def process_chunk(cx, cy, z, grid_str)
     lines = grid_str.strip.split("\n")
     
