@@ -5,11 +5,11 @@ map:
 
 palette:
   "░": "floors_exterior_street_01_17"
-  "━": "walls_interior_house_01_0"
-  "┃": "walls_interior_house_01_1"
+  "━": "walls_interior_house_01_1"
+  "┃": "walls_interior_house_01_0"
   "┏": "walls_interior_house_01_2"
-  "┓": "walls_interior_house_01_1"
-  "┗": "walls_interior_house_01_0"
+  "┓": "walls_interior_house_01_0"
+  "┗": "walls_interior_house_01_1"
   "┛": "walls_interior_house_01_3"
   "🌲": WILDERNESS
   " ": null

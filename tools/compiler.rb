@@ -35,7 +35,13 @@ class MapCompiler
     @config['grid'].each do |level_key, chunks|
       z = level_key.split('_').last.to_i
       chunks.each do |chunk_key, grid_str|
-        cx, cy = chunk_key.scan(/\d+/).map(&:to_i)
+        # Parse chunk_X_Y from YAML
+        # User wants: chunk_4_5 below chunk_4_4 (same X, higher Y)
+        # In setSquareBits: cx = lx / chunkDim (column/X), cy = ly / chunkDim (row/Y)
+        # So for chunk_4_5 to be below: cx=4 (same column), cy=5 (next row)
+        # YAML chunk_X_Y: first number is X (cx), second is Y (cy)
+        nums = chunk_key.scan(/\d+/).map(&:to_i)
+        cx, cy = nums[0], nums[1]  # YAML: chunk_X_Y means cx=X, cy=Y
         process_chunk(cx, cy, z, grid_str)
       end
     end
@@ -54,14 +60,30 @@ class MapCompiler
   private
   def process_chunk(cx, cy, z, grid_str)
     lines = grid_str.strip.split("\n")
-    lines.each_with_index do |line, ly|
+    
+    # Transpose the grid: convert rows to columns and columns to rows
+    # This is needed because the game's coordinate system might be transposed
+    max_width = lines.map { |l| l.chars.length }.max || 0
+    transposed = []
+    max_width.times do |x|
+      transposed[x] = []
+      lines.each_with_index do |line, y|
+        transposed[x][y] = line.chars[x] || ' '
+      end
+    end
+    transposed_lines = transposed.map { |col| col.join('') }
+    
+    transposed_lines.each_with_index do |line, ly|
       # Unicode-aware character iteration
       line.chars.each_with_index do |char, lx|
         val = @palette[char]
         next if val.nil?
 
-        abs_x = @cell_x * 256 + cx * 8 + lx
-        abs_y = @cell_y * 256 + cy * 8 + ly
+        # In setSquareBits: cx = lx / chunkDim (from X), cy = ly / chunkDim (from Y)
+        # So cx is column (X direction), cy is row (Y direction)
+        # After transposition: original rows become columns (X), original columns become rows (Y)
+        abs_x = @cell_x * 256 + cx * 8 + lx  # lx is column (X)
+        abs_y = @cell_y * 256 + cy * 8 + ly  # ly is row (Y)
         
         # Mark this square as defined
         @defined_squares[[abs_x, abs_y, z]] = true
