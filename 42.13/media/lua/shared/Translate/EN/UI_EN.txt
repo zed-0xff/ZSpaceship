@@ -1,0 +1,4 @@
+UI_EN = {
+    UI_prof_astronaut = "Astronaut",
+    UI_spawn_spaceship = "Spaceship Z-001",
+}

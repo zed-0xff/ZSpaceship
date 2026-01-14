@@ -1,0 +1,6 @@
+name=Zed's Spaceship
+id=ZSpaceship
+description=A retrofuturistic spaceship mod with teleporters, space suits, and vacuum mechanics.
+poster=poster.png
+
+require=\ZUnfussyTrait

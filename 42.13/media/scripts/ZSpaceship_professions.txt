@@ -1,0 +1,12 @@
+module ZSpaceship
+{
+    character_profession_definition zspaceship:astronaut
+    {
+        CharacterProfession = zspaceship:astronaut,
+        Cost = -4,
+        UIName = UI_prof_astronaut,
+        IconPathName = Icon_Astronaut,
+        GrantedTraits = ZUnfussyTrait:unfussy,
+        XPBoosts = Doctor=1;Maintenance=1;Electricity=1;MetalWelding=1,
+    }
+}

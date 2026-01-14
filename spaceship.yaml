@@ -1,0 +1,24 @@
+map:
+  id: "Spaceship Z-001"
+  origin: [78, 78]
+  levels: 1
+
+palette:
+  "░": "blends_street_01_80"
+  "T": "blends_street_01_87"
+  "🌲": WILDERNESS
+  " ": null
+
+grid:
+  level_0:
+    # Put the 8x8 ship pad at absolute 20000,20000:
+    # cell 78*256=19968, so chunk 4 starts at +32 => 20000.
+    chunk_4_4: |
+      T░░░░░░░
+      ░░░░░░░░
+      ░░░░░░░░
+      ░░░░░░░░
+      ░░░░░░░░
+      ░░░░░░░░
+      ░░░░░░░░
+      ░░░░░░░░

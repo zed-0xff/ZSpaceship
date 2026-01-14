@@ -1,0 +1,90 @@
+module ZSpaceship
+{
+    imports
+    {
+        Base
+    }
+
+    item Spacesuit_Helmet
+    {
+        ItemType = Clothing,
+        DisplayName = Spacesuit Helmet,
+        ClothingItem = Hat_SpaceHelmet,
+        Icon = SpacesuitHelmet,
+        Weight = 1.5,
+        Temperature = 10,
+        Insulation = 1.0,
+        WindResistance = 1.0,
+        WaterResistance = 1.0,
+        BloodLocation = Head,
+        Tags = GasMask,
+    }
+
+    item Spacesuit_Body
+    {
+        ItemType = Clothing,
+        DisplayName = Spacesuit Body,
+        ClothingItem = Suit_SpaceSuit,
+        Icon = SpacesuitBody,
+        Weight = 6.0,
+        Temperature = 35,
+        Insulation = 1.0,
+        WindResistance = 1.0,
+        WaterResistance = 1.0,
+        BloodLocation = Jacket,
+        CanBeExtra = true,
+    }
+
+    item Spaceship_Battery
+    {
+        ItemType = Normal,
+        DisplayName = Spaceship Battery,
+        Icon = SpaceshipBattery,
+        Weight = 10.0,
+    }
+
+    item Spaceship_Battery_Broken
+    {
+        ItemType = Normal,
+        DisplayName = Broken Spaceship Battery,
+        Icon = SpaceshipBatteryBroken,
+        Weight = 10.0,
+    }
+
+    item Spaceship_SolarPanel
+    {
+        ItemType = Normal,
+        DisplayName = Spaceship Solar Panel,
+        Icon = SpaceshipSolarPanel,
+        Weight = 15.0,
+    }
+
+    item Spaceship_SolarPanel_Broken
+    {
+        ItemType = Normal,
+        DisplayName = Broken Spaceship Solar Panel,
+        Icon = SpaceshipSolarPanelBroken,
+        Weight = 15.0,
+    }
+
+    item Communicator
+    {
+        ItemType = Normal,
+        DisplayName = Spaceship Communicator,
+        Icon = Communicator,
+        Weight = 0.5,
+        Tooltip = Tooltip_Communicator,
+    }
+
+    item Teleporter
+    {
+        ItemType = Moveable,
+        DisplayName = Spaceship Teleporter,
+        Icon = Teleporter,
+        Weight = 50.0,
+        Tooltip = Tooltip_Teleporter,
+        CanBePlastered = false,
+        IsMoveable = true,
+        WorldSprite = location_spaceship_01_0, -- Placeholder sprite
+    }
+}

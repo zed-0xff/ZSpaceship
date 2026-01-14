@@ -1,0 +1,10 @@
+ItemName_EN = {
+    ItemName_ZSpaceship.Spacesuit_Helmet = "Spacesuit Helmet",
+    ItemName_ZSpaceship.Spacesuit_Body = "Spacesuit Body",
+    ItemName_ZSpaceship.Spaceship_Battery = "Spaceship Battery",
+    ItemName_ZSpaceship.Spaceship_Battery_Broken = "Broken Spaceship Battery",
+    ItemName_ZSpaceship.Spaceship_SolarPanel = "Spaceship Solar Panel",
+    ItemName_ZSpaceship.Spaceship_SolarPanel_Broken = "Broken Spaceship Solar Panel",
+    ItemName_ZSpaceship.Communicator = "Spaceship Communicator",
+    ItemName_ZSpaceship.Teleporter = "Spaceship Teleporter",
+}
