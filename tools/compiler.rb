@@ -29,6 +29,9 @@ class MapCompiler
     @header.minLevel = 0
     @header.maxLevel = (@config['map']['levels'] || 1) - 1
 
+    # Track which squares we've explicitly defined
+    @defined_squares = {}
+    
     @config['grid'].each do |level_key, chunks|
       z = level_key.split('_').last.to_i
       chunks.each do |chunk_key, grid_str|
@@ -36,6 +39,10 @@ class MapCompiler
         process_chunk(cx, cy, z, grid_str)
       end
     end
+    
+    # Set default floor for all squares in the cell that weren't explicitly defined
+    # This ensures the blending system can access floors on all squares
+    set_default_floors_for_cell
 
     @header.save(File.join(out_dir, "#{@cell_x}_#{@cell_y}.lotheader"))
     @pack.save(File.join(out_dir, "world_#{@cell_x}_#{@cell_y}.lotpack"))
@@ -55,6 +62,9 @@ class MapCompiler
 
         abs_x = @cell_x * 256 + cx * 8 + lx
         abs_y = @cell_y * 256 + cy * 8 + ly
+        
+        # Mark this square as defined
+        @defined_squares[[abs_x, abs_y, z]] = true
         
         # 1. Update Collision (chunkdata.bin)
         bits = 0
@@ -80,7 +90,37 @@ class MapCompiler
         tiles = val.is_a?(Array) ? val : [val]
         # Remove meta-constants like WILDERNESS from tile list
         real_tiles = tiles.select { |t| t.is_a?(String) && !t.empty? && t != "WILDERNESS" }
+        
+        # Ensure first tile is a floor tile (has solidfloor flag)
+        # If no floor tile is present, prepend a default floor
+        if real_tiles.empty? || !real_tiles.first.include?("floor")
+          # Use a default floor tile if none specified
+          default_floor = "floors_exterior_street_01_17"
+          real_tiles.unshift(default_floor) unless real_tiles.include?(default_floor)
+        end
+        
         @pack.set_square_data(abs_x, abs_y, z, real_tiles)
+      end
+    end
+  end
+  
+  def set_default_floors_for_cell
+    # Set a default floor tile for all squares in the cell that weren't explicitly defined
+    # This prevents the blending system from crashing when accessing squares without floors
+    default_floor = "floors_exterior_street_01_17"
+    
+    # Only set floors for level 0 (ground level) to avoid unnecessary work
+    z = 0
+    256.times do |x|
+      256.times do |y|
+        abs_x = @cell_x * 256 + x
+        abs_y = @cell_y * 256 + y
+        
+        # Skip if we already defined this square
+        next if @defined_squares[[abs_x, abs_y, z]]
+        
+        # Set default floor for undefined squares
+        @pack.set_square_data(abs_x, abs_y, z, [default_floor])
       end
     end
   end

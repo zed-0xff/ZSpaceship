@@ -4,8 +4,13 @@ map:
   levels: 1
 
 palette:
-  "░": "blends_street_01_80"
-  "T": "blends_street_01_87"
+  "░": "floors_exterior_street_01_17"
+  "━": "walls_interior_house_01_0"
+  "┃": "walls_interior_house_01_1"
+  "┏": "walls_interior_house_01_2"
+  "┓": "walls_interior_house_01_1"
+  "┗": "walls_interior_house_01_0"
+  "┛": "walls_interior_house_01_3"
   "🌲": WILDERNESS
   " ": null
 
@@ -14,11 +19,10 @@ grid:
     # Put the 8x8 ship pad at absolute 20000,20000:
     # cell 78*256=19968, so chunk 4 starts at +32 => 20000.
     chunk_4_4: |
-      T░░░░░░░
-      ░░░░░░░░
-      ░░░░░░░░
-      ░░░░░░░░
-      ░░░░░░░░
-      ░░░░░░░░
-      ░░░░░░░░
-      ░░░░░░░░
+      ┏━━┓
+      ┃A ┃
+      ┗━━┛
+      ┏━━━┓
+      ┃B  ┃
+      ┃   ┃
+      ┗━━━┛
