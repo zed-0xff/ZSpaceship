@@ -4,10 +4,17 @@ map:
   levels: 1
 
 palette:
+  "R": "signs_one-off_03_489"
+  "O": "signs_one-off_03_490"
+  "X": "signs_one-off_03_491"
+  "Y": "signs_one-off_03_492"
+  "S": "signs_one-off_03_493"
+
   "━": "industry_trucks_01_5"
   "┃": "industry_trucks_01_4"
   "═": { "tile": "industry_trucks_01_5", "y": +1 }
   "║": { "tile": "industry_trucks_01_4", "x": +1 }
+
 
 grid:
   level_0:

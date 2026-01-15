@@ -104,19 +104,9 @@ class MapCompiler
   def process_chunk(cx, cy, z, grid_str)
     lines = grid_str.strip.split("\n")
     
-    # Transpose the grid: convert rows to columns and columns to rows
-    # This is needed because the game's coordinate system might be transposed
-    max_width = lines.map { |l| l.chars.length }.max || 0
-    transposed = []
-    max_width.times do |x|
-      transposed[x] = []
-      lines.each_with_index do |line, y|
-        transposed[x][y] = line.chars[x] || ' '
-      end
-    end
-    transposed_lines = transposed.map { |col| col.join('') }
-    
-    transposed_lines.each_with_index do |line, ly|
+    # Process grid directly without transposition
+    # YAML row index → game Y, YAML column index → game X
+    lines.each_with_index do |line, ly|
       # Unicode-aware character iteration
       line.chars.each_with_index do |char, lx|
         val = @palette[char]
@@ -127,27 +117,26 @@ class MapCompiler
         end
         
         # Support for offset-based wall syntax:
-        # { "tile": "tile_name", "x": +1 } - place wall tile at y+1 (north wall on that cell) - TRANSPOSED
-        # { "tile": "tile_name", "y": +1 } - place wall tile at x+1 (west wall on that cell) - TRANSPOSED
+        # { "tile": "tile_name", "x": +1 } - place west wall on the cell to the right
+        # { "tile": "tile_name", "y": +1 } - place north wall on the cell below
         # { "tile": "tile_name" } - place tile at current position (no wall bits, regular tile)
         if val.is_a?(Hash) && val.key?('tile')
           wall_tile = val['tile']
           default_floor = "floors_exterior_street_01_17"
           has_offset = false
           
-          # Handle x offset: TRANSPOSED - place north wall on the cell below (treat x as y)
+          # Handle x offset: place west wall on the cell to the right
           if val.key?('x') && val['x'] != 0
             has_offset = true
-            offset_y = val['x']  # Transpose: x offset becomes y offset
-            target_lx = lx
-            target_ly = ly + offset_y
+            target_lx = lx + val['x']
+            target_ly = ly
             
             # Check bounds
-            if target_ly >= 0 && target_ly < transposed_lines.length
+            if target_lx >= 0 && target_lx < (lines.map(&:length).max || 0)
               abs_x = @cell_x * 256 + cx * 8 + target_lx
               abs_y = @cell_y * 256 + cy * 8 + target_ly
-              # Set wall on north edge
-              bits = POTChunkData::Chunk::BIT_WALLN
+              # Set wall on west edge
+              bits = POTChunkData::Chunk::BIT_WALLW
               @cdata.setSquareBits(abs_x, abs_y, bits)
               # Get existing tiles and append wall tile
               existing = @pack.getSquareData(abs_x, abs_y, z) || []
@@ -166,19 +155,18 @@ class MapCompiler
             end
           end
           
-          # Handle y offset: TRANSPOSED - place west wall on the cell to the right (treat y as x)
+          # Handle y offset: place north wall on the cell below
           if val.key?('y') && val['y'] != 0
             has_offset = true
-            offset_x = val['y']  # Transpose: y offset becomes x offset
-            target_lx = lx + offset_x
-            target_ly = ly
+            target_lx = lx
+            target_ly = ly + val['y']
             
             # Check bounds
-            if target_lx >= 0 && target_lx < transposed_lines.first.length
+            if target_ly >= 0 && target_ly < lines.length
               abs_x = @cell_x * 256 + cx * 8 + target_lx
               abs_y = @cell_y * 256 + cy * 8 + target_ly
-              # Set wall on west edge
-              bits = POTChunkData::Chunk::BIT_WALLW
+              # Set wall on north edge
+              bits = POTChunkData::Chunk::BIT_WALLN
               @cdata.setSquareBits(abs_x, abs_y, bits)
               # Get existing tiles and append wall tile
               existing = @pack.getSquareData(abs_x, abs_y, z) || []
@@ -209,18 +197,9 @@ class MapCompiler
         
         next if val.nil?
         
-        # Regular processing for non-half-block characters (interior cells, regular walls, etc.)
-        # Check if this character represents a wall (not an interior cell)
-        is_wall_char = false
-        if val.is_a?(String)
-          is_wall_char = val.include?("wall") || val.include?("industry_trucks") || 
-                         ["━", "┃", "┏", "┓", "┗", "┛"].include?(char)
-        elsif val.is_a?(Array)
-          is_wall_char = val.any? { |v| v.is_a?(String) && (v.include?("wall") || v.include?("industry_trucks")) }
-        end
-        
         # For interior cells (letters, floor tiles, etc.), use grid position directly
         # For wall characters, also use grid position (they occupy cells)
+        # YAML column (lx) → game X, YAML row (ly) → game Y
         abs_x = @cell_x * 256 + cx * 8 + lx
         abs_y = @cell_y * 256 + cy * 8 + ly
         
