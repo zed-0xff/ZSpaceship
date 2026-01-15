@@ -60,6 +60,16 @@ class MapCompiler
   end
 
   private
+  
+  def append_square_tile(x, y, z, new_tile)
+    # Get existing tiles at this position
+    existing = @pack.getSquareData(x, y, z) || []
+    # Append the new tile (avoid duplicates)
+    all_tiles = existing + [new_tile]
+    all_tiles = all_tiles.uniq  # Remove duplicates
+    @pack.set_square_data(x, y, z, all_tiles)
+  end
+  
   def resolve_palette_references
     # Resolve symbol references: if a palette value is a string that matches
     # another palette key, replace it with that key's value (recursively)
@@ -110,13 +120,109 @@ class MapCompiler
       # Unicode-aware character iteration
       line.chars.each_with_index do |char, lx|
         val = @palette[char]
+        
+        # If character is not in palette, treat as interior cell with default floor
+        if val.nil?
+          val = "floors_exterior_street_01_17"
+        end
+        
+        # Support for offset-based wall syntax:
+        # { "tile": "tile_name", "x": +1 } - place wall tile at y+1 (north wall on that cell) - TRANSPOSED
+        # { "tile": "tile_name", "y": +1 } - place wall tile at x+1 (west wall on that cell) - TRANSPOSED
+        # { "tile": "tile_name" } - place tile at current position (no wall bits, regular tile)
+        if val.is_a?(Hash) && val.key?('tile')
+          wall_tile = val['tile']
+          default_floor = "floors_exterior_street_01_17"
+          has_offset = false
+          
+          # Handle x offset: TRANSPOSED - place north wall on the cell below (treat x as y)
+          if val.key?('x') && val['x'] != 0
+            has_offset = true
+            offset_y = val['x']  # Transpose: x offset becomes y offset
+            target_lx = lx
+            target_ly = ly + offset_y
+            
+            # Check bounds
+            if target_ly >= 0 && target_ly < transposed_lines.length
+              abs_x = @cell_x * 256 + cx * 8 + target_lx
+              abs_y = @cell_y * 256 + cy * 8 + target_ly
+              # Set wall on north edge
+              bits = POTChunkData::Chunk::BIT_WALLN
+              @cdata.setSquareBits(abs_x, abs_y, bits)
+              # Get existing tiles and append wall tile
+              existing = @pack.getSquareData(abs_x, abs_y, z) || []
+              all_tiles = existing + [wall_tile]
+              all_tiles = all_tiles.uniq
+              # Ensure floor exists
+              if !all_tiles.any? { |t| t && t.include?("floor") }
+                all_tiles.unshift(default_floor)
+              end
+              # Ensure floor is first
+              floor_tiles = all_tiles.select { |t| t && t.include?("floor") }
+              non_floor_tiles = all_tiles.reject { |t| t && t.include?("floor") }
+              all_tiles = floor_tiles + non_floor_tiles
+              @pack.set_square_data(abs_x, abs_y, z, all_tiles)
+              @defined_squares[[abs_x, abs_y, z]] = true
+            end
+          end
+          
+          # Handle y offset: TRANSPOSED - place west wall on the cell to the right (treat y as x)
+          if val.key?('y') && val['y'] != 0
+            has_offset = true
+            offset_x = val['y']  # Transpose: y offset becomes x offset
+            target_lx = lx + offset_x
+            target_ly = ly
+            
+            # Check bounds
+            if target_lx >= 0 && target_lx < transposed_lines.first.length
+              abs_x = @cell_x * 256 + cx * 8 + target_lx
+              abs_y = @cell_y * 256 + cy * 8 + target_ly
+              # Set wall on west edge
+              bits = POTChunkData::Chunk::BIT_WALLW
+              @cdata.setSquareBits(abs_x, abs_y, bits)
+              # Get existing tiles and append wall tile
+              existing = @pack.getSquareData(abs_x, abs_y, z) || []
+              all_tiles = existing + [wall_tile]
+              all_tiles = all_tiles.uniq
+              # Ensure floor exists
+              if !all_tiles.any? { |t| t && t.include?("floor") }
+                all_tiles.unshift(default_floor)
+              end
+              # Ensure floor is first
+              floor_tiles = all_tiles.select { |t| t && t.include?("floor") }
+              non_floor_tiles = all_tiles.reject { |t| t && t.include?("floor") }
+              all_tiles = floor_tiles + non_floor_tiles
+              @pack.set_square_data(abs_x, abs_y, z, all_tiles)
+              @defined_squares[[abs_x, abs_y, z]] = true
+            end
+          end
+          
+          # If no offsets, place tile at current position as a regular tile
+          if !has_offset
+            # Continue to regular processing - replace val with the tile string
+            val = wall_tile
+          else
+            # We handled offsets, skip current position
+            next
+          end
+        end
+        
         next if val.nil?
-
-        # In setSquareBits: cx = lx / chunkDim (from X), cy = ly / chunkDim (from Y)
-        # So cx is column (X direction), cy is row (Y direction)
-        # After transposition: original rows become columns (X), original columns become rows (Y)
-        abs_x = @cell_x * 256 + cx * 8 + lx  # lx is column (X)
-        abs_y = @cell_y * 256 + cy * 8 + ly  # ly is row (Y)
+        
+        # Regular processing for non-half-block characters (interior cells, regular walls, etc.)
+        # Check if this character represents a wall (not an interior cell)
+        is_wall_char = false
+        if val.is_a?(String)
+          is_wall_char = val.include?("wall") || val.include?("industry_trucks") || 
+                         ["━", "┃", "┏", "┓", "┗", "┛"].include?(char)
+        elsif val.is_a?(Array)
+          is_wall_char = val.any? { |v| v.is_a?(String) && (v.include?("wall") || v.include?("industry_trucks")) }
+        end
+        
+        # For interior cells (letters, floor tiles, etc.), use grid position directly
+        # For wall characters, also use grid position (they occupy cells)
+        abs_x = @cell_x * 256 + cx * 8 + lx
+        abs_y = @cell_y * 256 + cy * 8 + ly
         
         # Mark this square as defined
         @defined_squares[[abs_x, abs_y, z]] = true
@@ -144,17 +250,28 @@ class MapCompiler
         # 2. Update Visuals (.lotpack)
         tiles = val.is_a?(Array) ? val : [val]
         # Remove meta-constants like WILDERNESS from tile list
-        real_tiles = tiles.select { |t| t.is_a?(String) && !t.empty? && t != "WILDERNESS" }
+        new_tiles = tiles.select { |t| t.is_a?(String) && !t.empty? && t != "WILDERNESS" }
+        
+        # Get existing tiles at this position
+        existing_tiles = @pack.getSquareData(abs_x, abs_y, z) || []
+        
+        # Merge existing and new tiles, ensuring floor is first
+        all_tiles = existing_tiles + new_tiles
+        all_tiles = all_tiles.uniq  # Remove duplicates
         
         # Ensure first tile is a floor tile (has solidfloor flag)
         # If no floor tile is present, prepend a default floor
-        if real_tiles.empty? || !real_tiles.first.include?("floor")
-          # Use a default floor tile if none specified
+        floor_tiles = all_tiles.select { |t| t && t.include?("floor") }
+        non_floor_tiles = all_tiles.reject { |t| t && t.include?("floor") }
+        
+        if floor_tiles.empty?
           default_floor = "floors_exterior_street_01_17"
-          real_tiles.unshift(default_floor) unless real_tiles.include?(default_floor)
+          all_tiles = [default_floor] + non_floor_tiles
+        else
+          all_tiles = floor_tiles + non_floor_tiles
         end
         
-        @pack.set_square_data(abs_x, abs_y, z, real_tiles)
+        @pack.set_square_data(abs_x, abs_y, z, all_tiles)
       end
     end
   end

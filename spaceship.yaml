@@ -4,24 +4,22 @@ map:
   levels: 1
 
 palette:
-  "░": "industry_01_7"
   "━": "industry_trucks_01_5"
   "┃": "industry_trucks_01_4"
-  "┏": "industry_trucks_01_6"
-  "┓": "┃"
-  "┗": "━"
-  "┛": "industry_trucks_01_7"
-  " ": null
+  "═": { "tile": "industry_trucks_01_5", "y": +1 }
+  "║": { "tile": "industry_trucks_01_4", "x": +1 }
 
 grid:
   level_0:
     # Put the 8x8 ship pad at absolute 20000,20000:
     # cell 78*256=19968, so chunk 4 starts at +32 => 20000.
     chunk_4_4: |
-      ┏━┓  ┏━━┓
-      ┃A┃  ┃AB┃
-      ┗━┛  ┗━━┛
-      ┏━━┓
-      ┃AB┃
-      ┃CD┃
+      ╔══┓
+      ║AB┃
+      ║CD┃
       ┗━━┛
+      ╔═══┓
+      ║ABC┃
+      ║DEF┃
+      ║GHI┃
+      ┗━━━┛
