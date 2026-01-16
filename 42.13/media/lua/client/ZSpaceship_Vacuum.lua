@@ -255,6 +255,11 @@ local function checkVacuum(ticks)
     local player = getPlayer()
     local inVacuum = false
     
+    -- Check if player is in vacuum (for sound muting - regardless of protection)
+    if player then
+        inVacuum = ZSpaceship.isCreatureInVacuum(player)
+    end
+    
     -- Process all creatures (zombies, animals, players) in vacuum
     if cell then
         local objects = cell:getObjectList()
@@ -265,16 +270,12 @@ local function checkVacuum(ticks)
                     if ZSpaceship.isCreatureInVacuum(obj) then
                         local tookDamage = applyVacuumDamage(obj, mult)
                         
-                        -- Track if local player is in vacuum (for sound muting)
-                        if obj == player then
-                            inVacuum = tookDamage
-                            -- Visual bark for player
-                            if tookDamage then
-                                local t = ticks
-                                if type(t) ~= "number" then t = 0 end
-                                if math.floor(t) % 60 == 0 and player.Say then
-                                    player:Say("I can't breathe!")
-                                end
+                        -- Visual bark for player taking damage
+                        if obj == player and tookDamage then
+                            local t = ticks
+                            if type(t) ~= "number" then t = 0 end
+                            if math.floor(t) % 60 == 0 and player.Say then
+                                player:Say("I can't breathe!")
                             end
                         end
                     end
