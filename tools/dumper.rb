@@ -11,10 +11,6 @@ Dir[File.join(File.dirname(__FILE__), "lib", "*.rb")].each do |libf|
   require libf
 end
 
-Rect = IOStruct.new("l4", :x, :y, :w, :h, inspect: to_s)
-Ass  = IOStruct.new("L2", :bld_id, :room_id, inspect: to_s)
-Obj  = IOStruct.new("l3")
-
 def process_file(fname)
   magic = File.binread(fname, 4)
   case magic
@@ -22,9 +18,64 @@ def process_file(fname)
     process_LOTH_file(fname)
   when "LOTP"
     process_LOTP_file(fname)
+  when "tdef"
+    process_tdef_file(fname)
   else
-    if fname.end_with?(".bin")
-      process_BIN_file(fname)
+    process_BIN_file(fname) if fname.end_with?(".bin")
+  end
+end
+
+def process_tdef_file(fname)
+  puts "Processing #{fname} (#{File.size(fname)} bytes)".cyan
+  File.open(fname, "rb") do |f|
+    magic = f.read(4)
+    unless magic == "tdef"
+      puts "  Invalid tdef file (bad magic #{magic.inspect})".red
+      return
+    end
+
+    version = f.read(4).unpack1("L<")
+    puts "  Version: #{version}"
+
+    numTilesheets = f.read(4).unpack1("L<")
+    puts "  numTilesheets: #{numTilesheets}"
+
+    numTilesheets.times do |ts_idx|
+      indent = "      "; name_len = -14
+
+      printf "    Tilesheet %3d:\n", ts_idx
+      name = f.gets.chomp
+      printf "%s%*s: %s\n", indent, name_len, "name", name
+
+      img_name = f.gets.chomp
+      printf "%s%*s: %s\n", indent, name_len, "img_name", img_name
+
+      a,b = f.read(8).unpack("L2")
+      printf "%s%*s: %s\n", indent, name_len, "size", "#{a} x #{b}"
+
+      tilesetNumber = f.read(4).unpack1("L<")
+      printf "%s%*s: %d\n", indent, name_len, "tilesetNumber", tilesetNumber
+
+      nTiles = f.read(4).unpack1("L<")
+      printf "%s%*s: %d\n", indent, name_len, "nTiles", nTiles
+
+      indent += "  "
+      nTiles.times do |tile_idx|
+        nProps = f.read(4).unpack1("L<")
+        #printf "nProps: %d: ", nProps
+        props = {}
+        nProps.times do |prop_idx|
+          prop = f.gets.chomp
+          val = f.gets.chomp
+          props[prop] = val
+        end
+
+        if props.any?
+          printf "%sTile %3d: ", indent, tile_idx
+          puts props.map{ |k,v| v == "" ? k : "#{k}:#{v}" }.join(", ")
+        end
+      end
+      puts
     end
   end
 end

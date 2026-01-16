@@ -1,3 +1,7 @@
+require 'iostruct'
+
+Rect = IOStruct.new("l4", :x, :y, :w, :h, inspect: to_s)
+
 class POTLotHeader
   attr_reader :pot, :x, :y, :tilesUsed, :rooms, :buildings
   attr_accessor :version, :width, :height, :minLevel, :maxLevel
