@@ -1,5 +1,5 @@
--- Vacuum handling for ZSpaceship mod
--- Handles breach detection, damage, sound blocking, and weather control
+-- Vacuum damage handling for ZSpaceship mod
+-- Handles breach detection, creature damage, sound muting, and weather control
 
 ZSpaceship = ZSpaceship or {}
 
@@ -247,6 +247,10 @@ function ZSpaceship.isCreatureInVacuum(creature)
     return isRoomBreached(room)
 end
 
+-- Throttle for expensive vacuum checks (runs once per second instead of every tick)
+local vacuumCheckAccumulator = 0
+local VACUUM_CHECK_INTERVAL = 1.0  -- seconds
+
 -- Vacuum damage and sound muting
 local function checkVacuum(ticks)
     local mult = getGameTime():getThirtyFPSMultiplier()
@@ -256,45 +260,39 @@ local function checkVacuum(ticks)
     local inVacuum = false
     
     -- Check if player is in vacuum (for sound muting - regardless of protection)
+    -- This is cheap, runs every tick
     if player then
         inVacuum = ZSpaceship.isCreatureInVacuum(player)
     end
     
+    -- Accumulate time for throttled checks
+    vacuumCheckAccumulator = vacuumCheckAccumulator + (mult / 30.0)
+    local doHeavyChecks = vacuumCheckAccumulator >= VACUUM_CHECK_INTERVAL
+    if doHeavyChecks then
+        vacuumCheckAccumulator = 0
+    end
+    
     -- Process all creatures (zombies, animals, players) in vacuum
-    if cell then
+    -- Only run once per second
+    if cell and doHeavyChecks then
+        -- Scale damage to account for running once per second instead of every tick
+        -- (mult ~= 1.0 at 30fps, so 30 ticks/second * interval = damage per check)
+        local damageMult = VACUUM_CHECK_INTERVAL * 30
+        
         local objects = cell:getObjectList()
         if objects then
             for i = 0, objects:size() - 1 do
                 local obj = objects:get(i)
                 if obj and instanceof(obj, "IsoGameCharacter") then
                     if ZSpaceship.isCreatureInVacuum(obj) then
-                        local tookDamage = applyVacuumDamage(obj, mult)
+                        local tookDamage = applyVacuumDamage(obj, damageMult)
                         
-                        -- Visual bark for player taking damage
-                        if obj == player and tookDamage then
-                            local t = ticks
-                            if type(t) ~= "number" then t = 0 end
-                            if math.floor(t) % 60 == 0 and player.Say then
+                        -- Visual bark for player taking damage (every ~2 seconds)
+                        if obj == player and tookDamage and player.Say then
+                            if not ZSpaceship.lastBreathBark or (getTimestamp() - ZSpaceship.lastBreathBark) > 2000 then
                                 player:Say("I can't breathe!")
+                                ZSpaceship.lastBreathBark = getTimestamp()
                             end
-                        end
-                    end
-                end
-            end
-        end
-        
-        -- Extinguish fires in vacuum (no oxygen to sustain combustion)
-        local fireStack = IsoFireManager.FireStack
-        if fireStack then
-            for i = fireStack:size() - 1, 0, -1 do
-                local fire = fireStack:get(i)
-                if fire then
-                    local sq = fire:getSquare()
-                    if sq and ZSpaceship.isInSpace(sq:getX(), sq:getY()) then
-                        local room = sq:getRoom()
-                        if not room or isRoomBreached(room) then
-                            -- No oxygen = fire goes out immediately
-                            sq:stopFire()
                         end
                     end
                 end
