@@ -281,6 +281,24 @@ local function checkVacuum(ticks)
                 end
             end
         end
+        
+        -- Extinguish fires in vacuum (no oxygen to sustain combustion)
+        local fireStack = IsoFireManager.FireStack
+        if fireStack then
+            for i = fireStack:size() - 1, 0, -1 do
+                local fire = fireStack:get(i)
+                if fire then
+                    local sq = fire:getSquare()
+                    if sq and ZSpaceship.isInSpace(sq:getX(), sq:getY()) then
+                        local room = sq:getRoom()
+                        if not room or isRoomBreached(room) then
+                            -- No oxygen = fire goes out immediately
+                            sq:stopFire()
+                        end
+                    end
+                end
+            end
+        end
     end
     
     -- Handle vacuum sound muting (like Deaf trait)
