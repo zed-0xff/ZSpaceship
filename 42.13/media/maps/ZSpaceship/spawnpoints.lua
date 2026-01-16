@@ -1,7 +1,7 @@
 function SpawnPoints()
     return {
         unemployed = {
-            { posX = 20000, posY = 20000, posZ = 0 }
+            { posX = 20096, posY = 20096, posZ = 0 }
         }
     }
 end

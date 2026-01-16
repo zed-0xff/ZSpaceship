@@ -12,44 +12,43 @@ end
 # --- Compiler Logic ---
 
 class MapCompiler
+  DEFAULT_FLOOR = "floors_exterior_street_01_17"
+  
   def initialize(yaml_path)
-    @config = YAML.safe_load(File.read(yaml_path, encoding: "utf-8"))
-    @cell_x, @cell_y = @config['map']['origin']
+    @config = YAML.safe_load(File.read(yaml_path, encoding: "utf-8"), permitted_classes: [Symbol])
+    @cell_x, @cell_y = @config['origin']
     
     @header = POTLotHeader.new(@cell_x, @cell_y, true)
     @pack = POTLotPack.new(@header)
     @cdata = POTChunkData.new(@cell_x, @cell_y, true)
     
-    @palette = @config['palette']
-    resolve_palette_references
+    @elements = @config['elements'] || {}
+    @metapalette = @config['metapalette'] || {}
+    @metamap = @config['metamap'] || ""
+    
+    # Compute element sizes (standard: width=chars, height=lines)
+    @element_sizes = {}
+    @elements.each do |name, elem|
+      lines = (elem['map'] || "").rstrip.split("\n")
+      height = lines.length
+      width = lines.map { |l| l.chars.length }.max || 0
+      @element_sizes[name] = { width: width, height: height }
+    end
   end
 
   def compile(out_dir)
     FileUtils.mkdir_p(out_dir)
     
-    # Set levels from config
     @header.minLevel = 0
-    @header.maxLevel = (@config['map']['levels'] || 1) - 1
-
-    # Track which squares we've explicitly defined
+    @header.maxLevel = 0
     @defined_squares = {}
     
-    @config['grid'].each do |level_key, chunks|
-      z = level_key.split('_').last.to_i
-      chunks.each do |chunk_key, grid_str|
-        # Parse chunk_X_Y from YAML
-        # User wants: chunk_4_5 below chunk_4_4 (same X, higher Y)
-        # In setSquareBits: cx = lx / chunkDim (column/X), cy = ly / chunkDim (row/Y)
-        # So for chunk_4_5 to be below: cx=4 (same column), cy=5 (next row)
-        # YAML chunk_X_Y: first number is X (cx), second is Y (cy)
-        nums = chunk_key.scan(/\d+/).map(&:to_i)
-        cx, cy = nums[0], nums[1]  # YAML: chunk_X_Y means cx=X, cy=Y
-        process_chunk(cx, cy, z, grid_str)
-      end
+    placements = parse_metamap
+    
+    placements.each do |placement|
+      process_element_placement(placement)
     end
     
-    # Set default floor for all squares in the cell that weren't explicitly defined
-    # This ensures the blending system can access floors on all squares
     set_default_floors_for_cell
 
     @header.save(File.join(out_dir, "#{@cell_x}_#{@cell_y}.lotheader"))
@@ -61,226 +60,193 @@ class MapCompiler
 
   private
   
-  def append_square_tile(x, y, z, new_tile)
-    # Get existing tiles at this position
-    existing = @pack.getSquareData(x, y, z) || []
-    # Append the new tile (avoid duplicates)
-    all_tiles = existing + [new_tile]
-    all_tiles = all_tiles.uniq  # Remove duplicates
-    @pack.set_square_data(x, y, z, all_tiles)
+  # Convert local offsets to world coords (no transpose)
+  def to_world(local_x, local_y)
+    abs_x = @cell_x * 256 + local_x
+    abs_y = @cell_y * 256 + local_y
+    [abs_x, abs_y]
   end
   
-  def resolve_palette_references
-    # Resolve symbol references: if a palette value is a string that matches
-    # another palette key, replace it with that key's value (recursively)
-    @palette.each do |key, value|
-      if value.is_a?(String) && @palette.key?(value)
-        @palette[key] = resolve_reference(value)
-      elsif value.is_a?(Array)
-        @palette[key] = value.map do |v|
-          if v.is_a?(String) && @palette.key?(v)
-            resolve_reference(v)
-          else
-            v
-          end
-        end
+  def parse_metamap
+    lines = @metamap.rstrip.split("\n")
+    return [] if lines.empty?
+    
+    element_refs = []
+    
+    lines.each_with_index do |line, meta_y|
+      line.chars.each_with_index do |char, meta_x|
+        next if char == ' ' || char == "\t"
+        element_name = @metapalette[char]
+        next unless element_name && @elements[element_name]
+        element_refs << {
+          meta_x: meta_x,
+          meta_y: meta_y,
+          element_name: element_name
+        }
       end
     end
-  end
-  
-  def resolve_reference(symbol, visited = Set.new)
-    # Prevent infinite loops
-    return @palette[symbol] if visited.include?(symbol)
-    visited.add(symbol)
     
-    value = @palette[symbol]
-    if value.is_a?(String) && @palette.key?(value)
-      resolve_reference(value, visited)
-    else
-      value
+    max_meta_x = element_refs.map { |r| r[:meta_x] }.max || 0
+    max_meta_y = element_refs.map { |r| r[:meta_y] }.max || 0
+    
+    # Column widths (for X positioning in metamap)
+    col_widths = Array.new(max_meta_x + 1, 0)
+    # Row heights (for Y positioning in metamap)
+    row_heights = Array.new(max_meta_y + 1, 0)
+    
+    element_refs.each do |ref|
+      size = @element_sizes[ref[:element_name]]
+      col_widths[ref[:meta_x]] = [col_widths[ref[:meta_x]], size[:width]].max
+      row_heights[ref[:meta_y]] = [row_heights[ref[:meta_y]], size[:height]].max
     end
+    
+    col_offsets = [0]
+    col_widths.each { |w| col_offsets << col_offsets.last + w }
+    
+    row_offsets = [0]
+    row_heights.each { |h| row_offsets << row_offsets.last + h }
+    
+    # Calculate total size and center offset
+    total_width = col_offsets.last
+    total_height = row_offsets.last
+    center_offset_x = (256 - total_width) / 2
+    center_offset_y = (256 - total_height) / 2
+    
+    placements = element_refs.map do |ref|
+      {
+        element_name: ref[:element_name],
+        local_x: col_offsets[ref[:meta_x]] + center_offset_x,
+        local_y: row_offsets[ref[:meta_y]] + center_offset_y
+      }
+    end
+    
+    placements
   end
   
-  def process_chunk(cx, cy, z, grid_str)
-    lines = grid_str.strip.split("\n")
+  def process_element_placement(placement)
+    element_name = placement[:element_name]
+    base_local_x = placement[:local_x]
+    base_local_y = placement[:local_y]
     
-    # Process grid directly without transposition
-    # YAML row index → game Y, YAML column index → game X
+    element = @elements[element_name]
+    return unless element
+    
+    palette = element['palette'] || {}
+    map_str = element['map'] || ""
+    z = 0
+    
+    lines = map_str.rstrip.split("\n")
     lines.each_with_index do |line, ly|
-      # Unicode-aware character iteration
       line.chars.each_with_index do |char, lx|
-        val = @palette[char]
-        
-        # If character is not in palette, treat as interior cell with default floor
-        if val.nil?
-          val = "floors_exterior_street_01_17"
-        end
-        
-        # Support for offset-based wall syntax:
-        # { "tile": "tile_name", "x": +1 } - place west wall on the cell to the right
-        # { "tile": "tile_name", "y": +1 } - place north wall on the cell below
-        # { "tile": "tile_name" } - place tile at current position (no wall bits, regular tile)
-        if val.is_a?(Hash) && val.key?('tile')
-          wall_tile = val['tile']
-          default_floor = "floors_exterior_street_01_17"
-          has_offset = false
-          
-          # Handle x offset: place west wall on the cell to the right
-          if val.key?('x') && val['x'] != 0
-            has_offset = true
-            target_lx = lx + val['x']
-            target_ly = ly
-            
-            # Check bounds
-            if target_lx >= 0 && target_lx < (lines.map(&:length).max || 0)
-              abs_x = @cell_x * 256 + cx * 8 + target_lx
-              abs_y = @cell_y * 256 + cy * 8 + target_ly
-              # Set wall on west edge
-              bits = POTChunkData::Chunk::BIT_WALLW
-              @cdata.setSquareBits(abs_x, abs_y, bits)
-              # Get existing tiles and append wall tile
-              existing = @pack.getSquareData(abs_x, abs_y, z) || []
-              all_tiles = existing + [wall_tile]
-              all_tiles = all_tiles.uniq
-              # Ensure floor exists
-              if !all_tiles.any? { |t| t && t.include?("floor") }
-                all_tiles.unshift(default_floor)
-              end
-              # Ensure floor is first
-              floor_tiles = all_tiles.select { |t| t && t.include?("floor") }
-              non_floor_tiles = all_tiles.reject { |t| t && t.include?("floor") }
-              all_tiles = floor_tiles + non_floor_tiles
-              @pack.set_square_data(abs_x, abs_y, z, all_tiles)
-              @defined_squares[[abs_x, abs_y, z]] = true
-            end
-          end
-          
-          # Handle y offset: place north wall on the cell below
-          if val.key?('y') && val['y'] != 0
-            has_offset = true
-            target_lx = lx
-            target_ly = ly + val['y']
-            
-            # Check bounds
-            if target_ly >= 0 && target_ly < lines.length
-              abs_x = @cell_x * 256 + cx * 8 + target_lx
-              abs_y = @cell_y * 256 + cy * 8 + target_ly
-              # Set wall on north edge
-              bits = POTChunkData::Chunk::BIT_WALLN
-              @cdata.setSquareBits(abs_x, abs_y, bits)
-              # Get existing tiles and append wall tile
-              existing = @pack.getSquareData(abs_x, abs_y, z) || []
-              all_tiles = existing + [wall_tile]
-              all_tiles = all_tiles.uniq
-              # Ensure floor exists
-              if !all_tiles.any? { |t| t && t.include?("floor") }
-                all_tiles.unshift(default_floor)
-              end
-              # Ensure floor is first
-              floor_tiles = all_tiles.select { |t| t && t.include?("floor") }
-              non_floor_tiles = all_tiles.reject { |t| t && t.include?("floor") }
-              all_tiles = floor_tiles + non_floor_tiles
-              @pack.set_square_data(abs_x, abs_y, z, all_tiles)
-              @defined_squares[[abs_x, abs_y, z]] = true
-            end
-          end
-          
-          # If no offsets, place tile at current position as a regular tile
-          if !has_offset
-            # Continue to regular processing - replace val with the tile string
-            val = wall_tile
-          else
-            # We handled offsets, skip current position
-            next
-          end
-        end
-        
+        val = palette[char]
         next if val.nil?
         
-        # For interior cells (letters, floor tiles, etc.), use grid position directly
-        # For wall characters, also use grid position (they occupy cells)
-        # YAML column (lx) → game X, YAML row (ly) → game Y
-        abs_x = @cell_x * 256 + cx * 8 + lx
-        abs_y = @cell_y * 256 + cy * 8 + ly
+        local_x = base_local_x + lx
+        local_y = base_local_y + ly
         
-        # Mark this square as defined
+        if val.is_a?(Hash) && val.key?('tile')
+          process_offset_tile(val, local_x, local_y, z)
+          next
+        end
+        
+        abs_x, abs_y = to_world(local_x, local_y)
+        
         @defined_squares[[abs_x, abs_y, z]] = true
-        
-        # 1. Update Collision (chunkdata.bin)
-        bits = 0
-        if val == "WILDERNESS"
-          bits |= POTChunkData::Chunk::BIT_WILDERNESS 
-        elsif val.is_a?(String)
-          bits |= POTChunkData::Chunk::BIT_WATER if val.include?("water")
-          bits |= POTChunkData::Chunk::BIT_SOLID if val.include?("wall") || val.include?("solid")
-          bits |= POTChunkData::Chunk::BIT_WALLN if val.include?("wall_n") || val.include?("walls_interior_house_01_0")
-          bits |= POTChunkData::Chunk::BIT_WALLW if val.include?("wall_w") || val.include?("walls_interior_house_01_1")
-        elsif val.is_a?(Array)
-          val.each do |v|
-            if v.is_a?(String)
-              bits |= POTChunkData::Chunk::BIT_SOLID if v.include?("wall") || v.include?("solid")
-              bits |= POTChunkData::Chunk::BIT_WALLN if v.include?("wall_n") || v.include?("walls_interior_house_01_0")
-              bits |= POTChunkData::Chunk::BIT_WALLW if v.include?("wall_w") || v.include?("walls_interior_house_01_1")
-            end
-          end
-        end
+        bits = compute_collision_bits(val)
         @cdata.setSquareBits(abs_x, abs_y, bits)
-
-        # 2. Update Visuals (.lotpack)
+        
         tiles = val.is_a?(Array) ? val : [val]
-        # Remove meta-constants like WILDERNESS from tile list
-        new_tiles = tiles.select { |t| t.is_a?(String) && !t.empty? && t != "WILDERNESS" }
+        tiles = tiles.select { |t| t.is_a?(String) && !t.empty? && t != "WILDERNESS" }
         
-        # Get existing tiles at this position
-        existing_tiles = @pack.getSquareData(abs_x, abs_y, z) || []
-        
-        # Merge existing and new tiles, ensuring floor is first
-        all_tiles = existing_tiles + new_tiles
-        all_tiles = all_tiles.uniq  # Remove duplicates
-        
-        # Ensure first tile is a floor tile (has solidfloor flag)
-        # If no floor tile is present, prepend a default floor
-        floor_tiles = all_tiles.select { |t| t && t.include?("floor") }
-        non_floor_tiles = all_tiles.reject { |t| t && t.include?("floor") }
-        
-        if floor_tiles.empty?
-          default_floor = "floors_exterior_street_01_17"
-          all_tiles = [default_floor] + non_floor_tiles
-        else
-          all_tiles = floor_tiles + non_floor_tiles
-        end
-        
-        @pack.set_square_data(abs_x, abs_y, z, all_tiles)
+        set_square_tiles(abs_x, abs_y, z, tiles)
       end
     end
+  end
+  
+  def process_offset_tile(val, local_x, local_y, z)
+    wall_tile = val['tile']
+    has_offset = false
+    
+    # x offset: move right, places west wall on target cell
+    if val.key?('x') && val['x'] != 0
+      has_offset = true
+      target_local_x = local_x + val['x']
+      abs_x, abs_y = to_world(target_local_x, local_y)
+      
+      bits = POTChunkData::Chunk::BIT_WALLW
+      @cdata.setSquareBits(abs_x, abs_y, bits)
+      set_square_tiles(abs_x, abs_y, z, [wall_tile])
+      @defined_squares[[abs_x, abs_y, z]] = true
+    end
+    
+    # y offset: move down, places north wall on target cell
+    if val.key?('y') && val['y'] != 0
+      has_offset = true
+      target_local_y = local_y + val['y']
+      abs_x, abs_y = to_world(local_x, target_local_y)
+      
+      bits = POTChunkData::Chunk::BIT_WALLN
+      @cdata.setSquareBits(abs_x, abs_y, bits)
+      set_square_tiles(abs_x, abs_y, z, [wall_tile])
+      @defined_squares[[abs_x, abs_y, z]] = true
+    end
+    
+    unless has_offset
+      abs_x, abs_y = to_world(local_x, local_y)
+      @defined_squares[[abs_x, abs_y, z]] = true
+      set_square_tiles(abs_x, abs_y, z, [wall_tile])
+    end
+  end
+  
+  def compute_collision_bits(val)
+    bits = 0
+    values = val.is_a?(Array) ? val : [val]
+    
+    values.each do |v|
+      next unless v.is_a?(String)
+      bits |= POTChunkData::Chunk::BIT_WILDERNESS if v == "WILDERNESS"
+      bits |= POTChunkData::Chunk::BIT_WATER if v.include?("water")
+      bits |= POTChunkData::Chunk::BIT_SOLID if v.include?("wall") || v.include?("solid")
+      bits |= POTChunkData::Chunk::BIT_WALLN if v.include?("wall_n") || v.include?("walls_interior_house_01_0")
+      bits |= POTChunkData::Chunk::BIT_WALLW if v.include?("wall_w") || v.include?("walls_interior_house_01_1")
+    end
+    
+    bits
+  end
+  
+  def set_square_tiles(abs_x, abs_y, z, new_tiles)
+    existing = @pack.getSquareData(abs_x, abs_y, z) || []
+    all_tiles = (existing + new_tiles).uniq
+    
+    floor_tiles = all_tiles.select { |t| t && t.include?("floor") }
+    non_floor_tiles = all_tiles.reject { |t| t && t.include?("floor") }
+    
+    if floor_tiles.empty?
+      all_tiles = [DEFAULT_FLOOR] + non_floor_tiles
+    else
+      all_tiles = floor_tiles + non_floor_tiles
+    end
+    
+    @pack.set_square_data(abs_x, abs_y, z, all_tiles)
   end
   
   def set_default_floors_for_cell
-    # Set a default floor tile for all squares in the cell that weren't explicitly defined
-    # This prevents the blending system from crashing when accessing squares without floors
-    default_floor = "floors_exterior_street_01_17"
-    
-    # Only set floors for level 0 (ground level) to avoid unnecessary work
     z = 0
     256.times do |x|
       256.times do |y|
         abs_x = @cell_x * 256 + x
         abs_y = @cell_y * 256 + y
         
-        # Skip if we already defined this square
         next if @defined_squares[[abs_x, abs_y, z]]
         
-        # Set default floor for undefined squares
-        @pack.set_square_data(abs_x, abs_y, z, [default_floor])
+        @pack.set_square_data(abs_x, abs_y, z, [DEFAULT_FLOOR])
       end
     end
   end
 end
 
 if __FILE__ == $0
-  options = {
-    output: "output_map"
-  }
+  options = { output: "output_map" }
 
   OptionParser.new do |opts|
     opts.banner = "Usage: compiler.rb [options] <map.yaml>"
@@ -305,4 +271,3 @@ if __FILE__ == $0
   compiler = MapCompiler.new(yaml_path)
   compiler.compile(options[:output])
 end
-

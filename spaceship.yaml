@@ -1,32 +1,42 @@
-map:
-  id: "Spaceship Z-001"
-  origin: [78, 78]
-  levels: 1
+id: "Spaceship Z-001"
+origin: [78, 78]
 
-palette:
-  "R": "signs_one-off_03_489"
-  "O": "signs_one-off_03_490"
-  "X": "signs_one-off_03_491"
-  "Y": "signs_one-off_03_492"
-  "S": "signs_one-off_03_493"
+metapalette:
+  C: cockpit
+  S: solar_panel
 
-  "━": "industry_trucks_01_5"
-  "┃": "industry_trucks_01_4"
-  "═": { "tile": "industry_trucks_01_5", "y": +1 }
-  "║": { "tile": "industry_trucks_01_4", "x": +1 }
+metamap: |
+  SCS
+   C
 
-
-grid:
-  level_0:
-    # Put the 8x8 ship pad at absolute 20000,20000:
-    # cell 78*256=19968, so chunk 4 starts at +32 => 20000.
-    chunk_4_4: |
-      ╔══┓
-      ║AB┃
-      ║CD┃
-      ┗━━┛
+elements:
+  cockpit:
+    palette:
+      "━": "industry_trucks_01_49"
+      "┃": "industry_trucks_01_48"
+      "═": { "tile": "location_community_medical_01_169", "y": +1 }
+      "║": { "tile": "location_community_medical_01_168", "x": +1 }
+      "A": recreational_01_on_94
+      "B": recreational_01_on_94
+      "C": recreational_01_on_94
+      "D": recreational_01_on_94
+      "E": recreational_01_on_94
+      "F": recreational_01_on_94
+      "G": recreational_01_on_94
+      "H": recreational_01_on_94
+      "I": recreational_01_on_94
+    map: |
       ╔═══┓
       ║ABC┃
       ║DEF┃
       ║GHI┃
       ┗━━━┛
+
+  solar_panel:
+    palette:
+      X: floor_carpet_motif_7
+    map: |
+      XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+      XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+      XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+      XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
