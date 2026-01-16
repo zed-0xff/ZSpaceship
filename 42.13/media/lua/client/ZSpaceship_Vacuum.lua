@@ -140,6 +140,94 @@ end
 -- Expose for other modules
 ZSpaceship.isRoomBreached = isRoomBreached
 
+-- Check if creature is protected from vacuum
+-- Players: need Hazmat suit (SCBA) activated with oxygen in tank
+-- Zombies: need Hazmat suit (SCBA) activated (no oxygen needed - they don't breathe)
+function ZSpaceship.isProtectedFromVacuum(creature)
+    if not creature then return false end
+    
+    -- God mode = protected
+    if creature.isGodMod and creature:isGodMod() then
+        return true
+    end
+    
+    local isZombie = instanceof(creature, "IsoZombie")
+    
+    -- For zombies, check outfit name (their wornItems don't have real item tags)
+    if isZombie then
+        local outfitName = creature:getOutfitName()
+        if outfitName and string.find(string.lower(outfitName), "hazard") then
+            return true
+        end
+        return false
+    end
+    
+    -- For players/animals, check actual worn items
+    local wornItems = creature:getWornItems()
+    if not wornItems then return false end
+    
+    for i = 0, wornItems:size() - 1 do
+        local item = wornItems:getItemByIndex(i)
+        if item and instanceof(item, "Clothing") then
+            -- Check for SCBA (Hazmat suit)
+            if item:hasTag("SCBA") then
+                -- Players need oxygen in the tank
+                if item:isActivated() and item:hasTank() and item:getUsedDelta() > 0.0 then
+                    return true
+                end
+            end
+        end
+    end
+    
+    return false
+end
+
+-- Apply vacuum damage to any creature (zombie, animal, player)
+local function applyVacuumDamage(creature, mult)
+    if not creature or creature:isDead() then return false end
+    
+    -- Damage multiplier based on creature type (zombies are tougher)
+    local damageMult = 1.0
+    if instanceof(creature, "IsoZombie") then
+        damageMult = 0.5  -- Zombies take 2x longer to die
+    end
+
+    if ZSpaceship.isProtectedFromVacuum(creature) then
+        return false
+    end
+    
+    -- Player-specific protection checks
+    if instanceof(creature, "IsoPlayer") then
+        -- Fatigue increase for players
+        local stats = creature:getStats()
+        if stats and stats:get(CharacterStat.FATIGUE) < 1.0 then
+            stats:add(CharacterStat.FATIGUE, 1.0E-4 * mult)
+        end
+    end
+    
+    local bodyDamage = creature:getBodyDamage()
+    if bodyDamage then
+        -- Head damage (eyes/ears bursting from pressure)
+        local head = bodyDamage:getBodyPart(BodyPartType.Head)
+        if head then
+            head:ReduceHealth(0.15 * mult * damageMult)
+            head:setBleeding(true)
+            head:setBleedingTime(10.0)
+        end
+        
+        -- Torso damage (lungs)
+        local torso = bodyDamage:getBodyPart(BodyPartType.Torso_Upper)
+        if torso then
+            torso:ReduceHealth(0.1 * mult * damageMult)
+        end
+    end
+    
+    -- Overall health reduction
+    local health = creature:getHealth()
+    creature:setHealth(health - 0.005 * mult * damageMult)
+    return true
+end
+
 -- Check if a creature (zombie/animal) is in vacuum
 function ZSpaceship.isCreatureInVacuum(creature)
     if not creature then return false end
@@ -159,80 +247,36 @@ function ZSpaceship.isCreatureInVacuum(creature)
     return isRoomBreached(room)
 end
 
--- Hook global addSound to block sounds in vacuum
-local originalAddSound = nil
-
-local function hookAddSound()
-    if originalAddSound then return end
-    originalAddSound = addSound
-    
-    addSound = function(source, x, y, z, radius, volume)
-        -- Check if in space zone
-        if ZSpaceship.isInSpace(x, y) then
-            local sq = getSquare(x, y, z)
-            if sq then
-                local room = sq:getRoom()
-                if not room or isRoomBreached(room) then
-                    -- In vacuum - block sound entirely
-                    return nil
-                end
-            end
-        end
-        return originalAddSound(source, x, y, z, radius, volume)
-    end
-end
-
-Events.OnGameStart.Add(hookAddSound)
-
 -- Vacuum damage and sound muting
 local function checkVacuum(ticks)
+    local mult = getGameTime():getThirtyFPSMultiplier()
+    local cell = getCell()
+    
     local player = getPlayer()
-    if not player then return end
-    
-    local square = player:getSquare()
-    if not square then return end
-    
     local inVacuum = false
     
-    -- Check if in spaceship zone
-    if ZSpaceship.isInSpace(square:getX(), square:getY()) then
-        local room = square:getRoom()
-        
-        if not room then
-            inVacuum = true
-        else
-            inVacuum = isRoomBreached(room)
-        end
-        
-        if inVacuum then
-            local isProtected = player:isProtectedFromToxic(false)
-            
-            if not isProtected then
-                local stats = player:getStats()
-                local bodyDamage = player:getBodyDamage()
-                local mult = getGameTime():getThirtyFPSMultiplier()
-                
-                -- Fatigue increase
-                if stats:get(CharacterStat.FATIGUE) < 1.0 then
-                    stats:add(CharacterStat.FATIGUE, 1.0E-4 * mult)
-                end
-                
-                -- Health damage to Upper Torso
-                local torso = bodyDamage:getBodyPart(BodyPartType.Torso_Upper)
-                if torso then torso:ReduceHealth(0.1 * mult) end
-                
-                -- Health damage to Head if very fatigued
-                if stats:get(CharacterStat.FATIGUE) > 0.8 then
-                    local head = bodyDamage:getBodyPart(BodyPartType.Head)
-                    if head then head:ReduceHealth(0.1 * mult) end
-                end
-                
-                -- Visual bark
-                local t = ticks
-                if type(t) ~= "number" then t = 0 end
-                if math.floor(t) % 60 == 0 then
-                    if player.Say then
-                        player:Say("I can't breathe!")
+    -- Process all creatures (zombies, animals, players) in vacuum
+    if cell then
+        local objects = cell:getObjectList()
+        if objects then
+            for i = 0, objects:size() - 1 do
+                local obj = objects:get(i)
+                if obj and instanceof(obj, "IsoGameCharacter") then
+                    if ZSpaceship.isCreatureInVacuum(obj) then
+                        local tookDamage = applyVacuumDamage(obj, mult)
+                        
+                        -- Track if local player is in vacuum (for sound muting)
+                        if obj == player then
+                            inVacuum = tookDamage
+                            -- Visual bark for player
+                            if tookDamage then
+                                local t = ticks
+                                if type(t) ~= "number" then t = 0 end
+                                if math.floor(t) % 60 == 0 and player.Say then
+                                    player:Say("I can't breathe!")
+                                end
+                            end
+                        end
                     end
                 end
             end
