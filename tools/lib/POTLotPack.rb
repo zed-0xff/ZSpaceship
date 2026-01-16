@@ -68,7 +68,7 @@ class POTLotPack
     minZ.upto(maxZ) do |z|
       # Game reads tiles in X-outer, Y-inner order
       @chunkDim.times do |x|
-        @chunkDim.times do |y|
+      @chunkDim.times do |y|
           abs_x = (@x * @cellDim) + (cx * @chunkDim) + x
           abs_y = (@y * @cellDim) + (cy * @chunkDim) + y
           

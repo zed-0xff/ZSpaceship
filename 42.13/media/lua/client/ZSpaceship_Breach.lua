@@ -13,11 +13,7 @@ local function updateBreaches(ticks)
     local player = getPlayer()
     if not player then return end
     
-    local x = player:getX()
-    local y = player:getY()
-    
-    if math.abs(x - ZSpaceship.ShipX) > ZSpaceship.ShipRange or 
-       math.abs(y - ZSpaceship.ShipY) > ZSpaceship.ShipRange then
+    if not ZSpaceship.isInSpace(player:getX(), player:getY()) then
         return
     end
 

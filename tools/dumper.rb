@@ -70,7 +70,7 @@ def process_tdef_file(fname)
           props[prop] = val
         end
 
-        if props.any?
+        if true # props.any?
           printf "%sTile %3d: ", indent, tile_idx
           puts props.map{ |k,v| v == "" ? k : "#{k}:#{v}" }.join(", ")
         end

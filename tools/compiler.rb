@@ -33,12 +33,16 @@ class MapCompiler
     @pack = POTLotPack.new(@header)
     @cdata = POTChunkData.new(@cell_x, @cell_y, true)
     
-    # Compute element sizes (standard: width=chars, height=lines)
+    # Compute element sizes (use explicit width/height if present, otherwise derive from map)
     @element_sizes = {}
     @elements.each do |name, elem|
       lines = (elem['map'] || "").rstrip.split("\n")
-      height = lines.length
-      width = lines.map { |l| l.chars.length }.max || 0
+      map_height = lines.length
+      map_width = lines.map { |l| l.chars.length }.max || 0
+      
+      # Respect explicit width/height if present
+      width = elem['width'] || map_width
+      height = elem['height'] || map_height
       @element_sizes[name] = { width: width, height: height }
     end
     

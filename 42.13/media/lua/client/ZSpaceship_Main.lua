@@ -1,10 +1,32 @@
 ZSpaceship = ZSpaceship or {}
-ZSpaceship.ShipX = 20000
-ZSpaceship.ShipY = 20000
+
+-- Space cell coordinates
+ZSpaceship.SpaceCellX = 78
+ZSpaceship.SpaceCellY = 78
+
+-- Cell boundaries (cell is 256x256)
+ZSpaceship.SpaceMinX = ZSpaceship.SpaceCellX * 256
+ZSpaceship.SpaceMaxX = (ZSpaceship.SpaceCellX + 1) * 256
+ZSpaceship.SpaceMinY = ZSpaceship.SpaceCellY * 256
+ZSpaceship.SpaceMaxY = (ZSpaceship.SpaceCellY + 1) * 256
+
+-- Ship position (center of cell for teleporting)
+ZSpaceship.ShipX = ZSpaceship.SpaceMinX + 128
+ZSpaceship.ShipY = ZSpaceship.SpaceMinY + 128
 ZSpaceship.ShipZ = 0
 
--- Range around ShipX, ShipY that is considered "Spaceship Zone"
-ZSpaceship.ShipRange = 100 
+-- Sound state for vacuum muting
+ZSpaceship.savedSoundVolume = nil
+ZSpaceship.savedMusicVolume = nil
+ZSpaceship.savedAmbientVolume = nil
+ZSpaceship.savedVehicleVolume = nil
+ZSpaceship.wasInVacuum = false
+
+-- Check if coordinates are in space (full cell)
+function ZSpaceship.isInSpace(x, y)
+    return x >= ZSpaceship.SpaceMinX and x < ZSpaceship.SpaceMaxX and
+           y >= ZSpaceship.SpaceMinY and y < ZSpaceship.SpaceMaxY
+end
 
 function ZSpaceship.TeleportToRandom(player)
     -- Teleport to random location in the county (0 to 15000)
@@ -50,8 +72,7 @@ local function doWorldContextMenu(playerNum, context, worldobjects, test)
 
     if teleporterObj then
         -- Only allow in the ship area, in case this sprite exists elsewhere.
-        if math.abs(player:getX() - ZSpaceship.ShipX) < ZSpaceship.ShipRange and
-           math.abs(player:getY() - ZSpaceship.ShipY) < ZSpaceship.ShipRange then
+        if ZSpaceship.isInSpace(player:getX(), player:getY()) then
             context:addOption("Beam me up, Scotty", player, ZSpaceship.TeleportToRandom)
         end
     end
@@ -79,9 +100,10 @@ local function checkVacuum(ticks)
     local x = player:getX()
     local y = player:getY()
     
+    local inVacuum = false
+    
     -- Check if in spaceship zone
-    if math.abs(x - ZSpaceship.ShipX) < ZSpaceship.ShipRange and 
-       math.abs(y - ZSpaceship.ShipY) < ZSpaceship.ShipRange then
+    if ZSpaceship.isInSpace(x, y) then
         
         local square = player:getSquare()
         local building = square:getBuilding()
@@ -93,7 +115,7 @@ local function checkVacuum(ticks)
         end
         
         -- Character is in vacuum if outside OR in a toxic building
-        local inVacuum = isVacuum or (building and building:isToxic())
+        inVacuum = isVacuum or (building and building:isToxic())
         
         if inVacuum then
             -- Check protection without draining (drain is handled by the engine if in toxic building)
@@ -135,6 +157,113 @@ local function checkVacuum(ticks)
             end
         end
     end
+    
+    -- Handle vacuum sound muting (like Deaf trait)
+    local soundManager = getSoundManager()
+    if inVacuum and not ZSpaceship.wasInVacuum then
+        -- Entering vacuum: save current volumes and mute all sounds
+        ZSpaceship.savedSoundVolume = soundManager:getSoundVolume()
+        ZSpaceship.savedMusicVolume = soundManager:getMusicVolume()
+        ZSpaceship.savedAmbientVolume = soundManager:getAmbientVolume()
+        ZSpaceship.savedVehicleVolume = soundManager:getVehicleEngineVolume()
+        soundManager:setSoundVolume(0)
+        soundManager:setMusicVolume(0)
+        soundManager:setAmbientVolume(0)
+        soundManager:setVehicleEngineVolume(0)
+        ZSpaceship.wasInVacuum = true
+    elseif not inVacuum and ZSpaceship.wasInVacuum then
+        -- Leaving vacuum: restore saved volumes
+        if ZSpaceship.savedSoundVolume then
+            soundManager:setSoundVolume(ZSpaceship.savedSoundVolume)
+        end
+        if ZSpaceship.savedMusicVolume then
+            soundManager:setMusicVolume(ZSpaceship.savedMusicVolume)
+        end
+        if ZSpaceship.savedAmbientVolume then
+            soundManager:setAmbientVolume(ZSpaceship.savedAmbientVolume)
+        end
+        if ZSpaceship.savedVehicleVolume then
+            soundManager:setVehicleEngineVolume(ZSpaceship.savedVehicleVolume)
+        end
+        ZSpaceship.wasInVacuum = false
+    end
 end
 
 Events.OnTick.Add(checkVacuum)
+
+-- Disable weather effects in space
+local function onPlayerUpdate(player)
+    if not player then return end
+    local sq = player:getCurrentSquare()
+    if not sq then return end
+    
+    local inSpace = ZSpaceship.isInSpace(sq:getX(), sq:getY())
+    local climate = getClimateManager()
+    
+    if inSpace then
+        -- Override climate settings to disable weather effects
+        local fogFloat = climate:getClimateFloat(ClimateManager.FLOAT_FOG_INTENSITY)
+        local precipFloat = climate:getClimateFloat(ClimateManager.FLOAT_PRECIPITATION_INTENSITY)
+        local windFloat = climate:getClimateFloat(ClimateManager.FLOAT_WIND_INTENSITY)
+        local cloudFloat = climate:getClimateFloat(ClimateManager.FLOAT_CLOUD_INTENSITY)
+        
+        if fogFloat then
+            fogFloat:setEnableAdmin(true)
+            fogFloat:setAdminValue(0)
+        end
+        if precipFloat then
+            precipFloat:setEnableAdmin(true)
+            precipFloat:setAdminValue(0)
+        end
+        if windFloat then
+            windFloat:setEnableAdmin(true)
+            windFloat:setAdminValue(0)
+        end
+        if cloudFloat then
+            cloudFloat:setEnableAdmin(true)
+            cloudFloat:setAdminValue(0)
+        end
+        
+        -- Also set WeatherFX directly for immediate effect
+        local cell = getCell()
+        if cell and cell:getWeatherFX() then
+            cell:getWeatherFX():setFogIntensity(0)
+            cell:getWeatherFX():setPrecipitationIntensity(0)
+        end
+    else
+        -- Disable admin override when leaving space
+        local fogFloat = climate:getClimateFloat(ClimateManager.FLOAT_FOG_INTENSITY)
+        local precipFloat = climate:getClimateFloat(ClimateManager.FLOAT_PRECIPITATION_INTENSITY)
+        local windFloat = climate:getClimateFloat(ClimateManager.FLOAT_WIND_INTENSITY)
+        local cloudFloat = climate:getClimateFloat(ClimateManager.FLOAT_CLOUD_INTENSITY)
+        
+        if fogFloat then fogFloat:setEnableAdmin(false) end
+        if precipFloat then precipFloat:setEnableAdmin(false) end
+        if windFloat then windFloat:setEnableAdmin(false) end
+        if cloudFloat then cloudFloat:setEnableAdmin(false) end
+    end
+end
+
+Events.OnPlayerUpdate.Add(onPlayerUpdate)
+
+-- Restore sound volumes when returning to main menu (in case player exits while in vacuum)
+local function restoreVolumeOnExit()
+    if ZSpaceship.wasInVacuum then
+        local soundManager = getSoundManager()
+        if ZSpaceship.savedSoundVolume then
+            soundManager:setSoundVolume(ZSpaceship.savedSoundVolume)
+        end
+        if ZSpaceship.savedMusicVolume then
+            soundManager:setMusicVolume(ZSpaceship.savedMusicVolume)
+        end
+        if ZSpaceship.savedAmbientVolume then
+            soundManager:setAmbientVolume(ZSpaceship.savedAmbientVolume)
+        end
+        if ZSpaceship.savedVehicleVolume then
+            soundManager:setVehicleEngineVolume(ZSpaceship.savedVehicleVolume)
+        end
+        ZSpaceship.wasInVacuum = false
+    end
+end
+
+Events.OnMainMenuEnter.Add(restoreVolumeOnExit)
