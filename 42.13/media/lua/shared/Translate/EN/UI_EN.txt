@@ -1,4 +1,7 @@
 UI_EN = {
     UI_prof_astronaut = "Astronaut",
     UI_spawn_spaceship = "Spaceship Z-001",
+    
+    UI_ZSpaceship_NoOxygen = "No oxygen to start a fire!",
+    UI_ZSpaceship_CantBreathe = "I can't breathe!",
 }

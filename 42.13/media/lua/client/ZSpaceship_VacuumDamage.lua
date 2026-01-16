@@ -290,7 +290,7 @@ local function checkVacuum(ticks)
                         -- Visual bark for player taking damage (every ~2 seconds)
                         if obj == player and tookDamage and player.Say then
                             if not ZSpaceship.lastBreathBark or (getTimestamp() - ZSpaceship.lastBreathBark) > 2000 then
-                                player:Say("I can't breathe!")
+                                player:Say(getText("UI_ZSpaceship_CantBreathe"))
                                 ZSpaceship.lastBreathBark = getTimestamp()
                             end
                         end

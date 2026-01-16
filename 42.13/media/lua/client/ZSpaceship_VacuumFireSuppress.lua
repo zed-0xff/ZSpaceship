@@ -71,31 +71,70 @@ local function canLightFire(target, playerObj)
     local sq = target:getSquare()
     if isInVacuum(sq) then
         if playerObj and playerObj.Say then
-            playerObj:Say("No oxygen to start a fire!")
+            playerObj:Say(getText("UI_ZSpaceship_NoOxygen"))
         end
         return false
     end
     return true
 end
 
-Events.OnGameStart.Add(function()
-    -- Hook stove toggle action
-    if ISToggleStoveAction then
-        local originalIsValid = ISToggleStoveAction.isValid
-        ISToggleStoveAction.isValid = function(self)
-            if not originalIsValid(self) then return false end
-            return canToggleStoveOn(self.object)
-        end
-        
-        local originalComplete = ISToggleStoveAction.complete
-        ISToggleStoveAction.complete = function(self)
-            if not canToggleStoveOn(self.object) then
-                return false
+-- Suppress all fires and heat sources in a room when it becomes breached
+local function suppressFiresInRoom(room)
+    if not room then return end
+    local squares = room:getSquares()
+    if not squares then return end
+    
+    for i = 0, squares:size() - 1 do
+        local sq = squares:get(i)
+        if sq then
+            -- Stop any fires on this square
+            sq:stopFire()
+            
+            -- Check objects on this square for heat sources
+            local objects = sq:getObjects()
+            if objects then
+                for j = 0, objects:size() - 1 do
+                    local obj = objects:get(j)
+                    if obj then
+                        -- Turn off lit fireplaces (includes campfires, fire pits)
+                        if instanceof(obj, "IsoFireplace") and obj:isLit() then
+                            obj:extinguish()
+                        end
+                        -- Turn off lit BBQs (all types need oxygen)
+                        if instanceof(obj, "IsoBarbecue") and obj:isLit() then
+                            obj:setLit(false)
+                        end
+                    end
+                end
             end
-            return originalComplete(self)
         end
     end
+end
+
+-- Check for breach at a square and suppress fires in affected rooms
+local function checkBreachAtSquare(sq)
+    if not sq then return end
+    if not ZSpaceship.isInSpace(sq:getX(), sq:getY()) then return end
     
+    -- Check adjacent rooms for breach
+    local checkedRooms = {}
+    for dx = -1, 1 do
+        for dy = -1, 1 do
+            local adjSq = getSquare(sq:getX() + dx, sq:getY() + dy, sq:getZ())
+            if adjSq then
+                local room = adjSq:getRoom()
+                if room and not checkedRooms[room] then
+                    checkedRooms[room] = true
+                    if ZSpaceship.isRoomBreached(room) then
+                        suppressFiresInRoom(room)
+                    end
+                end
+            end
+        end
+    end
+end
+
+Events.OnGameStart.Add(function()
     -- Hook campfire lighting functions
     if ISCampingMenu then
         local origLightFromLiterature = ISCampingMenu.onLightFromLiterature
@@ -116,4 +155,44 @@ Events.OnGameStart.Add(function()
             return origLightFromPetrol(playerObj, lighter, petrol, target, timedAction)
         end
     end
+    
+    -- Hook BBQ toggle
+    if ISBBQMenu then
+        local origOnToggle = ISBBQMenu.onToggle
+        ISBBQMenu.onToggle = function(worldobjects, player, bbq, tank)
+            if bbq and not bbq:isLit() then
+                local sq = bbq:getSquare()
+                if sq and isInVacuum(sq) then
+                    local playerObj = getSpecificPlayer(player)
+                    if playerObj and playerObj.Say then
+                        playerObj:Say(getText("UI_ZSpaceship_NoOxygen"))
+                    end
+                    return
+                end
+            end
+            return origOnToggle(worldobjects, player, bbq, tank)
+        end
+    end
+    
+    -- Hook door open/close to check for breach
+    if ISOpenCloseDoor then
+        local originalDoorComplete = ISOpenCloseDoor.complete
+        ISOpenCloseDoor.complete = function(self)
+            local result = originalDoorComplete(self)
+            
+            -- Check if this door is in space and now causes a breach
+            local door = self.item
+            if door and door.IsOpen and door:IsOpen() then
+                checkBreachAtSquare(door:getSquare())
+            end
+            
+            return result
+        end
+    end
+end)
+
+-- Check breach and suppress fires when a wall/door is destroyed
+Events.OnDestroyIsoThumpable.Add(function(thumpable, owner)
+    if not thumpable then return end
+    checkBreachAtSquare(thumpable:getSquare())
 end)
