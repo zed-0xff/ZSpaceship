@@ -1,5 +1,6 @@
 id: "Spaceship Z-001"
 origin: [78, 78]
+default_floor: floors_exterior_street_01_18
 
 metapalette:
   C: cockpit
@@ -11,28 +12,23 @@ metamap: |
 
 elements:
   cockpit:
+    floor: floors_interior_tilesandwood_01_28
+    roof:  floors_exterior_street_01_0
     palette:
-      "━": walls_garage_02_17
-      "┃": walls_garage_02_16
-      "┛": walls_garage_02_19
-      "╔": { tile: location_community_medical_01_170, x: +1, y: +1, replaces: [location_community_medical_01_168, location_community_medical_01_169] }
-      "═": { tile: location_community_medical_01_169, y: +1 }
-      "║": { tile: location_community_medical_01_168, x: +1 }
-      "A": recreational_01_on_94
-      "B": recreational_01_on_94
-      "C": recreational_01_on_94
-      "D": recreational_01_on_94
-      "E": recreational_01_on_94
-      "F": recreational_01_on_94
-      "G": recreational_01_on_94
-      "H": recreational_01_on_94
-      "I": recreational_01_on_94
-      "/": [walls_garage_01_52, industry_trucks_01_19, industry_trucks_01_17]
+      walls:
+        "━": walls_garage_02_17
+        "┃": walls_garage_02_16
+        "┛": walls_garage_02_19
+        "╔": { tile: location_community_medical_01_170, x: +1, y: +1, replaces: [location_community_medical_01_168, location_community_medical_01_169] }
+        "═": { tile: location_community_medical_01_169, y: +1 }
+        "║": { tile: location_community_medical_01_168, x: +1 }
+      doors:
+        "/": [walls_garage_01_52, industry_trucks_01_19, industry_trucks_01_17]
     map: |
       ╔═══┓
-      ║ABC┃
-      ║DEF┃
-      ║GHI┃
+      ║   ┃
+      ║   ┃
+      ║   ┃
       ┗━/━┛
 
   solar_panel:

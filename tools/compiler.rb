@@ -12,19 +12,26 @@ end
 # --- Compiler Logic ---
 
 class MapCompiler
-  DEFAULT_FLOOR = "floors_exterior_street_01_17"
-  
   def initialize(yaml_path)
     @config = YAML.safe_load(File.read(yaml_path, encoding: "utf-8"), permitted_classes: [Symbol])
     @cell_x, @cell_y = @config['origin']
-    
-    @header = POTLotHeader.new(@cell_x, @cell_y, true)
-    @pack = POTLotPack.new(@header)
-    @cdata = POTChunkData.new(@cell_x, @cell_y, true)
+    @default_floor = @config['default_floor'] || "floors_exterior_street_01_17"
     
     @elements = @config['elements'] || {}
     @metapalette = @config['metapalette'] || {}
     @metamap = @config['metamap'] || ""
+    
+    # Pre-calculate maxLevel based on elements with roof
+    max_level = 0
+    @elements.each do |name, elem|
+      max_level = 1 if elem['roof']
+    end
+    
+    @header = POTLotHeader.new(@cell_x, @cell_y, true)
+    @header.minLevel = 0
+    @header.maxLevel = max_level
+    @pack = POTLotPack.new(@header)
+    @cdata = POTChunkData.new(@cell_x, @cell_y, true)
     
     # Compute element sizes (standard: width=chars, height=lines)
     @element_sizes = {}
@@ -37,13 +44,14 @@ class MapCompiler
     
     # Track replaced tiles per square - these are blocked from being added later
     @replaced_tiles = Hash.new { |h, k| h[k] = Set.new }
+    
+    # Room counter for unique IDs
+    @room_index = 0
+    @building_index = 0
   end
 
   def compile(out_dir)
     FileUtils.mkdir_p(out_dir)
-    
-    @header.minLevel = 0
-    @header.maxLevel = 0
     @defined_squares = {}
     
     placements = parse_metamap
@@ -134,25 +142,65 @@ class MapCompiler
     element = @elements[element_name]
     return unless element
     
-    palette = element['palette'] || {}
+    raw_palette = element['palette'] || {}
+    palette, boundary_chars, door_chars = flatten_palette(raw_palette)
     map_str = element['map'] || ""
     z = 0
     
+    # Room floor, roof, and name (defaults to element name)
+    room_floor = element['floor']
+    room_roof = element['roof']
+    room_name = element['name'] || element_name
+    
     lines = map_str.rstrip.split("\n")
+    
+    # Detect interior cells (enclosed by walls/doors) using flood-fill
+    interior_cells = detect_interior_cells(lines, boundary_chars) if room_floor || room_roof
+    
+    # Collect door positions for room metadata
+    door_positions = []
     lines.each_with_index do |line, ly|
       line.chars.each_with_index do |char, lx|
-        val = palette[char]
-        next if val.nil?
-        
+        if door_chars.include?(char)
+          door_positions << { lx: lx, ly: ly, char: char }
+        end
+      end
+    end
+    
+    # Create room definition if there are interior cells
+    room = nil
+    if interior_cells && !interior_cells.empty?
+      room = create_room(room_name, interior_cells, base_local_x, base_local_y, z, door_positions, lines)
+    end
+    
+    lines.each_with_index do |line, ly|
+      line.chars.each_with_index do |char, lx|
         local_x = base_local_x + lx
         local_y = base_local_y + ly
+        abs_x, abs_y = to_world(local_x, local_y)
+        
+        val = palette[char]
+        
+        # Place floor and roof on interior cells (enclosed by walls/doors)
+        if interior_cells && interior_cells.include?([lx, ly])
+          if room_floor
+            set_square_tiles(abs_x, abs_y, z, [room_floor])
+            @defined_squares[[abs_x, abs_y, z]] = true
+          end
+          if room_roof
+            set_square_tiles(abs_x, abs_y, z + 1, [room_roof])
+            @defined_squares[[abs_x, abs_y, z + 1]] = true
+            @header.maxLevel = [(@header.maxLevel || 0), z + 1].max
+          end
+        end
+        
+        # Skip if no tile definition for this char
+        next if val.nil?
         
         if val.is_a?(Hash) && val.key?('tile')
           process_offset_tile(val, local_x, local_y, z)
           next
         end
-        
-        abs_x, abs_y = to_world(local_x, local_y)
         
         @defined_squares[[abs_x, abs_y, z]] = true
         bits = compute_collision_bits(val)
@@ -164,6 +212,159 @@ class MapCompiler
         set_square_tiles(abs_x, abs_y, z, tiles)
       end
     end
+  end
+  
+  # Create a room definition from interior cells
+  def create_room(name, interior_cells, base_local_x, base_local_y, z, door_positions = [], lines = [])
+    return nil if interior_cells.empty?
+    
+    room_id = RoomID.makeID(@cell_x, @cell_y, @room_index)
+    @room_index += 1
+    
+    room = RoomDef.new(room_id, name)
+    room.level = z
+    
+    # Convert interior cells to absolute coordinates and create rectangles
+    # For simplicity, compute bounding box of all interior cells
+    min_x = min_y = Float::INFINITY
+    max_x = max_y = -Float::INFINITY
+    
+    interior_cells.each do |lx, ly|
+      abs_x, abs_y = to_world(base_local_x + lx, base_local_y + ly)
+      min_x = [min_x, abs_x].min
+      max_x = [max_x, abs_x].max
+      min_y = [min_y, abs_y].min
+      max_y = [max_y, abs_y].max
+    end
+    
+    # Create a single rectangle covering the bounding box
+    rect = Rect.new
+    rect.x = min_x
+    rect.y = min_y
+    rect.w = max_x - min_x + 1
+    rect.h = max_y - min_y + 1
+    room.rects << rect
+    
+    # Add door objects
+    door_positions.each do |door|
+      abs_x, abs_y = to_world(base_local_x + door[:lx], base_local_y + door[:ly])
+      door_type = determine_door_type(door[:lx], door[:ly], interior_cells, lines)
+      
+      obj = MetaObject.new(MetaObjectEnum.sym2id(door_type), abs_x, abs_y, room)
+      room.objects << obj
+    end
+    
+    @header.rooms[room_id] = room
+    
+    # Create a building for this room
+    building = BuildingDef.new
+    building.id = BuildingID.makeID(@cell_x, @cell_y, @building_index)
+    @building_index += 1
+    building.rooms << room
+    room.building = building
+    @header.buildings << building
+    
+    room
+  end
+  
+  # Determine door direction based on adjacent interior cells
+  def determine_door_type(door_lx, door_ly, interior_cells, lines)
+    # Check which direction the interior is relative to the door
+    # Interior to the south (ly+1) = door faces north (DoorN)
+    # Interior to the north (ly-1) = door faces south (DoorS)
+    # Interior to the east (lx+1) = door faces west (DoorW)
+    # Interior to the west (lx-1) = door faces east (DoorE)
+    
+    if interior_cells.include?([door_lx, door_ly + 1])
+      :DoorN
+    elsif interior_cells.include?([door_lx, door_ly - 1])
+      :DoorS
+    elsif interior_cells.include?([door_lx + 1, door_ly])
+      :DoorW
+    elsif interior_cells.include?([door_lx - 1, door_ly])
+      :DoorE
+    else
+      # Default based on wall orientation - check surrounding characters
+      :DoorN
+    end
+  end
+  
+  # Detect interior cells using flood-fill from outside
+  # Returns Set of [x, y] coordinates that are enclosed by walls/doors
+  def detect_interior_cells(lines, boundary_chars)
+    return Set.new if lines.empty?
+    
+    height = lines.length
+    width = lines.map { |l| l.length }.max || 0
+    return Set.new if width == 0
+    
+    # Pad grid by 1 on each side to allow flood-fill from outside
+    padded_width = width + 2
+    padded_height = height + 2
+    
+    # Build grid: true = blocked (wall/door), false = open
+    blocked = Array.new(padded_height) { Array.new(padded_width, false) }
+    lines.each_with_index do |line, ly|
+      line.chars.each_with_index do |char, lx|
+        blocked[ly + 1][lx + 1] = boundary_chars.include?(char)
+      end
+    end
+    
+    # Flood-fill from (0,0) to find all exterior cells
+    exterior = Set.new
+    queue = [[0, 0]]
+    exterior.add([0, 0])
+    
+    while !queue.empty?
+      x, y = queue.shift
+      [[0, 1], [0, -1], [1, 0], [-1, 0]].each do |dx, dy|
+        nx, ny = x + dx, y + dy
+        next if nx < 0 || nx >= padded_width || ny < 0 || ny >= padded_height
+        next if blocked[ny][nx]
+        next if exterior.include?([nx, ny])
+        exterior.add([nx, ny])
+        queue << [nx, ny]
+      end
+    end
+    
+    # Interior = cells that are not exterior and not blocked (in original coords)
+    interior = Set.new
+    height.times do |ly|
+      width.times do |lx|
+        padded_x, padded_y = lx + 1, ly + 1
+        next if blocked[padded_y][padded_x]  # Skip walls/doors
+        next if exterior.include?([padded_x, padded_y])  # Skip exterior
+        interior.add([lx, ly])
+      end
+    end
+    
+    interior
+  end
+  
+  # Flatten nested palette categories into a single char -> value hash
+  # Also returns set of boundary characters (walls, doors) and door characters
+  def flatten_palette(palette)
+    flat = {}
+    boundary_chars = Set.new
+    door_chars = Set.new
+    
+    palette.each do |key, value|
+      if value.is_a?(Hash) && !value.key?('tile')
+        # It's a category (like 'walls', 'doors'), flatten its contents
+        is_boundary = %w[walls doors].include?(key)
+        is_door = key == 'doors'
+        value.each do |k, v|
+          flat[k] = v
+          boundary_chars.add(k) if is_boundary
+          door_chars.add(k) if is_door
+        end
+      else
+        # Direct char -> tile mapping (treat as boundary by default)
+        flat[key] = value
+        boundary_chars.add(key)
+      end
+    end
+    [flat, boundary_chars, door_chars]
   end
   
   def process_offset_tile(val, local_x, local_y, z)
@@ -222,7 +423,7 @@ class MapCompiler
     non_floor_tiles = all_tiles.reject { |t| t && t.include?("floor") }
     
     if floor_tiles.empty?
-      all_tiles = [DEFAULT_FLOOR] + non_floor_tiles
+      all_tiles = [@default_floor] + non_floor_tiles
     else
       all_tiles = floor_tiles + non_floor_tiles
     end
@@ -239,7 +440,7 @@ class MapCompiler
         
         next if @defined_squares[[abs_x, abs_y, z]]
         
-        @pack.set_square_data(abs_x, abs_y, z, [DEFAULT_FLOOR])
+        @pack.set_square_data(abs_x, abs_y, z, [@default_floor])
       end
     end
   end
