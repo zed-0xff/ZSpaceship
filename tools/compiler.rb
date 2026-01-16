@@ -201,7 +201,7 @@ class MapCompiler
         # Skip if no tile definition for this char
         next if val.nil?
         
-        if val.is_a?(Hash) && val.key?('tile')
+        if val.is_a?(Hash) && (val.key?('tile') || val.key?('tiles'))
           process_offset_tile(val, local_x, local_y, z)
           next
         end
@@ -372,7 +372,11 @@ class MapCompiler
   end
   
   def process_offset_tile(val, local_x, local_y, z)
-    wall_tile = val['tile']
+    # Support both 'tile' (single) and 'tiles' (array)
+    tiles = val['tiles'] || [val['tile']]
+    tiles = [tiles] unless tiles.is_a?(Array)
+    tiles = tiles.compact
+    
     replaces = val['replaces'] || []
     
     x_offset = val['x'] || 0
@@ -388,7 +392,7 @@ class MapCompiler
     bits |= POTChunkData::Chunk::BIT_WALLN if y_offset != 0
     
     @cdata.setSquareBits(abs_x, abs_y, bits) if bits != 0
-    set_square_tiles(abs_x, abs_y, z, [wall_tile], replaces: replaces)
+    set_square_tiles(abs_x, abs_y, z, tiles, replaces: replaces)
     @defined_squares[[abs_x, abs_y, z]] = true
   end
   

@@ -246,8 +246,9 @@ end
 
 Events.OnPlayerUpdate.Add(onPlayerUpdate)
 
--- Restore sound volumes when returning to main menu (in case player exits while in vacuum)
-local function restoreVolumeOnExit()
+-- Restore sound volumes and climate when exiting game
+local function restoreOnExit()
+    -- Restore sound volumes
     if ZSpaceship.wasInVacuum then
         local soundManager = getSoundManager()
         if ZSpaceship.savedSoundVolume then
@@ -264,6 +265,21 @@ local function restoreVolumeOnExit()
         end
         ZSpaceship.wasInVacuum = false
     end
+    
+    -- Restore climate admin overrides
+    local climate = getClimateManager()
+    if climate then
+        local fogFloat = climate:getClimateFloat(ClimateManager.FLOAT_FOG_INTENSITY)
+        local precipFloat = climate:getClimateFloat(ClimateManager.FLOAT_PRECIPITATION_INTENSITY)
+        local windFloat = climate:getClimateFloat(ClimateManager.FLOAT_WIND_INTENSITY)
+        local cloudFloat = climate:getClimateFloat(ClimateManager.FLOAT_CLOUD_INTENSITY)
+        
+        if fogFloat then fogFloat:setEnableAdmin(false) end
+        if precipFloat then precipFloat:setEnableAdmin(false) end
+        if windFloat then windFloat:setEnableAdmin(false) end
+        if cloudFloat then cloudFloat:setEnableAdmin(false) end
+    end
 end
 
-Events.OnMainMenuEnter.Add(restoreVolumeOnExit)
+Events.OnMainMenuEnter.Add(restoreOnExit)
+Events.OnDisconnect.Add(restoreOnExit)
