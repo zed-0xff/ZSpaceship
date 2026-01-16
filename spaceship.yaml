@@ -15,7 +15,7 @@ elements:
       "━": walls_garage_02_17
       "┃": walls_garage_02_16
       "┛": walls_garage_02_19
-      "╔": { tile: location_community_medical_01_170, x: +1, y: +1 }
+      "╔": { tile: location_community_medical_01_170, x: +1, y: +1, replaces: [location_community_medical_01_168, location_community_medical_01_169] }
       "═": { tile: location_community_medical_01_169, y: +1 }
       "║": { tile: location_community_medical_01_168, x: +1 }
       "A": recreational_01_on_94

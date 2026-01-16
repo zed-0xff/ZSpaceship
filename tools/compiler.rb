@@ -34,6 +34,9 @@ class MapCompiler
       width = lines.map { |l| l.chars.length }.max || 0
       @element_sizes[name] = { width: width, height: height }
     end
+    
+    # Track replaced tiles per square - these are blocked from being added later
+    @replaced_tiles = Hash.new { |h, k| h[k] = Set.new }
   end
 
   def compile(out_dir)
@@ -165,37 +168,23 @@ class MapCompiler
   
   def process_offset_tile(val, local_x, local_y, z)
     wall_tile = val['tile']
-    has_offset = false
+    replaces = val['replaces'] || []
     
-    # x offset: move right, places west wall on target cell
-    if val.key?('x') && val['x'] != 0
-      has_offset = true
-      target_local_x = local_x + val['x']
-      abs_x, abs_y = to_world(target_local_x, local_y)
-      
-      bits = POTChunkData::Chunk::BIT_WALLW
-      @cdata.setSquareBits(abs_x, abs_y, bits)
-      set_square_tiles(abs_x, abs_y, z, [wall_tile])
-      @defined_squares[[abs_x, abs_y, z]] = true
-    end
+    x_offset = val['x'] || 0
+    y_offset = val['y'] || 0
     
-    # y offset: move down, places north wall on target cell
-    if val.key?('y') && val['y'] != 0
-      has_offset = true
-      target_local_y = local_y + val['y']
-      abs_x, abs_y = to_world(local_x, target_local_y)
-      
-      bits = POTChunkData::Chunk::BIT_WALLN
-      @cdata.setSquareBits(abs_x, abs_y, bits)
-      set_square_tiles(abs_x, abs_y, z, [wall_tile])
-      @defined_squares[[abs_x, abs_y, z]] = true
-    end
+    target_local_x = local_x + x_offset
+    target_local_y = local_y + y_offset
+    abs_x, abs_y = to_world(target_local_x, target_local_y)
     
-    unless has_offset
-      abs_x, abs_y = to_world(local_x, local_y)
-      @defined_squares[[abs_x, abs_y, z]] = true
-      set_square_tiles(abs_x, abs_y, z, [wall_tile])
-    end
+    # Determine collision bits based on offset direction
+    bits = 0
+    bits |= POTChunkData::Chunk::BIT_WALLW if x_offset != 0
+    bits |= POTChunkData::Chunk::BIT_WALLN if y_offset != 0
+    
+    @cdata.setSquareBits(abs_x, abs_y, bits) if bits != 0
+    set_square_tiles(abs_x, abs_y, z, [wall_tile], replaces: replaces)
+    @defined_squares[[abs_x, abs_y, z]] = true
   end
   
   def compute_collision_bits(val)
@@ -214,8 +203,19 @@ class MapCompiler
     bits
   end
   
-  def set_square_tiles(abs_x, abs_y, z, new_tiles)
+  def set_square_tiles(abs_x, abs_y, z, new_tiles, replaces: [])
+    key = [abs_x, abs_y, z]
     existing = @pack.getSquareData(abs_x, abs_y, z) || []
+    
+    # Track replaced tiles - they can't be added later
+    replaces.each { |t| @replaced_tiles[key].add(t) }
+    
+    # Remove tiles that should be replaced
+    existing = existing.reject { |t| @replaced_tiles[key].include?(t) }
+    
+    # Filter out new tiles that were previously replaced
+    new_tiles = new_tiles.reject { |t| @replaced_tiles[key].include?(t) }
+    
     all_tiles = (existing + new_tiles).uniq
     
     floor_tiles = all_tiles.select { |t| t && t.include?("floor") }
