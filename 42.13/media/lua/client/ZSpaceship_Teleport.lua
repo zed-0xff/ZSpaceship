@@ -1,6 +1,42 @@
 -- ZSpaceship Teleport - Teleportation functions and context menus
 require "TimedActions/ISTimedActionQueue"
 
+-- Energy cost: 10 MJ/kg base, +50% if from/to building
+ZSpaceship.TELEPORT_COST_PER_KG = 10  -- MJ/kg
+ZSpaceship.TELEPORT_BUILDING_MULT = 1.5
+
+function ZSpaceship.getTeleportMass(player)
+    local bodyWeight = player:getNutrition():getWeight()
+    local inventoryWeight = player:getInventory():getCapacityWeight()
+    return bodyWeight + inventoryWeight
+end
+
+function ZSpaceship.isInBuilding(player)
+    local sq = player:getCurrentSquare()
+    if not sq or not sq:getBuilding() then
+        return false
+    end
+    -- Spaceship doesn't count as a building for teleport cost
+    local px, py = math.floor(player:getX()), math.floor(player:getY())
+    if ZSpaceship.isInSpace(px, py) then
+        return false
+    end
+    return true
+end
+
+function ZSpaceship.getTeleportCost(player, toBuilding)
+    local mass = ZSpaceship.getTeleportMass(player)
+    local cost = mass * ZSpaceship.TELEPORT_COST_PER_KG
+    
+    -- +50% if from or to building (spaceship excluded)
+    local fromBuilding = ZSpaceship.isInBuilding(player)
+    if fromBuilding or toBuilding then
+        cost = cost * ZSpaceship.TELEPORT_BUILDING_MULT
+    end
+    
+    return math.floor(cost)
+end
+
 function ZSpaceship.TeleportToRandom(player)
     -- Teleport to random location in the county (2000-13000), avoiding water and empty cells
     local x, y
@@ -108,15 +144,18 @@ local function doWorldContextMenu(playerNum, context, worldobjects, test)
     local pz = math.floor(player:getZ())
     
     if px == ZSpaceship.TeleporterX and py == ZSpaceship.TeleporterY and pz == ZSpaceship.TeleporterZ then
-        context:addOption(getText("UI_ZSpaceship_TeleportToCounty"), player, ZSpaceship.TeleportToRandom)
-        context:addOption(getText("UI_ZSpaceship_TeleportToBuilding"), player, ZSpaceship.TeleportToRandomBuilding)
+        local costSurface = ZSpaceship.getTeleportCost(player, false)
+        local costBuilding = ZSpaceship.getTeleportCost(player, true)
+        context:addOption(getText("UI_ZSpaceship_TeleportToCounty") .. " (" .. costSurface .. " MJ)", player, ZSpaceship.TeleportToRandom)
+        context:addOption(getText("UI_ZSpaceship_TeleportToBuilding") .. " (" .. costBuilding .. " MJ)", player, ZSpaceship.TeleportToRandomBuilding)
     end
     
     -- Return to Spaceship option when NOT in space and has communicator
     if not ZSpaceship.isInSpace(px, py) then
         local communicator = player:getInventory():getItemFromType("ZSpaceship.Communicator")
         if communicator then
-            context:addOption(getText("UI_ZSpaceship_ReturnToSpaceship"), player, ZSpaceship.TeleportToShip)
+            local costReturn = ZSpaceship.getTeleportCost(player, false)
+            context:addOption(getText("UI_ZSpaceship_ReturnToSpaceship") .. " (" .. costReturn .. " MJ)", player, ZSpaceship.TeleportToShip)
         end
     end
 end
@@ -128,7 +167,8 @@ local function doInventoryContextMenu(playerNum, context, items)
     
     local communicator = inv:getItemFromType("ZSpaceship.Communicator")
     if communicator then
-        context:addOption(getText("UI_ZSpaceship_ReturnToSpaceship"), player, ZSpaceship.TeleportToShip)
+        local costReturn = ZSpaceship.getTeleportCost(player, false)
+        context:addOption(getText("UI_ZSpaceship_ReturnToSpaceship") .. " (" .. costReturn .. " MJ)", player, ZSpaceship.TeleportToShip)
     end
 end
 
