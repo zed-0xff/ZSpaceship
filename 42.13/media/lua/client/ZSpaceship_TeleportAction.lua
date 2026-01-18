@@ -10,13 +10,16 @@ end
 function ISZSpaceshipTeleportAction:start()
     self:setActionAnim("Loot")
     self.character:Say(self.startMessage or "Energizing...")
+    self.sound = self.character:playSound("PZ_Owl_02")
 end
 
 function ISZSpaceshipTeleportAction:stop()
+    self.character:stopOrTriggerSound(self.sound)
     ISBaseTimedAction.stop(self)
 end
 
 function ISZSpaceshipTeleportAction:perform()
+    self.character:stopOrTriggerSound(self.sound)
     ISBaseTimedAction.perform(self)
 end
 
@@ -34,6 +37,7 @@ function ISZSpaceshipTeleportAction:complete()
         character:setForceY(targetY) -- center player on tile
         -- Update vacuum state for sound muting
         ZSpaceship.checkAndUpdateVacuumState(character)
+        character:getEmitter():playFootsteps("HumanFootstepsCombined", 1.0)
     end
     Events.OnTick.Add(doTeleport)
 
