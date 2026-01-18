@@ -10,6 +10,38 @@ ZSpaceship.savedAmbientVolume = nil
 ZSpaceship.savedVehicleVolume = nil
 ZSpaceship.wasInVacuum = false
 
+-- Update vacuum sound muting state (call after teleporting or state change)
+function ZSpaceship.updateVacuumSounds(inVacuum)
+    local soundManager = getSoundManager()
+    if inVacuum and not ZSpaceship.wasInVacuum then
+        -- Entering vacuum: save current volumes and mute all sounds
+        ZSpaceship.savedSoundVolume = soundManager:getSoundVolume()
+        ZSpaceship.savedMusicVolume = soundManager:getMusicVolume()
+        ZSpaceship.savedAmbientVolume = soundManager:getAmbientVolume()
+        ZSpaceship.savedVehicleVolume = soundManager:getVehicleEngineVolume()
+        soundManager:setSoundVolume(0)
+        soundManager:setMusicVolume(0)
+        soundManager:setAmbientVolume(0)
+        soundManager:setVehicleEngineVolume(0)
+        ZSpaceship.wasInVacuum = true
+    elseif not inVacuum and ZSpaceship.wasInVacuum then
+        -- Leaving vacuum: restore saved volumes
+        if ZSpaceship.savedSoundVolume then
+            soundManager:setSoundVolume(ZSpaceship.savedSoundVolume)
+        end
+        if ZSpaceship.savedMusicVolume then
+            soundManager:setMusicVolume(ZSpaceship.savedMusicVolume)
+        end
+        if ZSpaceship.savedAmbientVolume then
+            soundManager:setAmbientVolume(ZSpaceship.savedAmbientVolume)
+        end
+        if ZSpaceship.savedVehicleVolume then
+            soundManager:setVehicleEngineVolume(ZSpaceship.savedVehicleVolume)
+        end
+        ZSpaceship.wasInVacuum = false
+    end
+end
+
 -- Check a square for open doors, given direction from room
 local function checkSquareForOpenDoor(sq, fromX, fromY)
     if not sq then return false end
@@ -139,6 +171,22 @@ end
 
 -- Expose for other modules
 ZSpaceship.isRoomBreached = isRoomBreached
+
+-- Check if player is in vacuum and update sounds accordingly
+function ZSpaceship.checkAndUpdateVacuumState(player)
+    if not player then return false end
+    local sq = player:getCurrentSquare()
+    if not sq then return false end
+    
+    local inVacuum = false
+    if ZSpaceship.isInSpace(sq:getX(), sq:getY()) then
+        local room = sq:getRoom()
+        inVacuum = not room or isRoomBreached(room)
+    end
+    
+    ZSpaceship.updateVacuumSounds(inVacuum)
+    return inVacuum
+end
 
 -- Check if creature is protected from vacuum
 -- Players: need Hazmat suit (SCBA) activated with oxygen in tank
@@ -301,34 +349,7 @@ local function checkVacuum(ticks)
     end
     
     -- Handle vacuum sound muting (like Deaf trait)
-    local soundManager = getSoundManager()
-    if inVacuum and not ZSpaceship.wasInVacuum then
-        -- Entering vacuum: save current volumes and mute all sounds
-        ZSpaceship.savedSoundVolume = soundManager:getSoundVolume()
-        ZSpaceship.savedMusicVolume = soundManager:getMusicVolume()
-        ZSpaceship.savedAmbientVolume = soundManager:getAmbientVolume()
-        ZSpaceship.savedVehicleVolume = soundManager:getVehicleEngineVolume()
-        soundManager:setSoundVolume(0)
-        soundManager:setMusicVolume(0)
-        soundManager:setAmbientVolume(0)
-        soundManager:setVehicleEngineVolume(0)
-        ZSpaceship.wasInVacuum = true
-    elseif not inVacuum and ZSpaceship.wasInVacuum then
-        -- Leaving vacuum: restore saved volumes
-        if ZSpaceship.savedSoundVolume then
-            soundManager:setSoundVolume(ZSpaceship.savedSoundVolume)
-        end
-        if ZSpaceship.savedMusicVolume then
-            soundManager:setMusicVolume(ZSpaceship.savedMusicVolume)
-        end
-        if ZSpaceship.savedAmbientVolume then
-            soundManager:setAmbientVolume(ZSpaceship.savedAmbientVolume)
-        end
-        if ZSpaceship.savedVehicleVolume then
-            soundManager:setVehicleEngineVolume(ZSpaceship.savedVehicleVolume)
-        end
-        ZSpaceship.wasInVacuum = false
-    end
+    ZSpaceship.updateVacuumSounds(inVacuum)
 end
 
 Events.OnTick.Add(checkVacuum)

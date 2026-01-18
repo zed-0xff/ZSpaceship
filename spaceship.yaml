@@ -59,7 +59,7 @@ elements:
       B: [overlay_blood_wall_01_38, overlay_blood_wall_01_30, radio_tower_115, radio_tower_99, overlay_grime_wall_01_21, location_community_school_overlays_4, industry_02_180, industry_02_193]
       C: [radio_tower_115, overlay_grime_wall_01_21, location_community_school_overlays_5, overlay_blood_floor_01_24, overlay_blood_wall_01_55, industry_02_187, furniture_storage_02_28]
       D: [overlay_blood_floor_01_15, overlay_blood_wall_01_9, radio_tower_113, radio_tower_98, overlay_grime_wall_01_20, location_community_school_overlays_33, industry_02_181, industry_02_194]
-      E: [floors_exterior_tilesandstone_01_13, floors_burnt_01_1]
+      E: { teleporter: true, tiles: [floors_exterior_tilesandstone_01_13, floors_burnt_01_1] }
       F: [overlay_blood_floor_01_7, radio_tower_97]
       G: [overlay_blood_wall_01_27, radio_tower_113, overlay_grime_wall_01_20, location_community_school_overlays_32, overlay_blood_floor_01_0, industry_02_188, appliances_com_01_53]
       H: [overlay_blood_floor_01_1, radio_tower_96]
