@@ -2,26 +2,99 @@
 require "TimedActions/ISTimedActionQueue"
 
 function ZSpaceship.TeleportToRandom(player)
-    -- Teleport to random location in the county (2000-13000), avoiding water
+    -- Teleport to random location in the county (2000-13000), avoiding water and empty cells
     local x, y
     local maxAttempts = 100
+    local metaGrid = getWorld():getMetaGrid()
+    local found = false
+    
     for i = 1, maxAttempts do
-        x = ZombRand(2000, 13000)
-        y = ZombRand(2000, 13000)
-        local sq = getCell():getGridSquare(x, y, 0)
-        if sq and sq:getProperties() and not sq:getProperties():has(IsoFlagType.water) then
-            break
+        x = ZombRand(2000, 16000)
+        y = ZombRand(2000, 16000)
+        
+        -- Check if chunk has map data
+        local chunkX = math.floor(x / 10)
+        local chunkY = math.floor(y / 10)
+        if metaGrid:isValidChunk(chunkX, chunkY) then
+            -- Check for water zones at this location
+            local zones = metaGrid:getZonesAt(x, y, 0)
+            local isWater = false
+            if zones then
+                for j = 0, zones:size() - 1 do
+                    local zone = zones:get(j)
+                    local zoneType = zone:getType()
+                    if zoneType == "DeepWater" or zoneType == "Water" or zoneType == "River" or zoneType == "Lake" then
+                        isWater = true
+                        break
+                    end
+                end
+            end
+            if not isWater then
+                found = true
+                break
+            end
         end
     end
     
     ISTimedActionQueue.add(ISZSpaceshipTeleportAction:new(player, x + 0.5, y + 0.5, 0, "Energizing..."))
 end
 
+function ZSpaceship.TeleportToRandomBuilding(player)
+    -- Teleport to a random room in a random building (vanilla county area only)
+    local metaGrid = getWorld():getMetaGrid()
+    local buildings = metaGrid:getBuildings()
+    local buildingCount = buildings:size()
+    
+    -- Vanilla county bounds (avoid mod submaps like RV interiors)
+    local minX, maxX = 2000, 16000
+    local minY, maxY = 2000, 16000
+    
+    if buildingCount == 0 then
+        print("[ZSpaceship] No buildings found!")
+        return
+    end
+    
+    local x, y, z = 0, 0, 0
+    local maxAttempts = 100
+    
+    for i = 1, maxAttempts do
+        local building = buildings:get(ZombRand(buildingCount))
+        if building and building:getRooms() and building:getRooms():size() > 0 then
+            local bx, by = building:getX(), building:getY()
+            -- Only use buildings within vanilla county bounds
+            if bx >= minX and bx <= maxX and by >= minY and by <= maxY then
+                local room = building:getRandomRoom(6)
+                if room and room:getW() > 2 and room:getH() > 2 then
+                    -- Use center of room (corner might be at a wall)
+                    x = room:getX() + math.floor(room:getW() / 2) + 0.5
+                    y = room:getY() + math.floor(room:getH() / 2) + 0.5
+                    z = room:getZ()
+                    break
+                end
+            end
+        end
+    end
+    
+    if x == 0 and y == 0 then
+        print("[ZSpaceship] Failed to find a valid building after " .. maxAttempts .. " attempts!")
+        return
+    end
+    
+    ISTimedActionQueue.add(ISZSpaceshipTeleportAction:new(player, x, y, z, "Energizing...", 2.0, true))
+end
+
 function ZSpaceship.TeleportToShip(player)
     local x = ZSpaceship.TeleporterX + 0.5
     local y = ZSpaceship.TeleporterY + 0.5
     
-    ISTimedActionQueue.add(ISZSpaceshipTeleportAction:new(player, x, y, ZSpaceship.TeleporterZ, "Beam me up, Scotty!"))
+    -- Longer teleport time if inside a building
+    local timeMult = 1.0
+    local sq = player:getCurrentSquare()
+    if sq and sq:getBuilding() then
+        timeMult = 2.0
+    end
+    
+    ISTimedActionQueue.add(ISZSpaceshipTeleportAction:new(player, x, y, ZSpaceship.TeleporterZ, "Beam me up, Scotty!", timeMult))
 end
 
 -- Context Menu for Teleporter (World Object)
@@ -35,14 +108,15 @@ local function doWorldContextMenu(playerNum, context, worldobjects, test)
     local pz = math.floor(player:getZ())
     
     if px == ZSpaceship.TeleporterX and py == ZSpaceship.TeleporterY and pz == ZSpaceship.TeleporterZ then
-        context:addOption("Teleport to County", player, ZSpaceship.TeleportToRandom)
+        context:addOption(getText("UI_ZSpaceship_TeleportToCounty"), player, ZSpaceship.TeleportToRandom)
+        context:addOption(getText("UI_ZSpaceship_TeleportToBuilding"), player, ZSpaceship.TeleportToRandomBuilding)
     end
     
     -- Return to Spaceship option when NOT in space and has communicator
     if not ZSpaceship.isInSpace(px, py) then
         local communicator = player:getInventory():getItemFromType("ZSpaceship.Communicator")
         if communicator then
-            context:addOption("Return to Spaceship", player, ZSpaceship.TeleportToShip)
+            context:addOption(getText("UI_ZSpaceship_ReturnToSpaceship"), player, ZSpaceship.TeleportToShip)
         end
     end
 end
@@ -54,7 +128,7 @@ local function doInventoryContextMenu(playerNum, context, items)
     
     local communicator = inv:getItemFromType("ZSpaceship.Communicator")
     if communicator then
-        context:addOption("Return to Spaceship", player, ZSpaceship.TeleportToShip)
+        context:addOption(getText("UI_ZSpaceship_ReturnToSpaceship"), player, ZSpaceship.TeleportToShip)
     end
 end
 

@@ -4,4 +4,8 @@ UI_EN = {
     
     UI_ZSpaceship_NoOxygen = "No oxygen to start a fire!",
     UI_ZSpaceship_CantBreathe = "I can't breathe!",
+    
+    UI_ZSpaceship_TeleportToCounty = "Teleport to Surface",
+    UI_ZSpaceship_TeleportToBuilding = "Teleport into Building",
+    UI_ZSpaceship_ReturnToSpaceship = "Return to Spaceship",
 }
