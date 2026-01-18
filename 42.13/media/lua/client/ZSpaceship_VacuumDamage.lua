@@ -216,9 +216,11 @@ function ZSpaceship.isProtectedFromVacuum(creature)
     
     for i = 0, wornItems:size() - 1 do
         local item = wornItems:getItemByIndex(i)
-        if item and instanceof(item, "Clothing") then
+        -- Only check actual Clothing items that have hasTag method (not AlarmClockClothing, etc.)
+        if item and instanceof(item, "Clothing") and item.hasTag then
             -- Check for SCBA (Hazmat suit)
-            if item:hasTag("SCBA") then
+            local ok, hasScba = pcall(function() return item:hasTag("SCBA") end)
+            if ok and hasScba then
                 -- Players need oxygen in the tank
                 if item:isActivated() and item:hasTank() and item:getUsedDelta() > 0.0 then
                     return true

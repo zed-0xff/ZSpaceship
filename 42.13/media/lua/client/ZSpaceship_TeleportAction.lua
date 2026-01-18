@@ -3,9 +3,8 @@ require "TimedActions/ISBaseTimedAction"
 ISZSpaceshipTeleportAction = ISBaseTimedAction:derive("ISZSpaceshipTeleportAction")
 
 function ISZSpaceshipTeleportAction:isValid()
-    return true
-    --return self.character:getHealth() > 0 and 
-    --       self.character:getInventory():getItemFromType("ZSpaceship.Communicator") ~= nil
+    return self.character:getHealth() > 0 and 
+           self.character:getInventory():getItemFromType("ZSpaceship.Communicator") ~= nil
 end
 
 function ISZSpaceshipTeleportAction:start()
@@ -47,6 +46,9 @@ function ISZSpaceshipTeleportAction:new(character, targetX, targetY, targetZ, st
     o.targetY = targetY
     o.targetZ = targetZ
     o.maxTime = time or 100  -- default ~3 seconds
+    if character:isTimedActionInstant() then
+        o.maxTime = 1
+    end
     o.startMessage = startMessage
     o.stopOnWalk = true
     o.stopOnRun = true

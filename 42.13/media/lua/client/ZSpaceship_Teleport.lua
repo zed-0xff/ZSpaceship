@@ -2,11 +2,19 @@
 require "TimedActions/ISTimedActionQueue"
 
 function ZSpaceship.TeleportToRandom(player)
-    -- Teleport to random location in the county (2000-13000)
-    local x = ZombRand(2000, 13000) + 0.5
-    local y = ZombRand(2000, 13000) + 0.5
+    -- Teleport to random location in the county (2000-13000), avoiding water
+    local x, y
+    local maxAttempts = 100
+    for i = 1, maxAttempts do
+        x = ZombRand(2000, 13000)
+        y = ZombRand(2000, 13000)
+        local sq = getCell():getGridSquare(x, y, 0)
+        if sq and sq:getProperties() and not sq:getProperties():has(IsoFlagType.water) then
+            break
+        end
+    end
     
-    ISTimedActionQueue.add(ISZSpaceshipTeleportAction:new(player, x, y, 0, "Energizing..."))
+    ISTimedActionQueue.add(ISZSpaceshipTeleportAction:new(player, x + 0.5, y + 0.5, 0, "Energizing..."))
 end
 
 function ZSpaceship.TeleportToShip(player)
@@ -28,6 +36,14 @@ local function doWorldContextMenu(playerNum, context, worldobjects, test)
     
     if px == ZSpaceship.TeleporterX and py == ZSpaceship.TeleporterY and pz == ZSpaceship.TeleporterZ then
         context:addOption("Teleport to County", player, ZSpaceship.TeleportToRandom)
+    end
+    
+    -- Return to Spaceship option when NOT in space and has communicator
+    if not ZSpaceship.isInSpace(px, py) then
+        local communicator = player:getInventory():getItemFromType("ZSpaceship.Communicator")
+        if communicator then
+            context:addOption("Return to Spaceship", player, ZSpaceship.TeleportToShip)
+        end
     end
 end
 
