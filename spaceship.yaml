@@ -1,6 +1,23 @@
 id: "Spaceship Z-001"
 origin: [78, 78]
 default_floor: floors_exterior_street_01_18
+default_palette:
+  walls:
+    "┌": { tile: location_community_medical_01_170, x: +1, y: +1, replaces: [location_community_medical_01_168, location_community_medical_01_169] }
+    "─": { y: +1, tiles: [location_community_medical_01_169] }
+    "═": { y: +1, tiles: [location_community_medical_01_169, lighting_indoor_02_45] }
+    "┓": null
+    "┃": walls_garage_02_16
+    "┛": walls_garage_02_19
+    "━": walls_garage_02_17
+    "┗": null
+    "│": { x: +1, tiles: [location_community_medical_01_168] }
+    "║": { x: +1, tiles: [location_community_medical_01_168, lighting_indoor_02_44] }
+  doors:
+    "^": { y: +1, tiles: [walls_garage_01_52, lighting_indoor_02_45] }
+    ">": [walls_garage_01_49, industry_trucks_01_16, industry_trucks_01_18]
+    "v": [walls_garage_01_52, industry_trucks_01_19, industry_trucks_01_17]
+    "<": { x: +1, tiles: [walls_garage_01_49, lighting_indoor_02_44] }
 
 metapalette:
   C: cockpit
@@ -12,56 +29,27 @@ metapalette:
 metamap: |
   e
   SCS
-   X
+   XX
    T
 
 elements:
   cockpit:
     floor: floors_interior_tilesandwood_01_28
     roof:  floors_exterior_street_01_0
-    palette:
-      walls:
-        "┌": { tile: location_community_medical_01_170, x: +1, y: +1, replaces: [location_community_medical_01_168, location_community_medical_01_169] }
-        "─": { y: +1, tiles: [location_community_medical_01_169] }
-        "═": { y: +1, tiles: [location_community_medical_01_169, lighting_indoor_02_45] }
-        "┓": null
-        "┃": walls_garage_02_16
-        "┛": walls_garage_02_19
-        "━": walls_garage_02_17
-        "┗": null
-        "│": { x: +1, tiles: [location_community_medical_01_168] }
-        "║": { x: +1, tiles: [location_community_medical_01_168, lighting_indoor_02_44] }
-      doors:
-        "/": [walls_garage_01_52, industry_trucks_01_19, industry_trucks_01_17]
     map: |
       ┌─═─┓
       │   ┃
       ║   ┃
       │   ┃
-      ┗━/━┛
+      ┗━v━┛
 
   crossroads:
     floor: floors_interior_tilesandwood_01_28
     roof:  floors_exterior_street_01_0
-    palette:
-      walls:
-        "┌": { tile: location_community_medical_01_170, x: +1, y: +1, replaces: [location_community_medical_01_168, location_community_medical_01_169] }
-        "─": { y: +1, tiles: [location_community_medical_01_169] }
-        "┓": null
-        "┃": walls_garage_02_16
-        "┛": walls_garage_02_19
-        "━": walls_garage_02_17
-        "┗": null
-        "│": { x: +1, tiles: [location_community_medical_01_168] }
-      doors:
-        "^": { y: +1, tiles: [walls_garage_01_52, lighting_indoor_02_45] }
-        ">": [walls_garage_01_49, industry_trucks_01_16, industry_trucks_01_18]
-        "v": [walls_garage_01_52, industry_trucks_01_19, industry_trucks_01_17]
-        "<": { x: +1, tiles: [walls_garage_01_49, lighting_indoor_02_44] }
     map: |
       ┌─^─┓
       │   ┃
-      <   > 
+      <   >
       │   ┃
       ┗━v━┛
 
@@ -81,7 +69,7 @@ elements:
         "│": { x: +1, tiles: [industry_railroad_05_24] }
         "║": { x: +1, tiles: [industry_railroad_05_24, lighting_indoor_02_44] }
       doors:
-        "/": [walls_garage_01_52, industry_trucks_01_19, industry_trucks_01_17]
+        "v": [walls_garage_01_52, industry_trucks_01_19, industry_trucks_01_17]
       A: [overlay_blood_floor_01_26, overlay_blood_wall_01_3, overlay_blood_wall_01_7, radio_tower_113, radio_tower_115, radio_tower_103, overlay_grime_wall_01_22, overlay_grime_wall_01_20, location_community_school_overlays_34, location_community_school_overlays_3, industry_02_195]
       B: [overlay_blood_wall_01_38, overlay_blood_wall_01_30, radio_tower_115, radio_tower_99, overlay_grime_wall_01_21, location_community_school_overlays_4, industry_02_180, industry_02_193]
       C: [radio_tower_115, overlay_grime_wall_01_21, location_community_school_overlays_5, overlay_blood_floor_01_24, overlay_blood_wall_01_55, industry_02_187, furniture_storage_02_28]
@@ -96,7 +84,7 @@ elements:
       │ABC┃
       ║DEF┃
       │GHI┃
-      ┗━/━┛
+      ┗━v━┛
 
   solar_panel:
     palette:

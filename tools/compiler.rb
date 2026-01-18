@@ -20,6 +20,8 @@ class MapCompiler
     @elements = @config['elements'] || {}
     @metapalette = @config['metapalette'] || {}
     @metamap = @config['metamap'] || ""
+    @metamap_gap = @config['metamap_gap'] || 1  # Gap between elements in metamap
+    @default_palette = @config['default_palette'] || {}
     
     # Pre-calculate maxLevel based on elements with roof
     max_level = 0
@@ -129,6 +131,19 @@ class MapCompiler
 
   private
   
+  # Deep merge two hashes (right overrides left)
+  def deep_merge(left, right)
+    result = left.dup
+    right.each do |key, right_val|
+      if result.key?(key) && result[key].is_a?(Hash) && right_val.is_a?(Hash)
+        result[key] = deep_merge(result[key], right_val)
+      else
+        result[key] = right_val
+      end
+    end
+    result
+  end
+  
   # Convert local offsets to world coords (no transpose)
   def to_world(local_x, local_y)
     abs_x = @cell_x * 256 + local_x
@@ -170,12 +185,12 @@ class MapCompiler
     end
     
     col_offsets = [0]
-    col_widths.each { |w| col_offsets << col_offsets.last + w }
+    col_widths.each_with_index { |w, i| col_offsets << col_offsets.last + w + (i < col_widths.length - 1 ? @metamap_gap : 0) }
     
     row_offsets = [0]
-    row_heights.each { |h| row_offsets << row_offsets.last + h }
+    row_heights.each_with_index { |h, i| row_offsets << row_offsets.last + h + (i < row_heights.length - 1 ? @metamap_gap : 0) }
     
-    # Calculate total size and center offset
+    # Calculate total size and center offset (subtract extra gap added at end)
     total_width = col_offsets.last
     total_height = row_offsets.last
     center_offset_x = (256 - total_width) / 2
@@ -200,7 +215,8 @@ class MapCompiler
     element = @elements[element_name]
     return unless element
     
-    raw_palette = element['palette'] || {}
+    # Merge default_palette with element's palette (element overrides default)
+    raw_palette = deep_merge(@default_palette, element['palette'] || {})
     palette, boundary_chars, door_chars = flatten_palette(raw_palette)
     map_str = element['map'] || ""
     z = 0
