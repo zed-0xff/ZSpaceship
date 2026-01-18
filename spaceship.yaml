@@ -14,10 +14,10 @@ default_palette:
     "│": { x: +1, tiles: [location_community_medical_01_168] }
     "║": { x: +1, tiles: [location_community_medical_01_168, lighting_indoor_02_44] }
   doors:
-    "^": { y: +1, tiles: [walls_garage_01_52, lighting_indoor_02_45] }
-    ">": [walls_garage_01_49, industry_trucks_01_16, industry_trucks_01_18]
-    "v": [walls_garage_01_52, industry_trucks_01_19, industry_trucks_01_17]
-    "<": { x: +1, tiles: [walls_garage_01_49, lighting_indoor_02_44] }
+    "^": { y: +1, tiles: [walls_garage_02_52, lighting_indoor_02_45] }               # north
+    "v": { tiles: [walls_garage_02_52, industry_trucks_01_19, industry_trucks_01_17] } # south (default)
+    "<": { x: +1, tiles: [walls_garage_02_49, lighting_indoor_02_44] }               # west
+    ">": { facing: east, tiles: [walls_garage_02_49, industry_trucks_01_16, industry_trucks_01_18] }
 
 metapalette:
   C: cockpit
@@ -26,11 +26,20 @@ metapalette:
   X: crossroads
   e: earth
 
+metamap_gap: -1
 metamap: |
   e
   SCS
    XX
    T
+
+auto_corridors:
+  floor: floors_interior_tilesandwood_01_28
+  roof:  floors_exterior_street_01_0
+  north_wall: [location_community_medical_01_169]
+  south_wall: [walls_garage_02_17]
+  west_wall:  [walls_garage_02_16]
+  east_wall:  [location_community_medical_01_168]
 
 elements:
   cockpit:
@@ -68,8 +77,6 @@ elements:
         "┗": null
         "│": { x: +1, tiles: [industry_railroad_05_24] }
         "║": { x: +1, tiles: [industry_railroad_05_24, lighting_indoor_02_44] }
-      doors:
-        "v": [walls_garage_01_52, industry_trucks_01_19, industry_trucks_01_17]
       A: [overlay_blood_floor_01_26, overlay_blood_wall_01_3, overlay_blood_wall_01_7, radio_tower_113, radio_tower_115, radio_tower_103, overlay_grime_wall_01_22, overlay_grime_wall_01_20, location_community_school_overlays_34, location_community_school_overlays_3, industry_02_195]
       B: [overlay_blood_wall_01_38, overlay_blood_wall_01_30, radio_tower_115, radio_tower_99, overlay_grime_wall_01_21, location_community_school_overlays_4, industry_02_180, industry_02_193]
       C: [radio_tower_115, overlay_grime_wall_01_21, location_community_school_overlays_5, overlay_blood_floor_01_24, overlay_blood_wall_01_55, industry_02_187, furniture_storage_02_28]

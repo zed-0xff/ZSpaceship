@@ -20,7 +20,7 @@ class MapCompiler
     @elements = @config['elements'] || {}
     @metapalette = @config['metapalette'] || {}
     @metamap = @config['metamap'] || ""
-    @metamap_gap = @config['metamap_gap'] || 1  # Gap between elements in metamap
+    @metamap_gap = @config['metamap_gap'] || 0 # Gap between elements (-1 = share walls)
     @default_palette = @config['default_palette'] || {}
     
     # Pre-calculate maxLevel based on elements with roof
@@ -60,6 +60,11 @@ class MapCompiler
     
     # Collect door sprites (first entry from each door definition)
     @door_sprites = Set.new
+    
+    # Auto corridors config and tracking
+    @auto_corridors = @config['auto_corridors'] || {}
+    @placed_doors = []  # Track door positions for auto-corridor generation
+    @corridor_count = 0  # Counter for corridor instance IDs
   end
 
   def compile(out_dir)
@@ -71,6 +76,9 @@ class MapCompiler
     placements.each do |placement|
       process_element_placement(placement)
     end
+    
+    # Generate auto corridors between adjacent doors
+    process_auto_corridors if @auto_corridors['floor']
     
     set_default_floors_for_cell
 
@@ -196,9 +204,13 @@ class MapCompiler
     center_offset_x = (256 - total_width) / 2
     center_offset_y = (256 - total_height) / 2
     
+    # Track instance numbers for each element type
+    instance_counts = Hash.new(0)
     placements = element_refs.map do |ref|
+      instance_counts[ref[:element_name]] += 1
       {
         element_name: ref[:element_name],
+        instance_id: instance_counts[ref[:element_name]],
         local_x: col_offsets[ref[:meta_x]] + center_offset_x,
         local_y: row_offsets[ref[:meta_y]] + center_offset_y
       }
@@ -209,15 +221,18 @@ class MapCompiler
   
   def process_element_placement(placement)
     element_name = placement[:element_name]
+    instance_id = placement[:instance_id] || 1
+    element_instance = "#{element_name}##{instance_id}"  # Unique identifier for each placement
     base_local_x = placement[:local_x]
     base_local_y = placement[:local_y]
     
-    element = @elements[element_name]
+    # Support inline element definition (for auto-corridors) or lookup by name
+    element = placement[:element] || @elements[element_name]
     return unless element
     
     # Merge default_palette with element's palette (element overrides default)
     raw_palette = deep_merge(@default_palette, element['palette'] || {})
-    palette, boundary_chars, door_chars = flatten_palette(raw_palette)
+    palette, boundary_chars, door_chars, door_facings = flatten_palette(raw_palette)
     map_str = element['map'] || ""
     z = 0
     
@@ -231,12 +246,16 @@ class MapCompiler
     # Detect interior cells (enclosed by walls/doors) using flood-fill
     interior_cells = detect_interior_cells(lines, boundary_chars) if room_floor || room_roof
     
-    # Collect door positions for room metadata
+    # Collect door positions for room metadata and auto-corridors
     door_positions = []
     lines.each_with_index do |line, ly|
       line.chars.each_with_index do |char, lx|
         if door_chars.include?(char)
           door_positions << { lx: lx, ly: ly, char: char }
+          # Track for auto-corridors: get facing from palette definition
+          abs_x, abs_y = to_world(base_local_x + lx, base_local_y + ly)
+          facing = door_facings[char] || :unknown
+          @placed_doors << { x: abs_x, y: abs_y, z: 0, facing: facing, char: char, element: element_instance }
         end
       end
     end
@@ -296,6 +315,95 @@ class MapCompiler
       end
     end
   end
+  
+  # Process auto corridors between adjacent doors
+  def process_auto_corridors
+    return unless @auto_corridors['floor']
+    
+    puts "[AutoCorridor] #{@placed_doors.length} doors"
+    @placed_doors.each { |d| puts "  #{d[:x]},#{d[:y]} #{d[:facing]} (#{d[:element]})" }
+    
+    placed = Set.new
+    max_gap = 2
+    
+    @placed_doors.each do |d1|
+      @placed_doors.each do |d2|
+        next if d1 == d2 || d1[:z] != d2[:z] || d1[:element] == d2[:element]
+        
+        gap_x, gap_y = d2[:x] - d1[:x], d2[:y] - d1[:y]
+        facings = [d1[:facing], d2[:facing]].sort
+        
+        # Horizontal corridor: east meets west
+        if gap_y == 0 && gap_x.abs <= max_gap && facings == [:east, :west]
+          ([d1[:x], d2[:x]].min..[d1[:x], d2[:x]].max).each do |x|
+            if placed.add?([x, d1[:y], d1[:z]])
+              puts "  Corridor H at #{x},#{d1[:y]}"
+              place_corridor(x, d1[:y], d1[:z], :horizontal)
+            end
+          end
+        end
+        
+        # Vertical corridor: south meets north
+        if gap_x == 0 && gap_y.abs <= max_gap && facings == [:north, :south]
+          ([d1[:y], d2[:y]].min..[d1[:y], d2[:y]].max).each do |y|
+            if placed.add?([d1[:x], y, d1[:z]])
+              puts "  Corridor V at #{d1[:x]},#{y}"
+              place_corridor(d1[:x], y, d1[:z], :vertical)
+            end
+          end
+        end
+      end
+    end
+  end
+  
+  def place_corridor(abs_x, abs_y, z, direction)
+    config = @auto_corridors
+    
+    # Place floor
+    if config['floor']
+      set_square_tiles(abs_x, abs_y, z, [config['floor']])
+      @defined_squares[[abs_x, abs_y, z]] = true
+    end
+    
+    # Place roof
+    if config['roof']
+      set_square_tiles(abs_x, abs_y, z + 1, [config['roof']])
+      @defined_squares[[abs_x, abs_y, z + 1]] = true
+      @header.maxLevel = [(@header.maxLevel || 0), z + 1].max
+    end
+    
+    # Wall offsets: [x_offset, y_offset] - where to place the wall tiles
+    wall_offsets = {
+      'north_wall' => [0, 1],   # north edge (y+1)
+      'south_wall' => [0, 0],   # south edge (no offset)
+      'west_wall'  => [0, 0],   # west edge (no offset)
+      'east_wall'  => [1, 0]    # east edge (x+1)
+    }
+    
+    # Only place relevant walls based on corridor direction
+    walls_to_place = direction == :horizontal ? ['north_wall', 'south_wall'] : ['west_wall', 'east_wall']
+    
+    walls_to_place.each do |wall_key|
+      tiles = config[wall_key]
+      next unless tiles
+      
+      tiles = [tiles] unless tiles.is_a?(Array)
+      tiles = tiles.select { |t| t.is_a?(String) && !t.empty? }
+      next if tiles.empty?
+      
+      ox, oy = wall_offsets[wall_key]
+      wall_x, wall_y = abs_x + ox, abs_y + oy
+      set_square_tiles(wall_x, wall_y, z, tiles)
+    end
+  end
+  
+  # Convert world coordinates back to local (inverse of to_world)
+  def from_world(abs_x, abs_y)
+    local_x = abs_x - @cell_x * 256
+    local_y = abs_y - @cell_y * 256
+    [local_x, local_y]
+  end
+  
   
   # Create a room definition from interior cells
   def create_room(name, interior_cells, base_local_x, base_local_y, z, door_positions = [], lines = [])
@@ -381,6 +489,11 @@ class MapCompiler
     width = lines.map { |l| l.length }.max || 0
     return Set.new if width == 0
     
+    # Trivially small maps (1x1) - treat all cells as interior (for corridors)
+    if width == 1 && height == 1
+      return Set.new([[0, 0]])
+    end
+    
     # Pad grid by 1 on each side to allow flood-fill from outside
     padded_width = width + 2
     padded_height = height + 2
@@ -430,6 +543,7 @@ class MapCompiler
     flat = {}
     boundary_chars = Set.new
     door_chars = Set.new
+    door_facings = {}  # char -> facing direction
     
     palette.each do |key, value|
       if value.is_a?(Hash) && !value.key?('tile') && !value.key?('tiles')
@@ -441,9 +555,15 @@ class MapCompiler
           boundary_chars.add(k) if is_boundary
           if is_door
             door_chars.add(k)
+            # Determine facing from definition
+            door_facings[k] = infer_door_facing(k, v)
             # Collect first sprite from door definition
             if v.is_a?(Array) && v.first.is_a?(String)
               @door_sprites.add(v.first)
+            elsif v.is_a?(Hash) && v['tiles'].is_a?(Array) && v['tiles'].first.is_a?(String)
+              @door_sprites.add(v['tiles'].first)
+            elsif v.is_a?(Hash) && v['tile'].is_a?(String)
+              @door_sprites.add(v['tile'])
             end
           end
         end
@@ -452,7 +572,28 @@ class MapCompiler
         flat[key] = value
       end
     end
-    [flat, boundary_chars, door_chars]
+    [flat, boundary_chars, door_chars, door_facings]
+  end
+  
+  # Infer door facing from its definition
+  def infer_door_facing(char, definition)
+    # 1. Explicit facing property
+    if definition.is_a?(Hash) && definition['facing']
+      return definition['facing'].to_sym
+    end
+    
+    # 2. Infer from offset: y+1 = north, x+1 = west, no offset = south/east
+    if definition.is_a?(Hash)
+      y_offset = definition['y'] || 0
+      x_offset = definition['x'] || 0
+      return :north if y_offset > 0
+      return :west if x_offset > 0
+      # No offset means south (horizontal) or east (vertical) wall
+      return :south if y_offset == 0 && x_offset == 0
+    end
+    
+    # Array form without offset = south/east wall (default position)
+    :south
   end
   
   def process_offset_tile(val, local_x, local_y, z)
