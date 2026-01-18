@@ -353,7 +353,7 @@ class MapCompiler
     door_chars = Set.new
     
     palette.each do |key, value|
-      if value.is_a?(Hash) && !value.key?('tile')
+      if value.is_a?(Hash) && !value.key?('tile') && !value.key?('tiles')
         # It's a category (like 'walls', 'doors'), flatten its contents
         is_boundary = %w[walls doors].include?(key)
         is_door = key == 'doors'
@@ -363,9 +363,8 @@ class MapCompiler
           door_chars.add(k) if is_door
         end
       else
-        # Direct char -> tile mapping (treat as boundary by default)
+        # Direct char -> tile mapping - NOT a boundary (only walls/doors categories are)
         flat[key] = value
-        boundary_chars.add(key)
       end
     end
     [flat, boundary_chars, door_chars]
