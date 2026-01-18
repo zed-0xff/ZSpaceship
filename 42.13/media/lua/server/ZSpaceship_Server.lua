@@ -37,6 +37,32 @@ end
 -- Register for garage door sprites (walls_garage_01_52 is what we use)
 MapObjects.OnNewWithSprite("walls_garage_01_52", unlockDoor, 10)
 
+-- Add communicators to the teleport room container
+local function fillTeleportContainer(obj)
+    if not obj.getSquare then return end
+    
+    local sq = obj:getSquare()
+    if not sq then return end
+    
+    -- Check if in a teleport room
+    local room = sq:getRoom()
+    if not room or not string.find(room:getName(), "teleport") then return end
+    
+    local container = obj:getContainer()
+    if not container then return end
+    
+    -- Only fill if empty (avoid duplicates on reload)
+    if container:getItems():size() >= 5 then return end
+    
+    -- Add 5 space communicators
+    for i = 1, 5 do
+        container:AddItem("ZSpaceship.Communicator")
+    end
+end
+
+-- furniture_storage_02_28 is the chest in teleport room (has container:locker)
+MapObjects.OnNewWithSprite("furniture_storage_02_28", fillTeleportContainer, 10)
+
 -- Hook campfire lightFire to prevent lighting in vacuum
 Events.OnGameStart.Add(function()
     if not SCampfireGlobalObject then return end
