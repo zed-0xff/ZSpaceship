@@ -71,7 +71,8 @@ def process_tdef_file(fname)
         end
 
         if true # props.any?
-          printf "%sTile %3d: ", indent, tile_idx
+          name2 = "%s_%d" % [name, tile_idx]
+          printf "%-24s: ", name2
           puts props.map{ |k,v| v == "" ? k : "#{k}:#{v}" }.join(", ")
         end
       end

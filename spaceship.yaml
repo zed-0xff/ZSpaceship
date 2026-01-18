@@ -6,11 +6,13 @@ metapalette:
   C: cockpit
   T: teleport_room
   S: solar_panel
+  X: crossroads
   e: earth
 
 metamap: |
   e
   SCS
+   X
    T
 
 elements:
@@ -37,6 +39,31 @@ elements:
       ║   ┃
       │   ┃
       ┗━/━┛
+
+  crossroads:
+    floor: floors_interior_tilesandwood_01_28
+    roof:  floors_exterior_street_01_0
+    palette:
+      walls:
+        "┌": { tile: location_community_medical_01_170, x: +1, y: +1, replaces: [location_community_medical_01_168, location_community_medical_01_169] }
+        "─": { y: +1, tiles: [location_community_medical_01_169] }
+        "┓": null
+        "┃": walls_garage_02_16
+        "┛": walls_garage_02_19
+        "━": walls_garage_02_17
+        "┗": null
+        "│": { x: +1, tiles: [location_community_medical_01_168] }
+      doors:
+        "^": { y: +1, tiles: [walls_garage_01_52, lighting_indoor_02_45] }
+        ">": [walls_garage_01_49, industry_trucks_01_16, industry_trucks_01_18]
+        "v": [walls_garage_01_52, industry_trucks_01_19, industry_trucks_01_17]
+        "<": { x: +1, tiles: [walls_garage_01_49, lighting_indoor_02_44] }
+    map: |
+      ┌─^─┓
+      │   ┃
+      <   > 
+      │   ┃
+      ┗━v━┛
 
   teleport_room:
     floor: industry_01_39

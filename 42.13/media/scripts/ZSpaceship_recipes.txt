@@ -1,0 +1,47 @@
+module ZSpaceship
+{
+    imports
+    {
+        Base
+    }
+
+    entity PowerStorageUnit
+    {
+        component UiConfig
+        {
+            xuiSkin = default,
+            uiEnabled = true,
+        }
+        component SpriteConfig
+        {
+            isThumpable = true,
+            OnCreate = ZSpaceship.PSU_OnCreate,
+            face SINGLE
+            {
+                layer
+                {
+                    row = industry_02_175,
+                }
+            }
+        }
+        component CraftRecipe
+        {
+            timedAction = BuildMetalStructureMedium,
+            time = 300,
+            category = Electrical,
+            needToBeLearn = true,
+            SkillRequired = Electricity:3,
+            xpAward = Electricity:50,
+            Tooltip = Tooltip_PowerStorage,
+            inputs
+            {
+                item 1 tags[base:screwdriver] mode:keep flags[Prop1;MayDegradeLight],
+                item 1 tags[base:wrench] mode:keep flags[MayDegradeLight],
+                item 4 [Base.SheetMetal],
+                item 5 [Base.ElectronicsScrap],
+                item 10 [Base.ElectricWire],
+                item 10 [Base.CarBattery1;Base.CarBattery2;Base.CarBattery3] flags[ItemCount],
+            }
+        }
+    }
+}

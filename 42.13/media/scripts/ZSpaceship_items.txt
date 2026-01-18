@@ -35,35 +35,11 @@ module ZSpaceship
         CanBeExtra = true,
     }
 
-    item Spaceship_Battery
-    {
-        ItemType = Normal,
-        DisplayName = Spaceship Battery,
-        Icon = SpaceshipBattery,
-        Weight = 10.0,
-    }
-
-    item Spaceship_Battery_Broken
-    {
-        ItemType = Normal,
-        DisplayName = Broken Spaceship Battery,
-        Icon = SpaceshipBatteryBroken,
-        Weight = 10.0,
-    }
-
     item Spaceship_SolarPanel
     {
         ItemType = Normal,
         DisplayName = Spaceship Solar Panel,
         Icon = SpaceshipSolarPanel,
-        Weight = 15.0,
-    }
-
-    item Spaceship_SolarPanel_Broken
-    {
-        ItemType = Normal,
-        DisplayName = Broken Spaceship Solar Panel,
-        Icon = SpaceshipSolarPanelBroken,
         Weight = 15.0,
     }
 
@@ -76,15 +52,27 @@ module ZSpaceship
         Tooltip = Tooltip_Communicator,
     }
 
-    item Teleporter
+    item PowerStorageUnit
     {
         ItemType = Moveable,
-        DisplayName = Spaceship Teleporter,
-        Icon = Teleporter,
+        DisplayName = Power Storage Unit,
+        Icon = Generator,
         Weight = 50.0,
-        Tooltip = Tooltip_Teleporter,
+        Tooltip = Tooltip_PowerStorage,
         CanBePlastered = false,
         IsMoveable = true,
-        WorldSprite = location_spaceship_01_0, -- Placeholder sprite
+        WorldSprite = industry_02_175,
+    }
+
+    item PowerCell_Schematic
+    {
+        ItemType = Literature,
+        DisplayName = Power Systems Manual,
+        Icon = Magazine_Gaming,
+        Weight = 0.3,
+        BoredomChange = -15,
+        StressChange = -10,
+        Tooltip = Tooltip_PowerCell_Schematic,
+        TeachRecipes = Craft Power Storage Unit,
     }
 }

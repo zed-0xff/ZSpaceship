@@ -55,6 +55,9 @@ class MapCompiler
     
     # Track special locations (teleporter, spawn points, etc.)
     @teleporter_coords = nil
+    
+    # Collect door sprites (first entry from each door definition)
+    @door_sprites = Set.new
   end
 
   def compile(out_dir)
@@ -106,6 +109,17 @@ class MapCompiler
         ZSpaceship.MapData.TeleporterX = #{@teleporter_coords[:x]}
         ZSpaceship.MapData.TeleporterY = #{@teleporter_coords[:y]}
         ZSpaceship.MapData.TeleporterZ = #{@teleporter_coords[:z]}
+      LUA
+    end
+    
+    if !@door_sprites.empty?
+      sprites_lua = @door_sprites.to_a.map { |s| "  [\"#{s}\"] = true" }.join(",\n")
+      lua_content += <<~LUA
+        
+        -- Door sprites (first entry from each door definition in YAML)
+        ZSpaceship.MapData.DoorSprites = {
+        #{sprites_lua}
+        }
       LUA
     end
     
@@ -409,7 +423,13 @@ class MapCompiler
         value.each do |k, v|
           flat[k] = v
           boundary_chars.add(k) if is_boundary
-          door_chars.add(k) if is_door
+          if is_door
+            door_chars.add(k)
+            # Collect first sprite from door definition
+            if v.is_a?(Array) && v.first.is_a?(String)
+              @door_sprites.add(v.first)
+            end
+          end
         end
       else
         # Direct char -> tile mapping - NOT a boundary (only walls/doors categories are)

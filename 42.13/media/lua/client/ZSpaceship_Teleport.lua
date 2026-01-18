@@ -163,12 +163,26 @@ end
 -- Context Menu for Communicator (Inventory Item)
 local function doInventoryContextMenu(playerNum, context, items)
     local player = getSpecificPlayer(playerNum)
-    local inv = player:getInventory()
     
-    local communicator = inv:getItemFromType("ZSpaceship.Communicator")
-    if communicator then
-        local costReturn = ZSpaceship.getTeleportCost(player, false)
-        context:addOption(getText("UI_ZSpaceship_ReturnToSpaceship") .. " (" .. costReturn .. " MJ)", player, ZSpaceship.TeleportToShip)
+    -- Check if right-clicked item is the Communicator
+    local clickedCommunicator = false
+    for i = 1, #items do
+        local item = items[i]
+        if not instanceof(item, "InventoryItem") then
+            item = item.items[1]
+        end
+        if item and item:getFullType() == "ZSpaceship.Communicator" then
+            clickedCommunicator = true
+            break
+        end
+    end
+    
+    if clickedCommunicator then
+        local px, py = math.floor(player:getX()), math.floor(player:getY())
+        if not ZSpaceship.isInSpace(px, py) then
+            local costReturn = ZSpaceship.getTeleportCost(player, false)
+            context:addOption(getText("UI_ZSpaceship_ReturnToSpaceship") .. " (" .. costReturn .. " MJ)", player, ZSpaceship.TeleportToShip)
+        end
     end
 end
 

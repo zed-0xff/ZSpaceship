@@ -10,5 +10,11 @@ ZSpaceship.MapData.CellY = 78
 
 -- Teleporter location (center of teleport room)
 ZSpaceship.MapData.TeleporterX = 20095
-ZSpaceship.MapData.TeleporterY = 20100
+ZSpaceship.MapData.TeleporterY = 20103
 ZSpaceship.MapData.TeleporterZ = 0
+
+-- Door sprites (first entry from each door definition in YAML)
+ZSpaceship.MapData.DoorSprites = {
+  ["walls_garage_01_52"] = true,
+  ["walls_garage_01_49"] = true
+}
