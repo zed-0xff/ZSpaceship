@@ -255,7 +255,7 @@ class MapCompiler
     # Merge defaults palette with element's palette (element overrides default)
     # Note: For named elements, defaults are already merged, but inline elements (corridors) need this
     raw_palette = deep_merge(@defaults['palette'] || {}, element['palette'] || {})
-    palette, boundary_chars, door_chars, door_facings = flatten_palette(raw_palette)
+    palette, boundary_chars, door_chars, door_facings, door_offsets = flatten_palette(raw_palette)
     map_str = element['map'] || ""
     z = 0
     
@@ -276,7 +276,7 @@ class MapCompiler
       line.chars.each_with_index do |char, lx|
         if door_chars.include?(char)
           door_positions << { lx: lx, ly: ly, char: char }
-          # Track for auto-corridors: get facing from palette definition
+          # Track for auto-corridors at character position (not sprite position)
           abs_x, abs_y = to_world(base_local_x + lx, base_local_y + ly)
           facing = door_facings[char] || :unknown
           @placed_doors << { x: abs_x, y: abs_y, z: 0, facing: facing, char: char, element: element_instance }
@@ -568,6 +568,7 @@ class MapCompiler
     boundary_chars = Set.new
     door_chars = Set.new
     door_facings = {}  # char -> facing direction
+    door_offsets = {}  # char -> [x_offset, y_offset]
     
     palette.each do |key, value|
       if value.is_a?(Hash) && !value.key?('tile') && !value.key?('tiles')
@@ -581,6 +582,12 @@ class MapCompiler
             door_chars.add(k)
             # Determine facing from definition
             door_facings[k] = infer_door_facing(k, v)
+            # Track offset for corridor matching
+            if v.is_a?(Hash)
+              door_offsets[k] = [v['x'] || 0, v['y'] || 0]
+            else
+              door_offsets[k] = [0, 0]
+            end
             # Collect first sprite from door definition
             if v.is_a?(Array) && v.first.is_a?(String)
               @door_sprites.add(v.first)
@@ -596,7 +603,7 @@ class MapCompiler
         flat[key] = value
       end
     end
-    [flat, boundary_chars, door_chars, door_facings]
+    [flat, boundary_chars, door_chars, door_facings, door_offsets]
   end
   
   # Infer door facing from its definition

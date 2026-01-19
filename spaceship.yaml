@@ -65,19 +65,19 @@ elements:
 
   bathroom:
     palette:
-      R: [recreational_sports_01_36, fixtures_bathroom_01_34]
-      r: recreational_sports_01_37
       B: [recreational_sports_01_42, fixtures_bathroom_02_20]
+      R: [recreational_sports_01_36, fixtures_bathroom_01_34]
+      w: [fixtures_bathroom_02_19, fixtures_bathroom_02_31]
+      r: recreational_sports_01_37
       b: recreational_sports_01_43
       S: fixtures_bathroom_01_33
       s: furniture_storage_02_4
       W: [fixtures_bathroom_02_4, fixtures_bathroom_01_28]
-      w: [fixtures_bathroom_02_31, fixtures_bathroom_02_19]
       "`": fixtures_bathroom_02_23
     map: |
       ┌─═─┓
       │WBb┃
-      ║w` > 
+      ║w` >
       │SRr┃
       ┗━━━┛
 
