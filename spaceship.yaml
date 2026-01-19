@@ -8,13 +8,14 @@ metapalette:
   E: energy_storage
   H: hall
   s: solar_panel
+  B: bathroom
   T: teleport_room
   X: crossroads
 
 metamap_gap: -1
 metamap: |
   _C
-  THX
+  BHX
   T^X
    E
 
@@ -50,12 +51,35 @@ elements:
         ">": { tiles: [walls_garage_02_49, industry_trucks_01_16, industry_trucks_01_18], facing: east }
 
   cockpit:
+    palette:
+      a: [security_01_4, security_01_0]
+      A: [security_01_4, appliances_com_01_52]
+      c: location_community_medical_01_173
+      C: location_community_medical_01_172
     map: |
       ┌─═─┓
-      │   ┃
-      ║   ┃
-      │   ┃
+      │AaA┃
+      ║c c┃
+      │C C┃
       ┗━v━┛
+
+  bathroom:
+    palette:
+      R: [recreational_sports_01_36, fixtures_bathroom_01_34]
+      r: recreational_sports_01_37
+      B: [recreational_sports_01_42, fixtures_bathroom_02_20]
+      b: recreational_sports_01_43
+      S: fixtures_bathroom_01_33
+      s: furniture_storage_02_4
+      W: [fixtures_bathroom_02_4, fixtures_bathroom_01_28]
+      w: [fixtures_bathroom_02_31, fixtures_bathroom_02_19]
+      "`": fixtures_bathroom_02_23
+    map: |
+      ┌─═─┓
+      │WBb┃
+      ║w` > 
+      │SRr┃
+      ┗━━━┛
 
   crossroads:
     map: |
