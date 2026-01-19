@@ -10,7 +10,7 @@ ZSpaceship.MapData.CellY = 78
 
 -- Teleporter location (center of teleport room)
 ZSpaceship.MapData.TeleporterX = 20091
-ZSpaceship.MapData.TeleporterY = 20097
+ZSpaceship.MapData.TeleporterY = 20093
 ZSpaceship.MapData.TeleporterZ = 0
 
 -- Door sprites (first entry from each door definition in YAML)

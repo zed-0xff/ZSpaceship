@@ -3,20 +3,23 @@ origin: [78, 78]
 default_floor: floors_exterior_street_01_18
 
 metapalette:
+  B: bathroom
   C: cockpit
-  e: earth
   E: energy_storage
   H: hall
-  s: solar_panel
-  B: bathroom
+  L: library
   T: teleport_room
   X: crossroads
+  e: earth
+  s: solar_panel
 
 metamap_gap: -1
 metamap: |
   _C
   BHX
   T^X
+  LH
+   ^
    E
 
 auto_corridors:
@@ -80,6 +83,20 @@ elements:
       ║w` >
       │SRr┃
       ┗━━━┛
+
+  library:
+    palette:
+      c: carpentry_01_17
+      C: [carpentry_01_17, carpentry_01_18]
+      S: furniture_seating_indoor_03_123
+      T: [carpentry_01_17, appliances_television_01_0]
+    map: |
+      ┌─═─┓
+      │ccc┃
+      ║c  >
+      │T S┃
+      ┗━━━┛
+
 
   crossroads:
     map: |
