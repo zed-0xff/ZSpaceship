@@ -15,13 +15,18 @@ class MapCompiler
   def initialize(yaml_path)
     @config = YAML.safe_load(File.read(yaml_path, encoding: "utf-8"), permitted_classes: [Symbol])
     @cell_x, @cell_y = @config['origin']
-    @default_floor = @config['default_floor'] || "floors_exterior_street_01_17"
+    @default_floor = @config['default_floor']
     
     @elements = @config['elements'] || {}
     @metapalette = @config['metapalette'] || {}
     @metamap = @config['metamap'] || ""
     @metamap_gap = @config['metamap_gap'] || 0 # Gap between elements (-1 = share walls)
-    @default_palette = @config['default_palette'] || {}
+    
+    # Extract and merge defaults into all elements
+    @defaults = @elements.delete('defaults') || {}
+    @elements.each do |name, elem|
+      @elements[name] = deep_merge(@defaults.dup, elem)
+    end
     
     # Pre-calculate maxLevel based on elements with roof
     max_level = 0
@@ -179,41 +184,58 @@ class MapCompiler
     end
     
     max_meta_x = element_refs.map { |r| r[:meta_x] }.max || 0
-    max_meta_y = element_refs.map { |r| r[:meta_y] }.max || 0
     
-    # Column widths (for X positioning in metamap)
+    # Column widths (for X positioning) - only consider room elements
     col_widths = Array.new(max_meta_x + 1, 0)
-    # Row heights (for Y positioning in metamap)
-    row_heights = Array.new(max_meta_y + 1, 0)
-    
     element_refs.each do |ref|
+      element = @elements[ref[:element_name]]
+      next unless element['room']
       size = @element_sizes[ref[:element_name]]
       col_widths[ref[:meta_x]] = [col_widths[ref[:meta_x]], size[:width]].max
-      row_heights[ref[:meta_y]] = [row_heights[ref[:meta_y]], size[:height]].max
     end
     
     col_offsets = [0]
     col_widths.each_with_index { |w, i| col_offsets << col_offsets.last + w + (i < col_widths.length - 1 ? @metamap_gap : 0) }
     
-    row_offsets = [0]
-    row_heights.each_with_index { |h, i| row_offsets << row_offsets.last + h + (i < row_heights.length - 1 ? @metamap_gap : 0) }
+    # Track each column's current bottom position (for vertical stacking)
+    col_bottoms = Array.new(max_meta_x + 1, 0)
     
-    # Calculate total size and center offset (subtract extra gap added at end)
+    # Process elements row by row
+    instance_counts = Hash.new(0)
+    placements = []
+    
+    element_refs.group_by { |ref| ref[:meta_y] }.sort.each do |meta_y, row_elements|
+      # All elements in the same row start at the same Y (max col_bottom of columns in this row)
+      row_cols = row_elements.map { |ref| ref[:meta_x] }
+      row_start_y = row_cols.map { |col| col_bottoms[col] }.max
+      
+      row_elements.each do |ref|
+        element = @elements[ref[:element_name]]
+        size = @element_sizes[ref[:element_name]]
+        col = ref[:meta_x]
+        
+        instance_counts[ref[:element_name]] += 1
+        placements << {
+          element_name: ref[:element_name],
+          instance_id: instance_counts[ref[:element_name]],
+          local_x: col_offsets[col],
+          local_y: row_start_y
+        }
+        
+        # Update column bottom (only room elements affect stacking)
+        col_bottoms[col] = row_start_y + size[:height] + @metamap_gap if element['room']
+      end
+    end
+    
+    # Calculate total size and center everything
     total_width = col_offsets.last
-    total_height = row_offsets.last
+    total_height = col_bottoms.max || 0
     center_offset_x = (256 - total_width) / 2
     center_offset_y = (256 - total_height) / 2
     
-    # Track instance numbers for each element type
-    instance_counts = Hash.new(0)
-    placements = element_refs.map do |ref|
-      instance_counts[ref[:element_name]] += 1
-      {
-        element_name: ref[:element_name],
-        instance_id: instance_counts[ref[:element_name]],
-        local_x: col_offsets[ref[:meta_x]] + center_offset_x,
-        local_y: row_offsets[ref[:meta_y]] + center_offset_y
-      }
+    placements.each do |p|
+      p[:local_x] += center_offset_x
+      p[:local_y] += center_offset_y
     end
     
     placements
@@ -230,8 +252,9 @@ class MapCompiler
     element = placement[:element] || @elements[element_name]
     return unless element
     
-    # Merge default_palette with element's palette (element overrides default)
-    raw_palette = deep_merge(@default_palette, element['palette'] || {})
+    # Merge defaults palette with element's palette (element overrides default)
+    # Note: For named elements, defaults are already merged, but inline elements (corridors) need this
+    raw_palette = deep_merge(@defaults['palette'] || {}, element['palette'] || {})
     palette, boundary_chars, door_chars, door_facings = flatten_palette(raw_palette)
     map_str = element['map'] || ""
     z = 0
@@ -240,11 +263,12 @@ class MapCompiler
     room_floor = element['floor']
     room_roof = element['roof']
     room_name = element['name'] || element_name
+    should_create_room = element['room'] == true
     
     lines = map_str.rstrip.split("\n")
     
     # Detect interior cells (enclosed by walls/doors) using flood-fill
-    interior_cells = detect_interior_cells(lines, boundary_chars) if room_floor || room_roof
+    interior_cells = detect_interior_cells(lines, boundary_chars) if should_create_room
     
     # Collect door positions for room metadata and auto-corridors
     door_positions = []
@@ -289,7 +313,7 @@ class MapCompiler
         
         # Skip if no tile definition for this char
         next if val.nil?
-        
+
         if val.is_a?(Hash) && (val.key?('tile') || val.key?('tiles') || val.key?('teleporter'))
           # Check for teleporter marker
           if val['teleporter']
@@ -307,7 +331,7 @@ class MapCompiler
         @defined_squares[[abs_x, abs_y, z]] = true
         bits = compute_collision_bits(val)
         @cdata.setSquareBits(abs_x, abs_y, bits)
-        
+
         tiles = val.is_a?(Array) ? val : [val]
         tiles = tiles.select { |t| t.is_a?(String) && !t.empty? && t != "WILDERNESS" }
         

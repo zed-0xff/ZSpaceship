@@ -1,50 +1,55 @@
 id: "Spaceship Z-001"
 origin: [78, 78]
 default_floor: floors_exterior_street_01_18
-default_palette:
-  walls:
-    "┌": { tile: location_community_medical_01_170, x: +1, y: +1, replaces: [location_community_medical_01_168, location_community_medical_01_169] }
-    "─": { y: +1, tiles: [location_community_medical_01_169] }
-    "═": { y: +1, tiles: [location_community_medical_01_169, lighting_indoor_02_45] }
-    "┓": null
-    "┃": walls_garage_02_16
-    "┛": walls_garage_02_19
-    "━": walls_garage_02_17
-    "┗": null
-    "│": { x: +1, tiles: [location_community_medical_01_168] }
-    "║": { x: +1, tiles: [location_community_medical_01_168, lighting_indoor_02_44] }
-  doors:
-    "^": { y: +1, tiles: [walls_garage_02_52, lighting_indoor_02_45] }               # north
-    "v": { tiles: [walls_garage_02_52, industry_trucks_01_19, industry_trucks_01_17] } # south (default)
-    "<": { x: +1, tiles: [walls_garage_02_49, lighting_indoor_02_44] }               # west
-    ">": { facing: east, tiles: [walls_garage_02_49, industry_trucks_01_16, industry_trucks_01_18] }
 
 metapalette:
   C: cockpit
-  T: teleport_room
-  S: solar_panel
-  X: crossroads
   e: earth
+  E: energy_storage
+  H: hall
+  s: solar_panel
+  T: teleport_room
+  X: crossroads
 
 metamap_gap: -1
 metamap: |
-  e
-  SCS
-   XX
-   T
+  _C
+  THX
+  T^X
+   E
 
 auto_corridors:
   floor: floors_interior_tilesandwood_01_28
   roof:  floors_exterior_street_01_0
-  north_wall: [location_community_medical_01_169]
-  south_wall: [walls_garage_02_17]
-  west_wall:  [walls_garage_02_16]
-  east_wall:  [location_community_medical_01_168]
+  north_wall: [walls_garage_01_33]
+  south_wall: [walls_garage_01_33]
+  east_wall:  [walls_garage_01_32]
+  west_wall:  [walls_garage_01_32]
 
 elements:
-  cockpit:
+  defaults:
+    room: true
     floor: floors_interior_tilesandwood_01_28
     roof:  floors_exterior_street_01_0
+    palette:
+      walls:
+        "┌": { tile: location_community_medical_01_170, x: +1, y: +1, replaces: [location_community_medical_01_168, location_community_medical_01_169] }
+        "─": { y: +1, tiles: [location_community_medical_01_169] }
+        "═": { y: +1, tiles: [location_community_medical_01_169, lighting_indoor_02_45] }
+        "┓": null
+        "┃": walls_garage_02_16
+        "┛": walls_garage_02_19
+        "━": walls_garage_02_17
+        "┗": null
+        "│": { x: +1, tiles: [location_community_medical_01_168] }
+        "║": { x: +1, tiles: [location_community_medical_01_168, lighting_indoor_02_44] }
+      doors:
+        "^": { y: +1, tiles: [walls_garage_02_52, lighting_indoor_02_45] }
+        "v": { tiles: [walls_garage_02_52, industry_trucks_01_19, industry_trucks_01_17] }
+        "<": { x: +1, tiles: [walls_garage_02_49, lighting_indoor_02_44] }
+        ">": { tiles: [walls_garage_02_49, industry_trucks_01_16, industry_trucks_01_18], facing: east }
+
+  cockpit:
     map: |
       ┌─═─┓
       │   ┃
@@ -53,8 +58,6 @@ elements:
       ┗━v━┛
 
   crossroads:
-    floor: floors_interior_tilesandwood_01_28
-    roof:  floors_exterior_street_01_0
     map: |
       ┌─^─┓
       │   ┃
@@ -62,9 +65,32 @@ elements:
       │   ┃
       ┗━v━┛
 
+  hall:
+    map: |
+      ┌─^─┓
+      │   ┃
+      <   >
+      │   ┃
+      ║   ┃
+      │   ┃
+      <   >
+      │   ┃
+      ┗━v━┛
+
+  energy_storage:
+    palette:
+      b: industry_02_175
+    map: |
+      ┌─^─┓
+      │   ┃
+      ║   ┃
+      │   ┃
+      ║   ┃
+      │bbb┃
+      ┗━━━┛
+
   teleport_room:
     floor: industry_01_39
-    roof:  floors_exterior_street_01_0
     palette:
       walls:
         "┌": { tile: industry_railroad_05_26, x: +1, y: +1, replaces: [industry_railroad_05_24, industry_railroad_05_25] }
@@ -89,11 +115,12 @@ elements:
     map: |
       ┌─═─┓
       │ABC┃
-      ║DEF┃
+      ║DEF>
       │GHI┃
-      ┗━v━┛
+      ┗━━━┛
 
   solar_panel:
+    room: false
     palette:
       X: floor_carpet_motif_7
     map: |
@@ -103,6 +130,7 @@ elements:
       XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
   earth:
+    room: false
     width: 5
     height: 5
     palette:

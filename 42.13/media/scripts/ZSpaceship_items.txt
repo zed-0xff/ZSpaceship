@@ -52,18 +52,6 @@ module ZSpaceship
         Tooltip = Tooltip_Communicator,
     }
 
-    item PowerStorageUnit
-    {
-        ItemType = Moveable,
-        DisplayName = Power Storage Unit,
-        Icon = Generator,
-        Weight = 50.0,
-        Tooltip = Tooltip_PowerStorage,
-        CanBePlastered = false,
-        IsMoveable = true,
-        WorldSprite = industry_02_175,
-    }
-
     item PowerCell_Schematic
     {
         ItemType = Literature,
