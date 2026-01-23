@@ -70,11 +70,20 @@ class MapCompiler
     @auto_corridors = @config['auto_corridors'] || {}
     @placed_doors = []  # Track door positions for auto-corridor generation
     @corridor_count = 0  # Counter for corridor instance IDs
+    
+    # Single building for the entire spaceship
+    @spaceship_building = nil
   end
 
   def compile(out_dir)
     FileUtils.mkdir_p(out_dir)
     @defined_squares = {}
+    
+    # Create a single building for all rooms
+    @spaceship_building = BuildingDef.new
+    @spaceship_building.id = BuildingID.makeID(@cell_x, @cell_y, @building_index)
+    @building_index += 1
+    @header.buildings << @spaceship_building
     
     placements = parse_metamap
     
@@ -348,6 +357,7 @@ class MapCompiler
     @placed_doors.each { |d| puts "  #{d[:x]},#{d[:y]} #{d[:facing]} (#{d[:element]})" }
     
     placed = Set.new
+    corridor_tiles = []  # Track all corridor tiles for room creation
     max_gap = 2
     
     @placed_doors.each do |d1|
@@ -363,6 +373,7 @@ class MapCompiler
             if placed.add?([x, d1[:y], d1[:z]])
               puts "  Corridor H at #{x},#{d1[:y]}"
               place_corridor(x, d1[:y], d1[:z], :horizontal)
+              corridor_tiles << [x, d1[:y], d1[:z]]
             end
           end
         end
@@ -373,11 +384,48 @@ class MapCompiler
             if placed.add?([d1[:x], y, d1[:z]])
               puts "  Corridor V at #{d1[:x]},#{y}"
               place_corridor(d1[:x], y, d1[:z], :vertical)
+              corridor_tiles << [d1[:x], y, d1[:z]]
             end
           end
         end
       end
     end
+    
+    # Create room definition for corridors
+    create_corridor_rooms(corridor_tiles) unless corridor_tiles.empty?
+  end
+  
+  def create_corridor_rooms(tiles)
+    return if tiles.empty?
+    
+    room_name = @auto_corridors['name'] || 'hall'
+    
+    # Create a separate 1x1 room for each corridor tile
+    tiles.uniq.each do |tile|
+      abs_x, abs_y, z = tile
+      
+      room_id = RoomID.makeID(@cell_x, @cell_y, @room_index)
+      @room_index += 1
+      
+      room = RoomDef.new(room_id, room_name)
+      room.level = z
+      
+      # 1x1 room at this tile
+      rect = Rect.new
+      rect.x = abs_x
+      rect.y = abs_y
+      rect.w = 1
+      rect.h = 1
+      room.rects << rect
+      
+      @header.rooms[room_id] = room
+      
+      # Add to the single spaceship building
+      @spaceship_building.rooms << room
+      room.building = @spaceship_building
+    end
+    
+    puts "  Created #{tiles.length} corridor rooms '#{room_name}'"
   end
   
   def place_corridor(abs_x, abs_y, z, direction)
@@ -471,13 +519,9 @@ class MapCompiler
     
     @header.rooms[room_id] = room
     
-    # Create a building for this room
-    building = BuildingDef.new
-    building.id = BuildingID.makeID(@cell_x, @cell_y, @building_index)
-    @building_index += 1
-    building.rooms << room
-    room.building = building
-    @header.buildings << building
+    # Add room to the single spaceship building
+    @spaceship_building.rooms << room
+    room.building = @spaceship_building
     
     room
   end
