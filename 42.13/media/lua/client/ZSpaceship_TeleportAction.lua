@@ -3,8 +3,23 @@ require "TimedActions/ISBaseTimedAction"
 ISZSpaceshipTeleportAction = ISBaseTimedAction:derive("ISZSpaceshipTeleportAction")
 
 function ISZSpaceshipTeleportAction:isValid()
-    return self.character:getHealth() > 0 and 
-           self.character:getInventory():getItemFromTag(ZSpaceship.Tags.Communicator, true, true) ~= nil
+    if self.character:getHealth() <= 0 then
+        return false
+    end
+    
+    if not self.character:getInventory():getItemFromTag(ZSpaceship.Tags.Communicator, true, true) then
+        return false
+    end
+    
+    -- Check if there's enough power
+    if ZSpaceship and ZSpaceship.Power then
+        local currentPower = ZSpaceship.Power.getCurrentAmount()
+        if currentPower < self.powerCost then
+            return false
+        end
+    end
+    
+    return true
 end
 
 function ISZSpaceshipTeleportAction:start()
@@ -29,6 +44,11 @@ function ISZSpaceshipTeleportAction:complete()
     local targetZ = self.targetZ
     local character = self.character
     local findFreeTile = self.findFreeTile
+
+    -- Consume power before teleporting
+    if ZSpaceship and ZSpaceship.Power and self.powerCost then
+        ZSpaceship.Power.consume(self.powerCost)
+    end
 
     local function finalizeTeleport()
         ZSpaceship.checkAndUpdateVacuumState(character)
@@ -94,7 +114,7 @@ function ISZSpaceshipTeleportAction:complete()
     return true
 end
 
-function ISZSpaceshipTeleportAction:new(character, targetX, targetY, targetZ, startMessage, timeMult, findFreeTile)
+function ISZSpaceshipTeleportAction:new(character, targetX, targetY, targetZ, startMessage, timeMult, findFreeTile, toBuilding)
     local o = ISBaseTimedAction.new(self, character)
     o.targetX = targetX
     o.targetY = targetY
@@ -110,5 +130,9 @@ function ISZSpaceshipTeleportAction:new(character, targetX, targetY, targetZ, st
     o.stopOnWalk = true
     o.stopOnRun = true
     o.stopOnAim = false
+    
+    -- Calculate and store power cost
+    o.powerCost = ZSpaceship.getTeleportCost(character, toBuilding or false)
+    
     return o
 end

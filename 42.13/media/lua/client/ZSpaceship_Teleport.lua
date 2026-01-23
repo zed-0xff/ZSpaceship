@@ -5,6 +5,22 @@ require "TimedActions/ISTimedActionQueue"
 ZSpaceship.TELEPORT_COST_PER_KG = 10  -- MJ/kg
 ZSpaceship.TELEPORT_BUILDING_MULT = 1.5
 
+local function addTeleportOption(context, player, cost, textKey, cb, comm)
+    local currentPower = 0
+    if ZSpaceship and ZSpaceship.Power then
+        currentPower = ZSpaceship.Power.getCurrentAmount()
+    end
+    local text = string.format(getText(textKey), cost, currentPower)
+    local opt = context:addOption(text, player, cb)
+    opt.notAvailable = currentPower < cost
+    if comm then
+        local scriptItem = comm.getScriptItem and comm:getScriptItem() or nil
+        if scriptItem and scriptItem.getNormalTexture then
+            opt.iconTexture = scriptItem:getNormalTexture()
+        end
+    end
+end
+
 function ZSpaceship.getTeleportMass(player)
     local bodyWeight = player:getNutrition():getWeight()
     local inventoryWeight = player:getInventory():getCapacityWeight()
@@ -38,6 +54,16 @@ function ZSpaceship.getTeleportCost(player, toBuilding)
 end
 
 function ZSpaceship.TeleportToRandom(player)
+    -- Check power before teleporting
+    local cost = ZSpaceship.getTeleportCost(player, false)
+    if ZSpaceship and ZSpaceship.Power then
+        local currentPower = ZSpaceship.Power.getCurrentAmount()
+        if currentPower < cost then
+            player:Say("Insufficient power! Need " .. cost .. " MJ, have " .. currentPower .. " MJ")
+            return
+        end
+    end
+    
     -- Teleport to random location in the county (2000-13000), avoiding water and empty cells
     local x, y
     local maxAttempts = 100
@@ -72,10 +98,20 @@ function ZSpaceship.TeleportToRandom(player)
         end
     end
     
-    ISTimedActionQueue.add(ISZSpaceshipTeleportAction:new(player, x + 0.5, y + 0.5, 0, "Energizing..."))
+    ISTimedActionQueue.add(ISZSpaceshipTeleportAction:new(player, x + 0.5, y + 0.5, 0, "Energizing...", nil, false, false))
 end
 
 function ZSpaceship.TeleportToRandomBuilding(player)
+    -- Check power before teleporting
+    local cost = ZSpaceship.getTeleportCost(player, true)
+    if ZSpaceship and ZSpaceship.Power then
+        local currentPower = ZSpaceship.Power.getCurrentAmount()
+        if currentPower < cost then
+            player:Say("Insufficient power! Need " .. cost .. " MJ, have " .. currentPower .. " MJ")
+            return
+        end
+    end
+    
     -- Teleport to a random room in a random building (vanilla county area only)
     local metaGrid = getWorld():getMetaGrid()
     local buildings = metaGrid:getBuildings()
@@ -116,10 +152,20 @@ function ZSpaceship.TeleportToRandomBuilding(player)
         return
     end
     
-    ISTimedActionQueue.add(ISZSpaceshipTeleportAction:new(player, x, y, z, "Energizing...", 2.0, true))
+    ISTimedActionQueue.add(ISZSpaceshipTeleportAction:new(player, x, y, z, "Energizing...", 2.0, true, true))
 end
 
 function ZSpaceship.TeleportToShip(player)
+    -- Check power before teleporting
+    local cost = ZSpaceship.getTeleportCost(player, false)
+    if ZSpaceship and ZSpaceship.Power then
+        local currentPower = ZSpaceship.Power.getCurrentAmount()
+        if currentPower < cost then
+            player:Say("Insufficient power! Need " .. cost .. " MJ, have " .. currentPower .. " MJ")
+            return
+        end
+    end
+    
     local x = ZSpaceship.TeleporterX + 0.5
     local y = ZSpaceship.TeleporterY + 0.5
     
@@ -130,7 +176,7 @@ function ZSpaceship.TeleportToShip(player)
         timeMult = 2.0
     end
     
-    ISTimedActionQueue.add(ISZSpaceshipTeleportAction:new(player, x, y, ZSpaceship.TeleporterZ, "Beam me up, Scotty!", timeMult))
+    ISTimedActionQueue.add(ISZSpaceshipTeleportAction:new(player, x, y, ZSpaceship.TeleporterZ, "Beam me up, Scotty!", timeMult, false, false))
 end
 
 -- Context Menu for Teleporter (World Object)
@@ -144,10 +190,11 @@ local function doWorldContextMenu(playerNum, context, worldobjects, test)
     local pz = math.floor(player:getZ())
     
     if px == ZSpaceship.TeleporterX and py == ZSpaceship.TeleporterY and pz == ZSpaceship.TeleporterZ then
+        local communicator = player:getInventory():getItemFromTag(ZSpaceship.Tags.Communicator, true, true)
         local costSurface = ZSpaceship.getTeleportCost(player, false)
         local costBuilding = ZSpaceship.getTeleportCost(player, true)
-        context:addOption(getText("UI_ZSpaceship_TeleportToCounty") .. " (" .. costSurface .. " MJ)", player, ZSpaceship.TeleportToRandom)
-        context:addOption(getText("UI_ZSpaceship_TeleportToBuilding") .. " (" .. costBuilding .. " MJ)", player, ZSpaceship.TeleportToRandomBuilding)
+        addTeleportOption(context, player, costSurface, "UI_ZSpaceship_TeleportToCounty", ZSpaceship.TeleportToRandom, communicator)
+        addTeleportOption(context, player, costBuilding, "UI_ZSpaceship_TeleportToBuilding", ZSpaceship.TeleportToRandomBuilding, communicator)
     end
     
     -- Return to Spaceship option when NOT in space and has communicator
@@ -155,7 +202,7 @@ local function doWorldContextMenu(playerNum, context, worldobjects, test)
         local communicator = player:getInventory():getItemFromTag(ZSpaceship.Tags.Communicator, true, true)
         if communicator then
             local costReturn = ZSpaceship.getTeleportCost(player, false)
-            context:addOption(getText("UI_ZSpaceship_ReturnToSpaceship") .. " (" .. costReturn .. " MJ)", player, ZSpaceship.TeleportToShip)
+            addTeleportOption(context, player, costReturn, "UI_ZSpaceship_ReturnToSpaceship", ZSpaceship.TeleportToShip, communicator)
         end
     end
 end
@@ -165,14 +212,14 @@ local function doInventoryContextMenu(playerNum, context, items)
     local player = getSpecificPlayer(playerNum)
     
     -- Check if right-clicked item is the Communicator
-    local clickedCommunicator = false
+    local clickedCommunicator = nil
     for i = 1, #items do
         local item = items[i]
         if not instanceof(item, "InventoryItem") then
             item = item.items[1]
         end
         if item and item:hasTag(ZSpaceship.Tags.Communicator) then
-            clickedCommunicator = true
+            clickedCommunicator = item
             break
         end
     end
@@ -181,7 +228,7 @@ local function doInventoryContextMenu(playerNum, context, items)
         local px, py = math.floor(player:getX()), math.floor(player:getY())
         if not ZSpaceship.isInSpace(px, py) then
             local costReturn = ZSpaceship.getTeleportCost(player, false)
-            context:addOption(getText("UI_ZSpaceship_ReturnToSpaceship") .. " (" .. costReturn .. " MJ)", player, ZSpaceship.TeleportToShip)
+            addTeleportOption(context, player, costReturn, "UI_ZSpaceship_ReturnToSpaceship", ZSpaceship.TeleportToShip, clickedCommunicator)
         end
     end
 end

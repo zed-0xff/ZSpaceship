@@ -15,8 +15,13 @@ function ProgressBarUI:render()
     local barWidth = self:getWidth()
     local barHeight = self:getHeight()
     
-    -- Sample progress value (0.0 to 1.0) - using a simple time-based animation
-    local progress = (getGameTime():getWorldAgeHours() % 10) / 10
+    local progress = 0
+    if ZSpaceship and ZSpaceship.Power then
+        local maxAmount = ZSpaceship.Power.getMaxAmount()
+        if maxAmount and maxAmount > 0 then
+            progress = ZSpaceship.Power.getCurrentAmount() / maxAmount
+        end
+    end
     
     -- Foreground color (cyan/blue-green similar to clock)
     local fgColor = {r = 100/255, g = 200/255, b = 210/255, a = 1.0}

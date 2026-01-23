@@ -10,12 +10,14 @@
 [ ] mechanics: oxygen synthesizer
 [ ] mechanics: water generator
 [ ] mechanics: pipes
-[ ] mechanics: energy
+
+[ ] craft:solar panels
 
 [ ] UI: ship external walls
 [ ] UI: ship doors
 [ ] UI: ship top
 
+[+] mechanics: energy
 [+] UX: show ship energy level when communicator is in inventory (equipped in watch slot?)
 [+] UI: communicator inventory icon
 [x] room: teleporter
