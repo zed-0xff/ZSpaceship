@@ -42,34 +42,77 @@ function ZSpaceship.updateVacuumSounds(inVacuum)
     end
 end
 
--- Check a square for open doors, given direction from room
-local function checkSquareForOpenDoor(sq, fromX, fromY)
-    if not sq then return false end
-    local specials = sq:getSpecialObjects()
-    
-    for j = 0, specials:size() - 1 do
-        local obj = specials:get(j)
-        local isDoor = instanceof(obj, "IsoDoor") or 
-                      (instanceof(obj, "IsoThumpable") and obj:isDoor())
-        
-        if isDoor and obj:IsOpen() then
-            -- Check the square on the OPPOSITE side from the room
-            local dx = sq:getX() - fromX
-            local dy = sq:getY() - fromY
-            local outsideSq = getSquare(sq:getX() + dx, sq:getY() + dy, sq:getZ())
-            if not outsideSq or not outsideSq:isInARoom() then
-                return true
-            end
-        end
-    end
-    return false
-end
-
 -- Check if room is breached (open door, missing wall, floor, or roof)
-local function isRoomBreached(room)
+local function isRoomBreached(room, visited)
     if not room then return true end
     local squares = room:getSquares()
     if not squares then return true end
+    
+    -- Track visited rooms to prevent infinite recursion
+    visited = visited or {}
+    local roomId = room:getName() or (tostring(room))
+    if visited[roomId] then
+        -- Already checking this room, assume it's not breached to break cycle
+        -- (if it were breached, we would have detected it already)
+        return false
+    end
+    visited[roomId] = true
+    
+    -- Check a square for open doors that lead to vacuum, given direction from room
+    local function checkSquareForOpenDoor(sq, fromX, fromY)
+        if not sq then return false end
+        
+        -- Helper to check if an object is an open door
+        local function isOpenDoor(obj)
+            if not obj then return false end
+            local isDoor = instanceof(obj, "IsoDoor") or 
+                          (instanceof(obj, "IsoThumpable") and obj:isDoor())
+            return isDoor and obj:IsOpen()
+        end
+        
+        -- Helper to check if a square is in vacuum (not in a room, or in a breached room)
+        local function isSquareInVacuum(checkSq)
+            if not checkSq then return true end  -- No square = vacuum
+            local checkRoom = checkSq:getRoom()
+            if not checkRoom then return true end  -- Not in a room = vacuum
+            -- Recursively check if the room is breached (pass visited set to prevent cycles)
+            return isRoomBreached(checkRoom, visited)  -- In a breached room = vacuum
+        end
+        
+        -- Check special objects (where doors are typically stored)
+        local specials = sq:getSpecialObjects()
+        for j = 0, specials:size() - 1 do
+            if isOpenDoor(specials:get(j)) then
+                -- Check the square on the OPPOSITE side from the room
+                local dx = sq:getX() - fromX
+                local dy = sq:getY() - fromY
+                local oppositeSq = getSquare(sq:getX() + dx, sq:getY() + dy, sq:getZ())
+                if isSquareInVacuum(oppositeSq) then
+                    -- Open door leads to vacuum = breach
+                    return true
+                end
+            end
+        end
+        
+        -- Also check regular objects list as a fallback
+        local objects = sq:getObjects()
+        if objects then
+            for j = 0, objects:size() - 1 do
+                if isOpenDoor(objects:get(j)) then
+                    -- Check the square on the OPPOSITE side from the room
+                    local dx = sq:getX() - fromX
+                    local dy = sq:getY() - fromY
+                    local oppositeSq = getSquare(sq:getX() + dx, sq:getY() + dy, sq:getZ())
+                    if isSquareInVacuum(oppositeSq) then
+                        -- Open door leads to vacuum = breach
+                        return true
+                    end
+                end
+            end
+        end
+        
+        return false
+    end
     
     -- Build a set of room squares for quick lookup
     local roomSquares = {}
@@ -216,11 +259,10 @@ function ZSpaceship.isProtectedFromVacuum(creature)
     
     for i = 0, wornItems:size() - 1 do
         local item = wornItems:getItemByIndex(i)
-        -- Only check actual Clothing items that have hasTag method (not AlarmClockClothing, etc.)
-        if item and instanceof(item, "Clothing") and item.hasTag then
-            -- Check for SCBA (Hazmat suit)
-            local ok, hasScba = pcall(function() return item:hasTag("SCBA") end)
-            if ok and hasScba then
+        -- Only check actual Clothing items (not AlarmClockClothing, etc.)
+        if item and instanceof(item, "Clothing") then
+            -- Check for SCBA (Hazmat suit) - use ItemTag enum, not string
+            if item:hasTag(ItemTag.SCBA) then
                 -- Players need oxygen in the tank
                 if item:isActivated() and item:hasTank() and item:getUsedDelta() > 0.0 then
                     return true
