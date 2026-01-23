@@ -1,5 +1,4 @@
 [ ] UX: invisible border
-[ ] UX: show ship energy level when communicator is in inventory (equipped in watch slot?)
 [ ] UX: show suit oxygen level
 
 [ ] room: med room / cloner
@@ -17,6 +16,7 @@
 [ ] UI: ship doors
 [ ] UI: ship top
 
+[+] UX: show ship energy level when communicator is in inventory (equipped in watch slot?)
 [+] UI: communicator inventory icon
 [x] room: teleporter
 [x] room: bathroom
