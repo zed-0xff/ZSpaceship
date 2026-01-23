@@ -1,10 +1,5 @@
-module ZSpaceship
+module Base
 {
-    imports
-    {
-        Base
-    }
-
     entity PowerStorageUnit
     {
         component UiConfig
