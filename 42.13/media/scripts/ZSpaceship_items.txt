@@ -1,55 +1,39 @@
 module ZSpaceship
 {
-    imports
+   item Communicator_Right
     {
-        Base
-    }
-
-    item Spacesuit_Helmet
-    {
-        ItemType = Clothing,
-        DisplayName = Spacesuit Helmet,
-        ClothingItem = Hat_SpaceHelmet,
-        Icon = SpacesuitHelmet,
-        Weight = 1.5,
-        Temperature = 10,
-        Insulation = 1.0,
-        WindResistance = 1.0,
-        WaterResistance = 1.0,
-        BloodLocation = Head,
-        Tags = GasMask,
-    }
-
-    item Spacesuit_Body
-    {
-        ItemType = Clothing,
-        DisplayName = Spacesuit Body,
-        ClothingItem = Suit_SpaceSuit,
-        Icon = SpacesuitBody,
-        Weight = 6.0,
-        Temperature = 35,
-        Insulation = 1.0,
-        WindResistance = 1.0,
-        WaterResistance = 1.0,
-        BloodLocation = Jacket,
-        CanBeExtra = true,
-    }
-
-    item Spaceship_SolarPanel
-    {
-        ItemType = Normal,
-        DisplayName = Spaceship Solar Panel,
-        Icon = SpaceshipSolarPanel,
-        Weight = 15.0,
-    }
-
-    item Communicator
-    {
-        ItemType = Normal,
-        DisplayName = Spaceship Communicator,
+        DisplayCategory = Accessory,
+        ItemType = base:alarmclockclothing,
+        Weight = 0.2,
         Icon = Communicator,
-        Weight = 0.5,
-        Tooltip = Tooltip_Communicator,
+        AlarmSound = WatchAlarmLoop,
+        BodyLocation = base:rightwrist,
+        ClothingExtraSubmenu = RightWrist,
+        ClothingItem = WristWatch_Right_ClassicGold,
+        ClothingItemExtra = Communicator_Left,
+        ClothingItemExtraOption = LeftWrist,
+        Cosmetic = true,
+        SoundRadius = 7,
+        WorldStaticModel = WatchClassicGold,
+        Tags = base:digital; ZSpaceship:CommunicatorTag,
+    }
+
+    item Communicator_Left
+    {
+        DisplayCategory = Accessory,
+        ItemType = base:alarmclockclothing,
+        Weight = 0.2,
+        Icon = Communicator,
+        AlarmSound = WatchAlarmLoop,
+        BodyLocation = base:leftwrist,
+        ClothingExtraSubmenu = LeftWrist,
+        ClothingItem = WristWatch_Left_ClassicGold,
+        ClothingItemExtra = Communicator_Right,
+        ClothingItemExtraOption = RightWrist,
+        Cosmetic = true,
+        SoundRadius = 7,
+        WorldStaticModel = WatchClassicGold,
+        Tags = base:digital; ZSpaceship:CommunicatorTag,
     }
 
     item PowerCell_Schematic

@@ -152,7 +152,7 @@ local function doWorldContextMenu(playerNum, context, worldobjects, test)
     
     -- Return to Spaceship option when NOT in space and has communicator
     if not ZSpaceship.isInSpace(px, py) then
-        local communicator = player:getInventory():getItemFromType("ZSpaceship.Communicator")
+        local communicator = player:getInventory():getItemFromTag(ZSpaceship.Tags.Communicator, true, true)
         if communicator then
             local costReturn = ZSpaceship.getTeleportCost(player, false)
             context:addOption(getText("UI_ZSpaceship_ReturnToSpaceship") .. " (" .. costReturn .. " MJ)", player, ZSpaceship.TeleportToShip)
@@ -171,7 +171,7 @@ local function doInventoryContextMenu(playerNum, context, items)
         if not instanceof(item, "InventoryItem") then
             item = item.items[1]
         end
-        if item and item:getFullType() == "ZSpaceship.Communicator" then
+        if item and item:hasTag(ZSpaceship.Tags.Communicator) then
             clickedCommunicator = true
             break
         end

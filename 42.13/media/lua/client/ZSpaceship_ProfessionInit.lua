@@ -1,6 +1,6 @@
 local function onNewGame(player, square)
     local prof = player:getDescriptor():getCharacterProfession()
-    if prof and tostring(prof) == "zspaceship:astronaut" then
+    if prof and prof == ZSpaceship.Professions.Astronaut then
         local inv = player:getInventory()
         
         -- Remove default clothes
@@ -19,8 +19,7 @@ local function onNewGame(player, square)
         suit:setUsedDelta(ZombRandFloat(0.5, 1.0))
         suit:setActivated(true)
         
-        -- Add Communicator and Screwdriver to inventory
-        inv:AddItem("ZSpaceship.Communicator")
+        -- Add Screwdriver to inventory
         inv:AddItem("Base.Screwdriver")
         
         -- Add Wrench and put it in the primary hand
@@ -31,10 +30,10 @@ local function onNewGame(player, square)
         local torch = inv:AddItem("Base.Torch")
         player:setSecondaryHandItem(torch)
         
-        -- Add Digital Watch and wear it
-        local watch = inv:AddItem("Base.WristWatch_Left_DigitalBlack")
-        if watch then
-            player:setWornItem(watch:getBodyLocation(), watch)
+        -- Add Communicator and wear it
+        local comm = inv:AddItem("ZSpaceship.Communicator_Left")
+        if comm then
+            player:setWornItem(comm:getBodyLocation(), comm)
         end
     end
 end

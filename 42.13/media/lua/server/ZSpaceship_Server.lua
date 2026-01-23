@@ -61,7 +61,7 @@ local function fillTeleportContainer(obj)
     
     -- Add 5 space communicators
     for i = 1, 5 do
-        container:AddItem("ZSpaceship.Communicator")
+        container:AddItem("ZSpaceship.Communicator_Left")
     end
 end
 

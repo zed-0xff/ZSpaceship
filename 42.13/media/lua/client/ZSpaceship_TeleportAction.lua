@@ -4,7 +4,7 @@ ISZSpaceshipTeleportAction = ISBaseTimedAction:derive("ISZSpaceshipTeleportActio
 
 function ISZSpaceshipTeleportAction:isValid()
     return self.character:getHealth() > 0 and 
-           self.character:getInventory():getItemFromType("ZSpaceship.Communicator") ~= nil
+           self.character:getInventory():getItemFromTag(ZSpaceship.Tags.Communicator, true, true) ~= nil
 end
 
 function ISZSpaceshipTeleportAction:start()
