@@ -6,10 +6,10 @@ metapalette:
   B: bathroom
   C: cockpit
   E: energy_storage
-  H: hall
+  H: longhub
   L: library
   T: teleport_room
-  X: crossroads
+  X: hub
   e: earth
   s: solar_panel
 
@@ -98,7 +98,7 @@ elements:
       ┗━━━┛
 
 
-  crossroads:
+  hub:
     map: |
       ┌─^─┓
       │   ┃
@@ -106,7 +106,7 @@ elements:
       │   ┃
       ┗━v━┛
 
-  hall:
+  longhub:
     map: |
       ┌─^─┓
       │   ┃
