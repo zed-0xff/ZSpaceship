@@ -4,6 +4,8 @@
 require 'colorize'
 require 'iostruct'
 require 'zhexdump'
+require 'optparse'
+require 'fileutils'
 
 ZHexdump.defaults[:width] = 32
 
@@ -20,8 +22,37 @@ def process_file(fname)
     process_LOTP_file(fname)
   when "tdef"
     process_tdef_file(fname)
+  when 'PZPK'
+    process_PACK_file(fname)
   else
-    process_BIN_file(fname) if fname.end_with?(".bin")
+    case fname
+    when /\.bin\z/
+      process_BIN_file(fname)
+    when /\.pack\z/
+      process_PACK_file(fname)
+    end
+  end
+end
+
+def process_PACK_file(fname)
+  puts "Processing #{fname} (#{File.size(fname)} bytes)".cyan
+  TexturePackDevice.open(fname) do |tpd|
+    p tpd
+    tpd.pages.each_with_index do |p, idx|
+      printf "    %4d: %s\n", idx, p.inspect
+
+      if @extract
+        FileUtils.mkdir_p(@outdir)
+        out_fname = File.join(@outdir, p.name + ".png")
+        File.open(out_fname, "wb") do |of|
+          File.open(fname, "rb") do |f|
+            f.seek(p.pngStart)
+            data = f.read(p.pngSize)
+            of.write(data)
+          end
+        end
+      end
+    end
   end
 end
 
@@ -203,6 +234,8 @@ def process_LOTP_file(fname)
 end
 
 @headers = {}
+@verbosity = 0
+@outdir = "out"
 
 def process_LOTH_file(fname)
   puts "Processing #{fname}".cyan
@@ -212,6 +245,20 @@ def process_LOTH_file(fname)
   @headers[coords] = hdr
   pp hdr.buildings
 end
+
+OptionParser.new do |opts|
+  opts.banner = "Usage: dumper.rb [options] [files...]"
+
+  opts.on("-v", "--verbose", "Increase verbosity") do |v|
+    @verbosity += 1
+  end
+  opts.on("-o", "--output DIR", "Output directory") do |dir|
+    @outdir = dir
+  end
+  opts.on("-x", "--extract", "Extract files") do
+    @extract = true
+  end
+end.parse!
 
 if ARGV.any?
   # load .lotheader files first
