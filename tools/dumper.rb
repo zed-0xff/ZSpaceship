@@ -41,6 +41,10 @@ def process_PACK_file(fname)
     tpd.pages.each_with_index do |p, idx|
       printf "    %4d: %s\n", idx, p.inspect
 
+      p.sub.each_with_index do |sub, sub_idx|
+        printf "          %4d: %s\n", sub_idx, sub.to_table
+      end
+
       if @extract
         FileUtils.mkdir_p(@outdir)
         out_fname = File.join(@outdir, p.name + ".png")
