@@ -1,46 +1,8 @@
 -- Vacuum damage handling for ZSpaceship mod
--- Handles breach detection, creature damage, sound muting, and weather control
+-- Handles breach detection, creature damage, and weather control
+-- Sound muting is handled in ZSpaceship_VacuumSound.lua
 
 ZSpaceship = ZSpaceship or {}
-
--- Sound state for vacuum muting
-ZSpaceship.savedSoundVolume = nil
-ZSpaceship.savedMusicVolume = nil
-ZSpaceship.savedAmbientVolume = nil
-ZSpaceship.savedVehicleVolume = nil
-ZSpaceship.wasInVacuum = false
-
--- Update vacuum sound muting state (call after teleporting or state change)
-function ZSpaceship.updateVacuumSounds(inVacuum)
-    local soundManager = getSoundManager()
-    if inVacuum and not ZSpaceship.wasInVacuum then
-        -- Entering vacuum: save current volumes and mute all sounds
-        ZSpaceship.savedSoundVolume = soundManager:getSoundVolume()
-        ZSpaceship.savedMusicVolume = soundManager:getMusicVolume()
-        ZSpaceship.savedAmbientVolume = soundManager:getAmbientVolume()
-        ZSpaceship.savedVehicleVolume = soundManager:getVehicleEngineVolume()
-        soundManager:setSoundVolume(0)
-        soundManager:setMusicVolume(0)
-        soundManager:setAmbientVolume(0)
-        soundManager:setVehicleEngineVolume(0)
-        ZSpaceship.wasInVacuum = true
-    elseif not inVacuum and ZSpaceship.wasInVacuum then
-        -- Leaving vacuum: restore saved volumes
-        if ZSpaceship.savedSoundVolume then
-            soundManager:setSoundVolume(ZSpaceship.savedSoundVolume)
-        end
-        if ZSpaceship.savedMusicVolume then
-            soundManager:setMusicVolume(ZSpaceship.savedMusicVolume)
-        end
-        if ZSpaceship.savedAmbientVolume then
-            soundManager:setAmbientVolume(ZSpaceship.savedAmbientVolume)
-        end
-        if ZSpaceship.savedVehicleVolume then
-            soundManager:setVehicleEngineVolume(ZSpaceship.savedVehicleVolume)
-        end
-        ZSpaceship.wasInVacuum = false
-    end
-end
 
 -- Check if room is breached (open door, missing wall, floor, or roof)
 local function isRoomBreached(room, visited)
@@ -227,7 +189,7 @@ function ZSpaceship.checkAndUpdateVacuumState(player)
         inVacuum = not room or isRoomBreached(room)
     end
     
-    ZSpaceship.updateVacuumSounds(inVacuum)
+    ZSpaceship.VacuumSound.updateVacuumSounds(inVacuum)
     return inVacuum
 end
 
@@ -393,7 +355,7 @@ local function checkVacuum(ticks)
     end
     
     -- Handle vacuum sound muting (like Deaf trait)
-    ZSpaceship.updateVacuumSounds(inVacuum)
+    ZSpaceship.VacuumSound.updateVacuumSounds(inVacuum)
 end
 
 Events.OnTick.Add(checkVacuum)
@@ -450,25 +412,8 @@ end
 
 Events.OnPlayerUpdate.Add(onPlayerUpdate)
 
--- Restore sound volumes and climate when exiting game
+-- Restore climate when exiting game (sound is handled in ZSpaceship_VacuumSound.lua)
 local function restoreOnExit()
-    if ZSpaceship.wasInVacuum then
-        local soundManager = getSoundManager()
-        if ZSpaceship.savedSoundVolume then
-            soundManager:setSoundVolume(ZSpaceship.savedSoundVolume)
-        end
-        if ZSpaceship.savedMusicVolume then
-            soundManager:setMusicVolume(ZSpaceship.savedMusicVolume)
-        end
-        if ZSpaceship.savedAmbientVolume then
-            soundManager:setAmbientVolume(ZSpaceship.savedAmbientVolume)
-        end
-        if ZSpaceship.savedVehicleVolume then
-            soundManager:setVehicleEngineVolume(ZSpaceship.savedVehicleVolume)
-        end
-        ZSpaceship.wasInVacuum = false
-    end
-    
     local climate = getClimateManager()
     if climate then
         local fogFloat = climate:getClimateFloat(ClimateManager.FLOAT_FOG_INTENSITY)
