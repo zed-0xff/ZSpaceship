@@ -132,7 +132,10 @@ function ISZSpaceshipTeleportAction:new(character, targetX, targetY, targetZ, st
     o.stopOnAim = false
     
     -- Calculate and store power cost
-    o.powerCost = ZSpaceship.getTeleportCost(character, toBuilding or false)
+    -- Check if teleporting from space (for cheaper cost)
+    local px, py = math.floor(character:getX()), math.floor(character:getY())
+    local fromSpace = ZSpaceship.isInSpace(px, py)
+    o.powerCost = ZSpaceship.getTeleportCost(character, toBuilding or false, fromSpace)
     
     return o
 end
