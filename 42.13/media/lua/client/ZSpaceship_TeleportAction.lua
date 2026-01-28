@@ -19,10 +19,29 @@ function ISZSpaceshipTeleportAction:isValid()
         end
     end
     
+    -- Abort if player coordinates changed (e.g., falling in open space)
+    if self.startX and self.startY and self.startZ then
+        local currentX = math.floor(self.character:getX())
+        local currentY = math.floor(self.character:getY())
+        local currentZ = math.floor(self.character:getZ())
+        
+        -- Allow small movement (1 tile) but abort on larger changes
+        if math.abs(currentX - self.startX) > 1 or 
+           math.abs(currentY - self.startY) > 1 or 
+           currentZ ~= self.startZ then
+            return false
+        end
+    end
+    
     return true
 end
 
 function ISZSpaceshipTeleportAction:start()
+    -- Store initial coordinates to detect movement
+    self.startX = math.floor(self.character:getX())
+    self.startY = math.floor(self.character:getY())
+    self.startZ = math.floor(self.character:getZ())
+    
     self:setActionAnim("Loot")
     self.character:Say(self.startMessage or "Energizing...")
     self.sound = self.character:playSound("PZ_Owl_02")
