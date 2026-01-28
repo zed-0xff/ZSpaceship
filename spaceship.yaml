@@ -33,6 +33,7 @@ auto_corridors:
 elements:
   defaults:
     room: true
+    level: 10
     floor: floors_interior_tilesandwood_01_28
     roof:  floors_exterior_street_01_0
     palette:

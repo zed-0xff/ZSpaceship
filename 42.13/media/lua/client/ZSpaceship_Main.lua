@@ -13,10 +13,10 @@ ZSpaceship.SpaceMaxX = (ZSpaceship.SpaceCellX + 1) * 256
 ZSpaceship.SpaceMinY = ZSpaceship.SpaceCellY * 256
 ZSpaceship.SpaceMaxY = (ZSpaceship.SpaceCellY + 1) * 256
 
--- Teleporter position (from compiled map data, or center of cell as fallback)
-ZSpaceship.TeleporterX = ZSpaceship.MapData.TeleporterX or (ZSpaceship.SpaceMinX + 128)
-ZSpaceship.TeleporterY = ZSpaceship.MapData.TeleporterY or (ZSpaceship.SpaceMinY + 128)
-ZSpaceship.TeleporterZ = ZSpaceship.MapData.TeleporterZ or 0
+-- Teleporter position (from compiled map data)
+ZSpaceship.TeleporterX = ZSpaceship.MapData.TeleporterX
+ZSpaceship.TeleporterY = ZSpaceship.MapData.TeleporterY
+ZSpaceship.TeleporterZ = ZSpaceship.MapData.TeleporterZ
 
 -- Check if coordinates are in space (full cell)
 function ZSpaceship.isInSpace(x, y)

@@ -1,8 +1,9 @@
 ZSpaceship = ZSpaceship or {}
+ZSpaceship.MapData = ZSpaceship.MapData or {}
 
--- Space cell coordinates
-ZSpaceship.SpaceCellX = 78
-ZSpaceship.SpaceCellY = 78
+-- Space cell coordinates (from compiled map data)
+ZSpaceship.SpaceCellX = ZSpaceship.MapData.CellX or 78
+ZSpaceship.SpaceCellY = ZSpaceship.MapData.CellY or 78
 
 -- Cell boundaries (cell is 256x256)
 ZSpaceship.SpaceMinX = ZSpaceship.SpaceCellX * 256
@@ -19,7 +20,7 @@ end
 -- Unlock a door/garage door object
 -- TODO: figure out if the door can be created initially unlocked
 local function unlockDoor(obj)
-    print("Unlocking door: " .. tostring(obj))
+    -- print("Unlocking door: " .. tostring(obj))
 
     if not obj.getSquare then return end
 
