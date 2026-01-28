@@ -1,5 +1,4 @@
 -- ZSpaceship Vacuum Sound - Handles sound muting in vacuum
--- Extracted from ZSpaceship_VacuumDamage.lua
 
 ZSpaceship = ZSpaceship or {}
 ZSpaceship.VacuumSound = ZSpaceship.VacuumSound or {}
