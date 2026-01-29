@@ -15,6 +15,30 @@ ZSpaceship.MapData.TeleporterZ = 10
 
 -- Door sprites (first entry from each door definition in YAML)
 ZSpaceship.MapData.DoorSprites = {
+  ["walls_garage_02_60"] = true,
+  ["walls_garage_02_57"] = true,
   ["walls_garage_02_52"] = true,
   ["walls_garage_02_49"] = true
+}
+
+-- Room centers (includes all rooms, including halls)
+ZSpaceship.MapData.Rooms = {
+  { x = 20095, y = 20085, z = 10, name = "cockpit" },
+  { x = 20091, y = 20089, z = 10, name = "bathroom" },
+  { x = 20095, y = 20091, z = 10, name = "longhub" },
+  { x = 20099, y = 20089, z = 10, name = "hub" },
+  { x = 20091, y = 20093, z = 10, name = "teleport_room" },
+  { x = 20099, y = 20093, z = 10, name = "hub" },
+  { x = 20091, y = 20097, z = 10, name = "library" },
+  { x = 20095, y = 20099, z = 10, name = "longhub" },
+  { x = 20095, y = 20106, z = 10, name = "energy_storage" },
+  { x = 20095, y = 20087, z = 10, name = "hall" },
+  { x = 20093, y = 20089, z = 10, name = "hall" },
+  { x = 20097, y = 20089, z = 10, name = "hall" },
+  { x = 20093, y = 20093, z = 10, name = "hall" },
+  { x = 20097, y = 20093, z = 10, name = "hall" },
+  { x = 20095, y = 20095, z = 10, name = "hall" },
+  { x = 20099, y = 20091, z = 10, name = "hall" },
+  { x = 20093, y = 20097, z = 10, name = "hall" },
+  { x = 20095, y = 20103, z = 10, name = "hall" }
 }

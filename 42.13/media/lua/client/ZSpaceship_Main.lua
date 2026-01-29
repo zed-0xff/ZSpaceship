@@ -23,3 +23,14 @@ function ZSpaceship.isInSpace(x, y)
     return x >= ZSpaceship.SpaceMinX and x < ZSpaceship.SpaceMaxX and
            y >= ZSpaceship.SpaceMinY and y < ZSpaceship.SpaceMaxY
 end
+
+function ZSpaceship.isAnyPlayerInSpace()
+    local players = IsoPlayer.getPlayers()
+    for i=0, players:size() -1 do
+        local player = players:get(i)
+        if player ~= nil and ZSpaceship.isInSpace(player:getX(), player:getY()) then
+            return true
+        end
+    end
+    return false
+end

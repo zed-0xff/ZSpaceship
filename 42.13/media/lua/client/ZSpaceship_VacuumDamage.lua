@@ -1,181 +1,9 @@
 -- Vacuum damage handling for ZSpaceship mod
--- Handles breach detection, creature damage, and weather control
+-- Handles creature damage and weather control
+-- Breach detection is handled in ZSpaceship_VacuumBreach.lua
 -- Sound muting is handled in ZSpaceship_VacuumSound.lua
 
 ZSpaceship = ZSpaceship or {}
-
--- Check if room is breached (open door, missing wall, floor, or roof)
-local function isRoomBreached(room, visited)
-    if not room then return true end
-    local squares = room:getSquares()
-    if not squares then return true end
-    
-    -- Track visited rooms to prevent infinite recursion
-    visited = visited or {}
-    local roomId = room:getName() or (tostring(room))
-    if visited[roomId] then
-        -- Already checking this room, assume it's not breached to break cycle
-        -- (if it were breached, we would have detected it already)
-        return false
-    end
-    visited[roomId] = true
-    
-    -- Check a square for open doors that lead to vacuum, given direction from room
-    local function checkSquareForOpenDoor(sq, fromX, fromY)
-        if not sq then return false end
-        
-        -- Helper to check if an object is an open door
-        local function isOpenDoor(obj)
-            if not obj then return false end
-            local isDoor = instanceof(obj, "IsoDoor") or 
-                          (instanceof(obj, "IsoThumpable") and obj:isDoor())
-            return isDoor and obj:IsOpen()
-        end
-        
-        -- Helper to check if a square is in vacuum (not in a room, or in a breached room)
-        local function isSquareInVacuum(checkSq)
-            if not checkSq then return true end  -- No square = vacuum
-            local checkRoom = checkSq:getRoom()
-            if not checkRoom then return true end  -- Not in a room = vacuum
-            -- Recursively check if the room is breached (pass visited set to prevent cycles)
-            return isRoomBreached(checkRoom, visited)  -- In a breached room = vacuum
-        end
-        
-        -- Check special objects (where doors are typically stored)
-        local specials = sq:getSpecialObjects()
-        for j = 0, specials:size() - 1 do
-            if isOpenDoor(specials:get(j)) then
-                -- Check the square on the OPPOSITE side from the room
-                local dx = sq:getX() - fromX
-                local dy = sq:getY() - fromY
-                local oppositeSq = getSquare(sq:getX() + dx, sq:getY() + dy, sq:getZ())
-                if isSquareInVacuum(oppositeSq) then
-                    -- Open door leads to vacuum = breach
-                    return true
-                end
-            end
-        end
-        
-        -- Also check regular objects list as a fallback
-        local objects = sq:getObjects()
-        if objects then
-            for j = 0, objects:size() - 1 do
-                if isOpenDoor(objects:get(j)) then
-                    -- Check the square on the OPPOSITE side from the room
-                    local dx = sq:getX() - fromX
-                    local dy = sq:getY() - fromY
-                    local oppositeSq = getSquare(sq:getX() + dx, sq:getY() + dy, sq:getZ())
-                    if isSquareInVacuum(oppositeSq) then
-                        -- Open door leads to vacuum = breach
-                        return true
-                    end
-                end
-            end
-        end
-        
-        return false
-    end
-    
-    -- Build a set of room squares for quick lookup
-    local roomSquares = {}
-    for i = 0, squares:size() - 1 do
-        local sq = squares:get(i)
-        if sq then
-            roomSquares[sq:getX() .. "," .. sq:getY()] = true
-        end
-    end
-    
-    for i = 0, squares:size() - 1 do
-        local sq = squares:get(i)
-        if sq then
-            local x, y, z = sq:getX(), sq:getY(), sq:getZ()
-            
-            -- Check floor
-            if not sq:getFloor() then
-                return true
-            end
-            
-            -- Check roof (floor tile at z+1)
-            local roofSq = getSquare(x, y, z + 1)
-            if not roofSq or not roofSq:getFloor() then
-                return true
-            end
-            
-            -- Check walls on boundary (adjacent squares not in room)
-            -- North boundary: need wall on current square facing north
-            local northSq = getSquare(x, y - 1, z)
-            if not northSq or not roomSquares[x .. "," .. (y-1)] then
-                if not sq:getWall(true) then
-                    if northSq then
-                        if not checkSquareForOpenDoor(sq, x, y - 1) then
-                            local door = sq:getDoor(true)
-                            if not door then
-                                return true
-                            end
-                        else
-                            return true -- Open door = breach
-                        end
-                    else
-                        return true
-                    end
-                end
-            end
-            
-            -- West boundary: need wall on current square facing west  
-            local westSq = getSquare(x - 1, y, z)
-            if not westSq or not roomSquares[(x-1) .. "," .. y] then
-                if not sq:getWall(false) then
-                    if westSq then
-                        if not checkSquareForOpenDoor(sq, x - 1, y) then
-                            local door = sq:getDoor(false)
-                            if not door then
-                                return true
-                            end
-                        else
-                            return true
-                        end
-                    else
-                        return true
-                    end
-                end
-            end
-            
-            -- South boundary: need wall on south square facing north
-            local southSq = getSquare(x, y + 1, z)
-            if southSq and not roomSquares[x .. "," .. (y+1)] then
-                if not southSq:getWall(true) then
-                    if not checkSquareForOpenDoor(southSq, x, y) then
-                        local door = southSq:getDoor(true)
-                        if not door then
-                            return true
-                        end
-                    else
-                        return true
-                    end
-                end
-            end
-            
-            -- East boundary: need wall on east square facing west
-            local eastSq = getSquare(x + 1, y, z)
-            if eastSq and not roomSquares[(x+1) .. "," .. y] then
-                if not eastSq:getWall(false) then
-                    if not checkSquareForOpenDoor(eastSq, x, y) then
-                        local door = eastSq:getDoor(false)
-                        if not door then
-                            return true
-                        end
-                    else
-                        return true
-                    end
-                end
-            end
-        end
-    end
-    return false
-end
-
--- Expose for other modules
-ZSpaceship.isRoomBreached = isRoomBreached
 
 -- Check if player is in vacuum and update sounds accordingly
 function ZSpaceship.checkAndUpdateVacuumState(player)
@@ -186,7 +14,7 @@ function ZSpaceship.checkAndUpdateVacuumState(player)
     local inVacuum = false
     if ZSpaceship.isInSpace(sq:getX(), sq:getY()) then
         local room = sq:getRoom()
-        inVacuum = not room or isRoomBreached(room)
+        inVacuum = not room or ZSpaceship.isRoomBreached(room, {})
     end
     
     ZSpaceship.VacuumSound.updateVacuumSounds(inVacuum)
@@ -298,12 +126,17 @@ function ZSpaceship.isCreatureInVacuum(creature)
         return true -- Not in any room = vacuum
     end
     
-    return isRoomBreached(room)
+    return ZSpaceship.isRoomBreached(room, {})
 end
 
--- Throttle for expensive vacuum checks (runs once per second instead of every tick)
+-- Throttle for expensive vacuum checks
 local vacuumCheckAccumulator = 0
-local VACUUM_CHECK_INTERVAL = 1.0  -- seconds
+local VACUUM_CHECK_INTERVAL = 2.0  -- seconds (increased from 1.0)
+local soundCheckAccumulator = 0
+local SOUND_CHECK_INTERVAL = 0.5  -- seconds (throttle sound checks to twice per second)
+
+-- Cache last vacuum state to avoid expensive checks every tick
+ZSpaceship.lastVacuumState = false
 
 -- Vacuum damage and sound muting
 local function checkVacuum(ticks)
@@ -313,10 +146,22 @@ local function checkVacuum(ticks)
     local player = getPlayer()
     local inVacuum = false
     
+    -- Accumulate time for sound checks (throttled to reduce expensive room breach checks)
+    soundCheckAccumulator = soundCheckAccumulator + (mult / 30.0)
+    local doSoundCheck = soundCheckAccumulator >= SOUND_CHECK_INTERVAL
+    if doSoundCheck then
+        soundCheckAccumulator = 0
+    end
+    
     -- Check if player is in vacuum (for sound muting - regardless of protection)
-    -- This is cheap, runs every tick
-    if player then
+    -- Throttled to reduce expensive room breach checks
+    if player and doSoundCheck then
         inVacuum = ZSpaceship.isCreatureInVacuum(player)
+        -- Store last vacuum state for caching
+        ZSpaceship.lastVacuumState = inVacuum
+    elseif player then
+        -- Use cached value between checks
+        inVacuum = ZSpaceship.lastVacuumState or false
     end
     
     -- Accumulate time for throttled checks
@@ -327,9 +172,9 @@ local function checkVacuum(ticks)
     end
     
     -- Process all creatures (zombies, animals, players) in vacuum
-    -- Only run once per second
+    -- Only run every VACUUM_CHECK_INTERVAL seconds (currently 2.0 seconds)
     if cell and doHeavyChecks then
-        -- Scale damage to account for running once per second instead of every tick
+        -- Scale damage to account for running at interval instead of every tick
         -- (mult ~= 1.0 at 30fps, so 30 ticks/second * interval = damage per check)
         local damageMult = VACUUM_CHECK_INTERVAL * 30
         

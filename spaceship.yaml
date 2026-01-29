@@ -37,6 +37,13 @@ elements:
     floor: floors_interior_tilesandwood_01_28
     roof:  floors_exterior_street_01_0
     palette:
+      flags:
+        WallN: ["┌", "─", "═", "━"]
+        WallW: ["┌", "│", "║", "┃"]
+        DoorN: ["^", "walls_garage_02_60"] # last one is the open door sprite, used in LUA
+        DoorS: ["v"]
+        DoorW: ["<", "walls_garage_02_57"]
+        DoorE: [">"]
       walls:
         "┌": { tile: location_community_medical_01_170, x: +1, y: +1, replaces: [location_community_medical_01_168, location_community_medical_01_169] }
         "─": { y: +1, tiles: [location_community_medical_01_169] }
