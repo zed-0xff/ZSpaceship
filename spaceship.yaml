@@ -220,7 +220,7 @@ elements:
       │bbb┃
       ┗━━━┛
 
-  teleport_room:
+  teleport_room: # XXX lua finds this room by its name, i.e. "teleport_room"
     floor: industry_01_39
     palette:
       walls:

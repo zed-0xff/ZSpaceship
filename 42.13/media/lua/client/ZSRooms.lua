@@ -8,6 +8,8 @@ ZSRooms = ZSRooms or {}
 
 local roomCache = {}
 local squareCache = {}
+local nameCache = {}
+local playerCache = {}
 
 -- Get room ID from room object
 local function getRoomId(room)
@@ -16,11 +18,7 @@ local function getRoomId(room)
     return tostring(room)
 end
 
--- Get or create cache entry for a room
-function ZSRooms.getOrCreate(room) -- IsoRoom
-    local roomId = getRoomId(room)
-    if not roomId then return nil end
-
+local function getOrCreateInternal(roomId, room) -- roomId not null, room IsoRoom not null
     if not roomCache[roomId] then
         -- Create ZSRoom object from the room
         local zsRoom = nil
@@ -42,6 +40,37 @@ function ZSRooms.getOrCreate(room) -- IsoRoom
     return roomCache[roomId]
 end
 
+local function initRooms()
+    if not ZSpaceship or not ZSpaceship.MapData or not ZSpaceship.MapData.Rooms then return end
+
+    for _, r in pairs(ZSpaceship.MapData.Rooms) do
+        local sq = getSquare(r.x, r.y, r.z)
+        if sq and sq.getRoom then
+            local room = sq:getRoom()
+            if room then
+                local roomId = getRoomId(room)
+                if roomId then
+                    getOrCreateInternal(roomId, room)
+                end
+            end
+        end
+    end
+
+    ZSRooms.updateAllSlow()
+end
+
+-- Get or create cache entry for a room
+function ZSRooms.getOrCreate(room) -- IsoRoom
+    local roomId = getRoomId(room)
+    if not roomId then return nil end
+
+    if #roomCache == 0 then
+        initRooms()
+    end
+
+    return getOrCreateInternal(roomId, room)
+end
+
 -- Find room from IsoGridSquare, IsoPlayer, or x,y,z coordinates
 -- Returns cached ZSRoom object or nil
 -- never creates new rooms
@@ -49,25 +78,32 @@ function ZSRooms.find(arg1, arg2, arg3)
     local square = nil
     local isoRoom = nil
     
+    if arg1 and type(arg1) == "string" then
+        return nameCache[arg1]
+    end
 
     if instanceof(arg1, "IsoGridSquare") then
-        return squareCache[arg1:getID()]
+        local key = ZSRoom.getSquareKey(arg1)
+        if key then
+            return squareCache[key]
+        end
     end
 
     -- Check if first argument is IsoPlayer (has getCurrentSquare method)
     if arg1 and arg1.getCurrentSquare then
         square = arg1:getCurrentSquare()
         if square then
-            return squareCache[square:getID()]
+            local key = ZSRoom.getSquareKey(square)
+            if key then
+                return squareCache[key]
+            end
         end
     -- Otherwise, treat as x, y, z coordinates
     elseif arg1 and arg2 and arg3 then
         local x, y, z = arg1, arg2, arg3
-        if getSquare then
-            square = getSquare(x, y, z)
-            if square then
-                return squareCache[square:getID()]
-            end
+        local key = ZSRoom.getSquareKeyFromCoords(x, y, z)
+        if key then
+            return squareCache[key]
         end
     end
     
@@ -151,15 +187,19 @@ end
 
 function ZSRooms.updateAllSlow()
     squareCache = {}
+    nameCache = {}
 
     for roomId, zsRoom in pairs(roomCache) do
         if zsRoom and zsRoom.update then
             zsRoom:update()
+            local name = zsRoom:getName()
+            if name then
+                nameCache[name] = zsRoom
+            end
             if zsRoom.squares then
-                for i = 0, zsRoom.squares:size() - 1 do
-                    local sq = zsRoom.squares:get(i)
-                    if sq then
-                        squareCache[sq:getID()] = zsRoom
+                for sqKey, sq in pairs(zsRoom.squares) do
+                    if sq and sqKey then
+                        squareCache[sqKey] = zsRoom
                     end
                 end
             end
@@ -173,6 +213,21 @@ function ZSRooms.updateAllSlow()
     end
 
     ZSRooms.updateAllFast()
+end
+
+function ZSRooms.dbgPrintCache()
+    print("roomCache:")
+    for roomId, zsRoom in pairs(roomCache) do
+        print("  " .. roomId .. ": " .. zsRoom:getName())
+    end
+    print("squareCache:")
+    for squareId, zsRoom in pairs(squareCache) do
+        print("  " .. squareId .. ": " .. zsRoom:getName())
+    end
+    print("nameCache:")
+    for name, zsRoom in pairs(nameCache) do
+        print("  " .. name .. ": " .. zsRoom:getName())
+    end
 end
 
 Events.OnTileRemoved.Add(function(sq) -- IsoGridSquare
@@ -197,19 +252,15 @@ Events.OnContainerUpdate.Add(function()
     ZSRooms.updateAllFast()
 end)
 
-Events.OnGameTimeLoaded.Add(function()
-end)
+-- may fail to create rooms if current map is not "Space"
+Events.OnGameStart.Add(initRooms)
 
-Events.OnGameStart.Add(function()
-    for _, r in pairs(ZSpaceship.MapData.Rooms) do
-        local sq = getSquare(r.x, r.y, r.z)
-        if sq and sq.getRoom then
-            local room = sq:getRoom()
-            if room then
-                ZSRooms.getOrCreate(room)
-            end
-        end
+Events.OnPlayerUpdate.Add(function(player)
+    local pid = player:getPlayerNum()
+    local curCell = player:getCell()
+    local prevCell = playerCache[pid]
+    if prevCell ~= curCell then
+        playerCache[pid] = curCell
+        print("[ZSpaceship] Player " .. pid .. " moved from cell " .. tostring(prevCell) .. " to cell " .. tostring(curCell))
     end
-
-    ZSRooms.updateAllSlow()
 end)

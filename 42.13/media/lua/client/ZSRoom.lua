@@ -12,6 +12,24 @@ ZSRoom.State = {
     BREACHED = "breached",
 }
 
+-- Static helper: Generate string key from square coordinates
+function ZSRoom.getSquareKey(sq)
+    if not sq then return nil end
+    local x, y, z = sq:getX(), sq:getY(), sq:getZ()
+    if x and y and z then
+        return x .. ":" .. y .. ":" .. z
+    end
+    return nil
+end
+
+-- Static helper: Generate string key from coordinates
+function ZSRoom.getSquareKeyFromCoords(x, y, z)
+    if x and y and z then
+        return x .. ":" .. y .. ":" .. z
+    end
+    return nil
+end
+
 -- Static helper: Check if square is open space
 function ZSRoom.isOpenSpace(sq)
     if not sq then return false end
@@ -64,19 +82,33 @@ function ZSRoom:getID()
     return self.isoRoom and tostring(self.isoRoom) or nil
 end
 
-function ZSRoom:getSquares()
-    return self.squares
-end
-
 -- Check if the room is valid
 function ZSRoom:isValid()
-    return self.isoRoom ~= nil and self.squares ~= nil and self.squares:size() > 0
+    if not self.isoRoom or not self.squares then return false end
+    -- Check if table has any entries
+    for _ in pairs(self.squares) do
+        return true
+    end
+    return false
 end
 
 -- Update room properties (open space, missing walls, airtight, connections)
 function ZSRoom:update()
-    if self.isoRoom and self.isoRoom.getSquares then
-        self.squares = self.isoRoom:getSquares()
+    if self.isoRoom and self.isoRoom.getSquares and self.isoRoom:getSquares():size() > 0 then
+        local javaSquares = self.isoRoom:getSquares()
+        -- Convert Java collection to Lua table with key = "x:y:z"
+        self.squares = {}
+        if javaSquares then
+            for i = 0, javaSquares:size() - 1 do
+                local sq = javaSquares:get(i)
+                if sq then
+                    local key = ZSRoom.getSquareKey(sq)
+                    if key then
+                        self.squares[key] = sq
+                    end
+                end
+            end
+        end
     end
     if not self:isValid() then return end
     
@@ -109,7 +141,12 @@ end
 
 -- Get the number of squares in the room
 function ZSRoom:getSquareCount()
-    return self.squares and self.squares:size() or 0
+    if not self.squares then return 0 end
+    local count = 0
+    for _ in pairs(self.squares) do
+        count = count + 1
+    end
+    return count
 end
 
 -- Get the north side Y coordinate (minimum Y)
@@ -119,8 +156,7 @@ function ZSRoom:getSideY_N()
     end
     
     local minY = nil
-    for i = 0, self.squares:size() - 1 do
-        local sq = self.squares:get(i)
+    for _, sq in pairs(self.squares) do
         if sq then
             local y = sq:getY()
             if minY == nil or y < minY then
@@ -144,8 +180,7 @@ function ZSRoom:getSquaresN()
     end
     
     local northSquares = {}
-    for i = 0, self.squares:size() - 1 do
-        local sq = self.squares:get(i)
+    for _, sq in pairs(self.squares) do
         if sq and sq:getY() == northY then
             table.insert(northSquares, sq)
         end
@@ -161,8 +196,7 @@ function ZSRoom:getSideX_W()
     end
     
     local minX = nil
-    for i = 0, self.squares:size() - 1 do
-        local sq = self.squares:get(i)
+    for _, sq in pairs(self.squares) do
         if sq then
             local x = sq:getX()
             if minX == nil or x < minX then
@@ -186,8 +220,7 @@ function ZSRoom:getSquaresW()
     end
     
     local westSquares = {}
-    for i = 0, self.squares:size() - 1 do
-        local sq = self.squares:get(i)
+    for _, sq in pairs(self.squares) do
         if sq and sq:getX() == westX then
             table.insert(westSquares, sq)
         end
@@ -203,8 +236,7 @@ function ZSRoom:getSideX_E()
     end
     
     local maxX = nil
-    for i = 0, self.squares:size() - 1 do
-        local sq = self.squares:get(i)
+    for _, sq in pairs(self.squares) do
         if sq then
             local x = sq:getX()
             if maxX == nil or x > maxX then
@@ -228,8 +260,7 @@ function ZSRoom:getSquaresE()
     end
     
     local eastSquares = {}
-    for i = 0, self.squares:size() - 1 do
-        local sq = self.squares:get(i)
+    for _, sq in pairs(self.squares) do
         if sq and sq:getX() == eastX then
             table.insert(eastSquares, sq)
         end
@@ -279,8 +310,7 @@ function ZSRoom:getMaxY()
     end
     
     local maxY = nil
-    for i = 0, self.squares:size() - 1 do
-        local sq = self.squares:get(i)
+    for _, sq in pairs(self.squares) do
         if sq then
             local y = sq:getY()
             if maxY == nil or y > maxY then
@@ -304,8 +334,7 @@ function ZSRoom:getSquaresS()
     end
     
     local southSquares = {}
-    for i = 0, self.squares:size() - 1 do
-        local sq = self.squares:get(i)
+    for _, sq in pairs(self.squares) do
         if sq and sq:getY() == southY then
             table.insert(southSquares, sq)
         end
@@ -324,7 +353,7 @@ function ZSRoom:getWallsDoorsS()
         -- For south walls, check the square to the south (y+1) for its north wall
         local southSq = getSquare(x, y + 1, z)
         -- north wall of south square = south wall of current
-        local wall = southSq and southSq:getWall(true) or southSq:getDoor(true)
+        local wall = southSq and (southSq:getWall(true) or southSq:getDoor(true))
         if wall then
             local tileName = nil
             if wall.getSpriteName then
@@ -359,7 +388,7 @@ function ZSRoom:getWallsDoorsE()
         -- For east walls, check the square to the east (x+1) for its west wall
         local eastSq = getSquare(x + 1, y, z)
         -- west wall of east square = east wall of current
-        local wall = eastSq and eastSq:getWall(false) or eastSq:getDoor(false)
+        local wall = eastSq and (eastSq:getWall(false) or eastSq:getDoor(false))
         if wall then
             local tileName = nil
             if wall.getSpriteName then
@@ -448,18 +477,24 @@ function ZSRoom:validate()
     self.maxX = nil
     self.minY = nil
     self.maxY = nil
+    self.minZ = nil
+    self.maxZ = nil
 
+    local totalCount = 0
+    for _ in pairs(self.squares) do
+        totalCount = totalCount + 1
+    end
+    
     local result = {
         squares = {
-            total = self.squares:size(),
+            total = totalCount,
             withFloor = 0,
             withRoof = 0,
         }
     }
 
     -- Check if all squares have both floor and roof, calculate min/max X/Y
-    for i = 0, self.squares:size() - 1 do
-        local sq = self.squares:get(i)
+    for _, sq in pairs(self.squares) do
         if sq then
             local x, y, z = sq:getX(), sq:getY(), sq:getZ()
 
@@ -475,6 +510,12 @@ function ZSRoom:validate()
             if not self.maxY or y > self.maxY then
                 self.maxY = y
             end
+            if not self.minZ or z < self.minZ then
+                self.minZ = z
+            end
+            if not self.maxZ or z > self.maxZ then
+                self.maxZ = z
+            end
 
             if sq:getFloor() then
                 result.squares.withFloor = result.squares.withFloor + 1
@@ -488,6 +529,14 @@ function ZSRoom:validate()
 
     self.width = self.maxX - self.minX + 1
     self.height = self.maxY - self.minY + 1
+
+    if self.width > 0 and self.height > 0 then
+        self.center = {
+            x = self.minX + (self.width / 2),
+            y = self.minY + (self.height / 2),
+            z = self.minZ
+        }
+    end
     
     local nsWalls = self:getWallsDoorsNS()
     local ewWalls = self:getWallsDoorsEW()

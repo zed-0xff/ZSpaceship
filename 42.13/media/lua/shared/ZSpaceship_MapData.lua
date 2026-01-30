@@ -8,11 +8,6 @@ ZSpaceship.MapData = ZSpaceship.MapData or {}
 ZSpaceship.MapData.CellX = 78
 ZSpaceship.MapData.CellY = 78
 
--- Teleporter location (center of teleport room)
-ZSpaceship.MapData.TeleporterX = 20096
-ZSpaceship.MapData.TeleporterY = 20093
-ZSpaceship.MapData.TeleporterZ = 10
-
 -- Door sprites (first entry from each door definition in YAML)
 ZSpaceship.MapData.DoorSprites = {
   ["walls_garage_02_60"] = true,
@@ -22,7 +17,7 @@ ZSpaceship.MapData.DoorSprites = {
 }
 
 -- Room centers (includes all rooms, including halls)
-ZSpaceship.MapData.Rooms = {
+ZSpaceship.MapData.DefaultRooms = {
   { x = 20100, y = 20085, z = 10, name = "cockpit" },
   { x = 20096, y = 20089, z = 10, name = "bathroom" },
   { x = 20100, y = 20091, z = 10, name = "longhub" },

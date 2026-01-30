@@ -67,10 +67,9 @@ class MapCompiler
     @room_index = 0
     @building_index = 0
     
-    # Track special locations (teleporter, spawn points, etc.)
-    @teleporter_coords = nil
+    # Track special locations (spawn points, etc.)
     @room_spawn_points = []  # Track room centers for spawn points (excluding corridors)
-    @all_rooms = []  # Track all room centers including halls (for MapData.Rooms)
+    @all_rooms = []  # Track all room centers including halls (for MapData.DefaultRooms)
     
     # Collect door sprites (first entry from each door definition)
     @door_sprites = Set.new
@@ -150,15 +149,6 @@ class MapCompiler
       ZSpaceship.MapData.CellY = #{@cell_y}
     LUA
     
-    if @teleporter_coords
-      lua_content += <<~LUA
-        
-        -- Teleporter location (center of teleport room)
-        ZSpaceship.MapData.TeleporterX = #{@teleporter_coords[:x]}
-        ZSpaceship.MapData.TeleporterY = #{@teleporter_coords[:y]}
-        ZSpaceship.MapData.TeleporterZ = #{@teleporter_coords[:z]}
-      LUA
-    end
     
     if !@door_sprites.empty?
       sprites_lua = @door_sprites.to_a.map { |s| "  [\"#{s}\"] = true" }.join(",\n")
@@ -176,7 +166,7 @@ class MapCompiler
       lua_content += <<~LUA
         
         -- Room centers (includes all rooms, including halls)
-        ZSpaceship.MapData.Rooms = {
+        ZSpaceship.MapData.DefaultRooms = {
         #{rooms_lua}
         }
       LUA
@@ -441,11 +431,7 @@ class MapCompiler
         next if val.nil?
 
         if val.is_a?(Hash) && (val.key?('tile') || val.key?('tiles') || val.key?('teleporter'))
-          # Check for teleporter marker
-          if val['teleporter']
-            @teleporter_coords = { x: abs_x, y: abs_y, z: z }
-            puts "Found teleporter at #{abs_x}, #{abs_y}, #{z}"
-          end
+          # Teleporter marker is no longer used (use ZSRooms.find("teleport_room") instead)
           
           # Process tiles if present
           if val.key?('tile') || val.key?('tiles')
@@ -541,7 +527,7 @@ class MapCompiler
       rect.h = 1
       room.rects << rect
       
-      # Add room center to all rooms (for MapData.Rooms, but not spawnpoints)
+      # Add room center to all rooms (for MapData.DefaultRooms, but not spawnpoints)
       @all_rooms << { x: abs_x, y: abs_y, z: z, name: room_name }
       
       @header.rooms[room_id] = room
@@ -663,7 +649,7 @@ class MapCompiler
     center_y = min_y + (max_y - min_y) / 2.0
     room_data = { x: center_x.round, y: center_y.round, z: z, name: name }
     
-    # Add to all rooms (for MapData.Rooms)
+    # Add to all rooms (for MapData.DefaultRooms)
     @all_rooms << room_data
     
     # Add to spawn points only if not a corridor (exclude corridors from spawnpoints)

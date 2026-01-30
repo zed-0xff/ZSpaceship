@@ -66,10 +66,21 @@ function ISZSpaceshipTeleportAction:complete()
 
     -- Consume power before teleporting
     if ZSpaceship and ZSpaceship.Power and self.powerCost then
+        local powerBefore = ZSpaceship.Power.getCurrentAmount()
         ZSpaceship.Power.consume(self.powerCost)
+        local powerAfter = ZSpaceship.Power.getCurrentAmount()
     end
 
     local function finalizeTeleport()
+        Events.OnTick.Remove(finalizeTeleport)
+
+
+        local sq = character:getSquare()
+        local csq = character:getCurrentSquare()
+        print("[ZSpaceship] sq: " .. tostring(sq:getX()) .. ", " .. tostring(sq:getY()) .. ", " .. tostring(sq:getZ()) .. ", csq: " .. tostring(csq:getX()) .. ", " .. tostring(csq:getY()) .. ", " .. tostring(csq:getZ()))
+        -- if ZSpaceship.isInSpace(targetX, targetY) then
+        --     ZSRooms.updateAllSlow()
+        -- end
         ZSpaceship.checkAndUpdateVacuumState(character)
         character:DoFootstepSound(2.0)
     end
@@ -114,18 +125,18 @@ function ISZSpaceshipTeleportAction:complete()
                         end
                     end
                     Events.OnTick.Remove(adjustPosition)
-                    finalizeTeleport()
+                    Events.OnTick.Add(finalizeTeleport)
                 elseif tickCount > 60 then
                     print("[ZSpaceship] Failed to find a free tile after 60 ticks")
                     Events.OnTick.Remove(adjustPosition)
-                    finalizeTeleport()
+                    Events.OnTick.Add(finalizeTeleport)
                 end
             end
             Events.OnTick.Add(adjustPosition)
         else
             character:setForceX(targetX)
             character:setForceY(targetY)
-            finalizeTeleport()
+            Events.OnTick.Add(finalizeTeleport)
         end
     end
     Events.OnTick.Add(doTeleport)
@@ -152,9 +163,13 @@ function ISZSpaceshipTeleportAction:new(character, targetX, targetY, targetZ, st
     
     -- Calculate and store power cost
     -- Check if teleporting from space (for cheaper cost)
+    -- Only apply cheap multiplier if BOTH origin and destination are in space
     local px, py = math.floor(character:getX()), math.floor(character:getY())
     local fromSpace = ZSpaceship.isInSpace(px, py)
-    o.powerCost = ZSpaceship.getTeleportCost(character, toBuilding or false, fromSpace)
+    local toSpace = ZSpaceship.isInSpace(targetX, targetY)
+    -- Only use cheap multiplier if teleporting within space (both from and to are in space)
+    local useCheapMultiplier = fromSpace and toSpace
+    o.powerCost = ZSpaceship.getTeleportCost(character, toBuilding or false, useCheapMultiplier)
     
     return o
 end
