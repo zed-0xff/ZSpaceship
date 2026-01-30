@@ -1,6 +1,5 @@
 [ ] UX: invisible border
 
-[ ] room: med room / cloner
 [ ] room: storage / workshop
 
 [ ] item: space suits
@@ -9,6 +8,7 @@
 [ ] mechanics: oxygen synthesizer
 [ ] mechanics: water generator
 [ ] mechanics: pipes
+[ ] mechanics: cloning
 
 [ ] craft:solar panels
 [ ] assets:solar panels - https://stockcake.com/i/floating-solar-innovation_1784775_1252444
@@ -38,3 +38,4 @@
 [+] room: library
 [+] room: kitchen
 [+] room: bedroom
+[+] room: med room / cloner

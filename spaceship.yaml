@@ -16,13 +16,14 @@ metapalette:
   r: smallR
   k: kitchenL
   b: bedroomR
+  M: medbayL
 
 metamap_gap: -1
 metamap: |
-  _C
+ __C
   BHX
   T^X
-  LHr
+ MLHr
   k^b
    E
 
@@ -41,6 +42,7 @@ elements:
     floor: floors_interior_tilesandwood_01_28
     roof:  floors_exterior_street_01_0
     palette:
+      "☐": [carpentry_02_104] # TODO: replace with space box
       flags:
         WallN: ["┌", "─", "═", "━"]
         WallW: ["┌", "│", "║", "┃"]
@@ -56,14 +58,15 @@ elements:
         "┃": walls_garage_02_16
         "┛": walls_garage_02_19
         "━": walls_garage_02_17
+        "┷": [walls_garage_02_17, lighting_indoor_02_46]
         "┗": null
         "│": { x: +1, tiles: [location_community_medical_01_168] }
         "║": { x: +1, tiles: [location_community_medical_01_168, lighting_indoor_02_44] }
       doors:
         "^": { y: +1, tiles: [walls_garage_02_52, lighting_indoor_02_45] }
-        "v": { tiles: [walls_garage_02_52, industry_trucks_01_19, industry_trucks_01_17] }
+        "v": { tiles: [walls_garage_02_52, industry_trucks_01_19, industry_trucks_01_17, lighting_indoor_02_46] }
         "<": { x: +1, tiles: [walls_garage_02_49, lighting_indoor_02_44] }
-        ">": { tiles: [walls_garage_02_49, industry_trucks_01_16, industry_trucks_01_18], facing: east }
+        ">": { tiles: [walls_garage_02_49, industry_trucks_01_16, industry_trucks_01_18, lighting_indoor_02_47], facing: east }
 
   cockpit:
     palette:
@@ -94,18 +97,46 @@ elements:
       │WBb┃
       ║w` >
       │SRr┃
-      ┗━━━┛
+      ┗━┷━┛
+
+  medbayL:
+    name: medical
+    palette:
+      1: [industry_02_Simon_MD_96, location_community_medical_01_219]
+      2: [industry_02_Simon_MD_96, location_community_medical_01_230, location_community_medical_01_116]
+      3: [location_community_medical_01_218]
+      4: [location_community_medical_01_229]
+      5: [location_community_medical_01_226]
+      6: [location_community_medical_01_228]
+
+      B: [industry_02_Simon_MD_98, location_community_medical_01_22, location_community_medical_01_117]
+      b: [industry_02_Simon_MD_100, location_community_medical_01_23]
+      -: [industry_02_Simon_MD_102]
+
+      t: [industry_02_Simon_MD_124]
+
+      X: [location_community_medical_01_76]
+      x: [location_community_medical_01_77]
+
+      C: [location_community_medical_01_154]
+      m: [fixtures_counters_01_33, location_community_medical_01_139]
+      s: [fixtures_counters_01_33, fixtures_sinks_01_19]
+      c: [fixtures_counters_01_33]
+    map: |
+      ┌─═──═──═─┓
+      │12Bb- CCC┃
+      ║34t      >
+      │56Xx  msc┃
+      ┗━┷━━┷━━┷━┛
 
   library:
     palette:
-      c: carpentry_01_17
-      C: [carpentry_01_17, carpentry_01_18]
       S: furniture_seating_indoor_03_123
-      T: [carpentry_01_17, appliances_television_01_0]
+      T: [carpentry_02_104, appliances_television_01_0]
     map: |
       ┌─═─┓
-      │ccc┃
-      ║c  >
+      │☐☐☐┃
+      <   >
       │T S┃
       ┗━━━┛
 
@@ -115,7 +146,7 @@ elements:
       │   ┃
       ║   >
       │   ┃
-      ┗━━━┛
+      ┗━┷━┛
 
   smallR:
     map: |
@@ -123,7 +154,7 @@ elements:
       │   ┃
       <   ┃
       │   ┃
-      ┗━━━┛
+      ┗━┷━┛
 
   kitchenL:
     name: kitchen
@@ -136,13 +167,12 @@ elements:
       m: [fixtures_counters_01_33, appliances_cooking_01_31, lighting_indoor_02_46]
       F: [appliances_refrigeration_01_9, fixtures_counters_01_31]
       l: [lighting_indoor_02_47]
-      x: [carpentry_02_104] # TODO: replace with space box
     map: |
       ┌─═─┓
       │r-W┃
       ║s  >
-      │Fxx┃
-      ┗━━━┛
+      │F☐☐┃
+      ┗━┷━┛
 
   bedroomR:
     name: bedroom
@@ -153,7 +183,7 @@ elements:
     map: |
       ┌─═─┓
       │Bbl┃
-      <  l┃ 
+      <  l┃
       │Bbl┃
       ┗━━━┛
 

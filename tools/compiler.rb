@@ -832,6 +832,11 @@ class MapCompiler
     end
     
     palette.each do |key, value|
+      case key
+      when 0..9
+        key = key.to_s # Convert numeric keys to strings
+      end
+
       if value.is_a?(Hash) && !value.key?('tile') && !value.key?('tiles')
         # It's a category (like 'walls', 'doors'), flatten its contents
         is_boundary = %w[walls doors].include?(key)

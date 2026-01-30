@@ -9,7 +9,7 @@ ZSpaceship.MapData.CellX = 78
 ZSpaceship.MapData.CellY = 78
 
 -- Teleporter location (center of teleport room)
-ZSpaceship.MapData.TeleporterX = 20091
+ZSpaceship.MapData.TeleporterX = 20096
 ZSpaceship.MapData.TeleporterY = 20093
 ZSpaceship.MapData.TeleporterZ = 10
 
@@ -23,28 +23,30 @@ ZSpaceship.MapData.DoorSprites = {
 
 -- Room centers (includes all rooms, including halls)
 ZSpaceship.MapData.Rooms = {
-  { x = 20095, y = 20085, z = 10, name = "cockpit" },
-  { x = 20091, y = 20089, z = 10, name = "bathroom" },
-  { x = 20095, y = 20091, z = 10, name = "longhub" },
-  { x = 20099, y = 20089, z = 10, name = "hub" },
-  { x = 20091, y = 20093, z = 10, name = "teleport_room" },
-  { x = 20099, y = 20093, z = 10, name = "hub" },
-  { x = 20091, y = 20097, z = 10, name = "library" },
-  { x = 20095, y = 20099, z = 10, name = "longhub" },
-  { x = 20099, y = 20097, z = 10, name = "smallR" },
-  { x = 20091, y = 20101, z = 10, name = "kitchen" },
-  { x = 20099, y = 20101, z = 10, name = "bedroom" },
-  { x = 20095, y = 20106, z = 10, name = "energy_storage" },
-  { x = 20095, y = 20087, z = 10, name = "hall" },
-  { x = 20093, y = 20089, z = 10, name = "hall" },
-  { x = 20097, y = 20089, z = 10, name = "hall" },
-  { x = 20093, y = 20093, z = 10, name = "hall" },
-  { x = 20097, y = 20093, z = 10, name = "hall" },
-  { x = 20095, y = 20095, z = 10, name = "hall" },
-  { x = 20099, y = 20091, z = 10, name = "hall" },
-  { x = 20093, y = 20097, z = 10, name = "hall" },
-  { x = 20097, y = 20097, z = 10, name = "hall" },
-  { x = 20093, y = 20101, z = 10, name = "hall" },
-  { x = 20097, y = 20101, z = 10, name = "hall" },
-  { x = 20095, y = 20103, z = 10, name = "hall" }
+  { x = 20100, y = 20085, z = 10, name = "cockpit" },
+  { x = 20096, y = 20089, z = 10, name = "bathroom" },
+  { x = 20100, y = 20091, z = 10, name = "longhub" },
+  { x = 20104, y = 20089, z = 10, name = "hub" },
+  { x = 20096, y = 20093, z = 10, name = "teleport_room" },
+  { x = 20104, y = 20093, z = 10, name = "hub" },
+  { x = 20089, y = 20097, z = 10, name = "medical" },
+  { x = 20096, y = 20097, z = 10, name = "library" },
+  { x = 20100, y = 20099, z = 10, name = "longhub" },
+  { x = 20104, y = 20097, z = 10, name = "smallR" },
+  { x = 20096, y = 20101, z = 10, name = "kitchen" },
+  { x = 20104, y = 20101, z = 10, name = "bedroom" },
+  { x = 20100, y = 20106, z = 10, name = "energy_storage" },
+  { x = 20100, y = 20087, z = 10, name = "hall" },
+  { x = 20098, y = 20089, z = 10, name = "hall" },
+  { x = 20102, y = 20089, z = 10, name = "hall" },
+  { x = 20098, y = 20093, z = 10, name = "hall" },
+  { x = 20102, y = 20093, z = 10, name = "hall" },
+  { x = 20100, y = 20095, z = 10, name = "hall" },
+  { x = 20104, y = 20091, z = 10, name = "hall" },
+  { x = 20094, y = 20097, z = 10, name = "hall" },
+  { x = 20098, y = 20097, z = 10, name = "hall" },
+  { x = 20102, y = 20097, z = 10, name = "hall" },
+  { x = 20098, y = 20101, z = 10, name = "hall" },
+  { x = 20102, y = 20101, z = 10, name = "hall" },
+  { x = 20100, y = 20103, z = 10, name = "hall" }
 }
