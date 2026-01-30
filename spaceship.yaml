@@ -12,14 +12,17 @@ metapalette:
   X: hub
   e: earth
   s: solar_panel
+  l: smallL
+  r: smallR
+  k: kitchenL
 
 metamap_gap: -1
 metamap: |
   _C
   BHX
   T^X
-  LH
-   ^
+  LHr
+  k^r
    E
 
 auto_corridors:
@@ -103,6 +106,41 @@ elements:
       │ccc┃
       ║c  >
       │T S┃
+      ┗━━━┛
+
+  smallL:
+    map: |
+      ┌─═─┓
+      │   ┃
+      ║   >
+      │   ┃
+      ┗━━━┛
+
+  smallR:
+    map: |
+      ┌─═─┓
+      │   ┃
+      <   ┃
+      │   ┃
+      ┗━━━┛
+
+  kitchenL:
+    name: kitchen
+    palette:
+      r: [fixtures_counters_01_36, fixtures_counters_01_172, appliances_cooking_01_29]
+      -: [fixtures_counters_01_30, fixtures_counters_01_37]
+      W: [appliances_laundry_01_0, fixtures_counters_01_30]
+      s: [fixtures_counters_01_31, fixtures_counters_01_35, fixtures_sinks_01_16]
+      L: [fixtures_counters_01_31, fixtures_counters_01_34]
+      m: [fixtures_counters_01_33, appliances_cooking_01_31, lighting_indoor_02_46]
+      F: [appliances_refrigeration_01_9, fixtures_counters_01_31]
+      l: [lighting_indoor_02_47]
+      x: [carpentry_02_104] # TODO: replace with space box
+    map: |
+      ┌─═─┓
+      │r-W┃
+      ║s  >
+      │Fxx┃
       ┗━━━┛
 
 

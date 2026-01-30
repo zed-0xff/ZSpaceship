@@ -21,11 +21,19 @@
 
 [ ] misc: missing thin wall at ┛ _internal_ corner
 
+[ ] skill: Science, bitch!
+    - use microscope to research various samples
+    - read books / magazines
+    - small xp gain along with electrical skill
+    - lowers time needed to read skill books
+    - boosts non-combat xp?
+
 [+] mechanics: vacuum
 [+] mechanics: energy
 [+] UX: show suit oxygen level
 [+] UX: show ship energy level when communicator is in inventory (equipped in watch slot?)
 [+] UI: communicator inventory icon
-[x] room: teleporter
-[x] room: bathroom
-[x] room: library
+[+] room: teleporter
+[+] room: bathroom
+[+] room: library
+[+] room: kitchen

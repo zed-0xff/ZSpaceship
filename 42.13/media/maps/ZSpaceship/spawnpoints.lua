@@ -10,6 +10,9 @@ function SpawnPoints()
                   { posX = 20099, posY = 20093, posZ = 10 },
                   { posX = 20091, posY = 20097, posZ = 10 },
                   { posX = 20095, posY = 20099, posZ = 10 },
+                  { posX = 20099, posY = 20097, posZ = 10 },
+                  { posX = 20091, posY = 20101, posZ = 10 },
+                  { posX = 20099, posY = 20101, posZ = 10 },
                   { posX = 20095, posY = 20106, posZ = 10 }
         }
     }
