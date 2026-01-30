@@ -1,5 +1,4 @@
 [ ] UX: invisible border
-[ ] UX: show suit oxygen level
 
 [ ] room: med room / cloner
 [ ] room: storage / workshop
@@ -12,12 +11,19 @@
 [ ] mechanics: pipes
 
 [ ] craft:solar panels
+[ ] assets:solar panels - https://stockcake.com/i/floating-solar-innovation_1784775_1252444
 
 [ ] UI: ship external walls
 [ ] UI: ship doors
 [ ] UI: ship top
 
+[ ] tiles: water storage 1x1 container from simon's tiles (screenshot in steam)
+
+[ ] misc: missing thin wall at ┛ _internal_ corner
+
+[+] mechanics: vacuum
 [+] mechanics: energy
+[+] UX: show suit oxygen level
 [+] UX: show ship energy level when communicator is in inventory (equipped in watch slot?)
 [+] UI: communicator inventory icon
 [x] room: teleporter

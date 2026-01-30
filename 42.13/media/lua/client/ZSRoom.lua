@@ -5,6 +5,13 @@
 ZSRoom = ZSRoom or {}
 ZSRoom.__index = ZSRoom
 
+ZSRoom.State = {
+    UNKNOWN = "unknown",
+    CHECKING = "checking",
+    SEALED = "sealed",
+    BREACHED = "breached",
+}
+
 -- Static helper: Check if square is open space
 function ZSRoom.isOpenSpace(sq)
     if not sq then return false end
@@ -50,6 +57,15 @@ function ZSRoom:new(squareOrRoom)
     self:update()
     
     return instance
+end
+
+-- Get the room ID
+function ZSRoom:getID()
+    return self.isoRoom and tostring(self.isoRoom) or nil
+end
+
+function ZSRoom:getSquares()
+    return self.squares
 end
 
 -- Check if the room is valid
@@ -741,5 +757,19 @@ function ZSRoom:isBreached()
     
     -- Return cached vacuum state (calculated by updateAllFast)
     -- If not calculated yet, default to false (sealed)
-    return self.vacuumState == true
+    return self.vacuumState == ZSRoom.State.BREACHED
+end
+
+function ZSRoom:isAllDoorsClosed()
+    if not self:isValid() or not self.isoRoom then
+        return false
+    end
+    
+    local doors = self:getDoors()
+    if not doors then return true end
+    
+    for _, door in ipairs(doors) do
+        if door.isOpen then return false end
+    end
+    return true
 end

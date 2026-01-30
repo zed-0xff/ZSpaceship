@@ -85,15 +85,66 @@ function ZSRooms.all()
     return roomCache
 end
 
+-- Calculate vacuum breach flags for all rooms
 function ZSRooms.updateAllFast()
-    -- Calculate vacuum breach flags for all rooms
-    -- Uses shared visited table for efficient caching across all rooms
-    local visited = {}
-    
-    for roomId, zsRoom in pairs(roomCache) do
-        if zsRoom and zsRoom.calculateVacuumState then
-            -- Calculate and cache vacuum state (uses visited cache for efficiency)
-            zsRoom:calculateVacuumState(visited)
+    local unknownRooms = {}
+    local breachedRooms = {}
+    for roomId, room in pairs(roomCache) do
+        if room then
+            if room.airtight then
+                if room:isAllDoorsClosed() then
+                    room.vacuumState = room.State.SEALED
+                elseif room:hasOpenDoorToSpace() then
+                    room.vacuumState = room.State.BREACHED
+                    breachedRooms[#breachedRooms + 1] = room
+                else
+                    room.vacuumState = room.State.UNKNOWN
+                    unknownRooms[#unknownRooms + 1] = room
+                end
+            else 
+                room.vacuumState = room.State.BREACHED
+                breachedRooms[#breachedRooms + 1] = room
+            end
+        end
+    end
+
+    for _, room in ipairs(breachedRooms) do
+        room:propagateBreach()
+    end
+
+    local maxPasses = 10
+    local pass = 0
+    local updated = true
+    while pass < maxPasses and #unknownRooms > 0 and updated do
+        pass = pass + 1
+        updated = false
+        local unknownRooms2 = {}
+        for _, room in ipairs(unknownRooms) do
+            if room.vacuumState == room.State.UNKNOWN and room.connections then
+                for adjRoom, doorDataArray in pairs(room.connections) do
+                    if adjRoom and adjRoom.vacuumState == ZSRoom.State.BREACHED then
+                        for _, doorData in ipairs(doorDataArray) do
+                            local door = doorData.isoDoor
+                            if door and door.IsOpen and door:IsOpen() then
+                                room.vacuumState = ZSRoom.State.BREACHED
+                                room:propagateBreach()
+                                updated = true
+                                break
+                            end
+                        end
+                    end
+                end
+            end
+            if room.vacuumState == room.State.UNKNOWN then
+                unknownRooms2[#unknownRooms2 + 1] = room
+            end
+        end
+        unknownRooms = unknownRooms2
+    end 
+
+    for _, room in ipairs(unknownRooms) do
+        if room.vacuumState == room.State.UNKNOWN then
+            room.vacuumState = room.State.SEALED
         end
     end
 end
