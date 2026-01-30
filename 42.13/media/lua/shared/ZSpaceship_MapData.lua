@@ -33,7 +33,7 @@ ZSpaceship.MapData.Rooms = {
   { x = 20095, y = 20099, z = 10, name = "longhub" },
   { x = 20099, y = 20097, z = 10, name = "smallR" },
   { x = 20091, y = 20101, z = 10, name = "kitchen" },
-  { x = 20099, y = 20101, z = 10, name = "smallR" },
+  { x = 20099, y = 20101, z = 10, name = "bedroom" },
   { x = 20095, y = 20106, z = 10, name = "energy_storage" },
   { x = 20095, y = 20087, z = 10, name = "hall" },
   { x = 20093, y = 20089, z = 10, name = "hall" },

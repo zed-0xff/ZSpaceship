@@ -15,6 +15,7 @@ metapalette:
   l: smallL
   r: smallR
   k: kitchenL
+  b: bedroomR
 
 metamap_gap: -1
 metamap: |
@@ -22,7 +23,7 @@ metamap: |
   BHX
   T^X
   LHr
-  k^r
+  k^b
    E
 
 auto_corridors:
@@ -141,6 +142,19 @@ elements:
       │r-W┃
       ║s  >
       │Fxx┃
+      ┗━━━┛
+
+  bedroomR:
+    name: bedroom
+    palette:
+      B: furniture_bedding_01_86
+      b: furniture_bedding_01_87
+      l: furniture_storage_02_6
+    map: |
+      ┌─═─┓
+      │Bbl┃
+      <  l┃ 
+      │Bbl┃
       ┗━━━┛
 
 
