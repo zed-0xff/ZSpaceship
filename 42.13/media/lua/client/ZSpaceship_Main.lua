@@ -33,9 +33,9 @@ function ZSpaceship.getTeleporterCoords()
         end
     end
     
-    -- Third try: search in MapData.DefaultRooms (compiled data)
-    if ZSpaceship.MapData and ZSpaceship.MapData.DefaultRooms then
-        for _, room in ipairs(ZSpaceship.MapData.DefaultRooms) do
+    -- Third try: search in MapData.Default.Rooms (compiled data)
+    if ZSpaceship.MapData and ZSpaceship.MapData.Default and ZSpaceship.MapData.Default.Rooms then
+        for _, room in ipairs(ZSpaceship.MapData.Default.Rooms) do
             if room.name == "teleport_room" then
                 return room.x, room.y, room.z
             end

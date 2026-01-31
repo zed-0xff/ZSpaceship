@@ -11,6 +11,11 @@ function ISZSpaceshipTeleportAction:isValid()
         return false
     end
     
+    -- Check Science perk level (requiredPerkLevel is set in :new())
+    if self.requiredPerkLevel and self.character:getPerkLevel(Perks.Science) < self.requiredPerkLevel then
+        return false
+    end
+    
     -- Check if there's enough power
     if ZSpaceship and ZSpaceship.Power then
         local currentPower = ZSpaceship.Power.getCurrentAmount()
@@ -154,6 +159,9 @@ function ISZSpaceshipTeleportAction:new(character, targetX, targetY, targetZ, st
     o.stopOnRun = true
     o.stopOnAim = false
     
+    -- Set required Science perk level: level 2 for building teleports, level 1 for others
+    o.requiredPerkLevel = (toBuilding == true) and ZSpaceship.Teleport.SCIENCE_LEVEL_BUILDING or ZSpaceship.Teleport.SCIENCE_LEVEL_MIN
+    
     -- Calculate and store power cost
     -- Check if teleporting from space (for cheaper cost)
     -- Only apply cheap multiplier if BOTH origin and destination are in space
@@ -162,7 +170,7 @@ function ISZSpaceshipTeleportAction:new(character, targetX, targetY, targetZ, st
     local toSpace = ZSpaceship.isInSpace(targetX, targetY)
     -- Only use cheap multiplier if teleporting within space (both from and to are in space)
     local useCheapMultiplier = fromSpace and toSpace
-    o.powerCost = ZSpaceship.getTeleportCost(character, toBuilding or false, useCheapMultiplier)
+    o.powerCost = ZSpaceship.Teleport.getCost(character, toBuilding or false, useCheapMultiplier)
     
     return o
 end

@@ -6,6 +6,7 @@ metapalette:
   B: bathroom
   C: cockpit
   E: energy_storage
+  G: longhub_with_generator
   H: longhub
   L: library
   T: teleport_room
@@ -21,7 +22,7 @@ metapalette:
 metamap_gap: -1
 metamap: |
  __C
-  BHX
+  BGX
   T^X
  MLHr
   k^b
@@ -50,6 +51,7 @@ elements:
         DoorS: ["v"]
         DoorW: ["<", "walls_garage_02_57"]
         DoorE: [">"]
+        Generator: ["⌁"]
       walls:
         "┌": { tile: location_community_medical_01_170, x: +1, y: +1, replaces: [location_community_medical_01_168, location_community_medical_01_169] }
         "─": { y: +1, tiles: [location_community_medical_01_169] }
@@ -201,6 +203,19 @@ elements:
       ┌─^─┓
       │   ┃
       <   >
+      │   ┃
+      ║   ┃
+      │   ┃
+      <   >
+      │   ┃
+      ┗━v━┛
+
+  longhub_with_generator:
+    name: longhub
+    map: |
+      ┌─^─┓
+      │   ┃
+      < ⌁ >
       │   ┃
       ║   ┃
       │   ┃

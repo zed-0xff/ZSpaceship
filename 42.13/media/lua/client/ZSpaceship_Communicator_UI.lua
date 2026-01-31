@@ -16,15 +16,35 @@ function ProgressBarUI:render()
     local barHeight = self:getHeight()
     
     local progress = 0
+    local currentPower = 0
     if ZSpaceship and ZSpaceship.Power then
         local maxAmount = ZSpaceship.Power.getMaxAmount()
+        currentPower = ZSpaceship.Power.getCurrentAmount()
         if maxAmount and maxAmount > 0 then
-            progress = ZSpaceship.Power.getCurrentAmount() / maxAmount
+            progress = currentPower / maxAmount
         end
     end
     
-    -- Foreground color (cyan/blue-green similar to clock)
-    local fgColor = {r = 100/255, g = 200/255, b = 210/255, a = 1.0}
+    -- Check if power is insufficient for teleporting to/from surface
+    local insufficientPower = false
+    if player and ZSpaceship and ZSpaceship.Teleport and ZSpaceship.isInSpace then
+        local inSpace = ZSpaceship.isInSpace(player:getX(), player:getY())
+        -- Calculate cost for teleporting to/from surface
+        local cost = ZSpaceship.Teleport.getCost(player, false, inSpace)
+        if currentPower < cost then
+            insufficientPower = true
+        end
+    end
+    
+    -- Foreground color: orange/yellow if insufficient power, otherwise cyan/blue-green
+    local fgColor
+    if insufficientPower then
+        -- Orange/yellow color (not red) when power is insufficient
+        fgColor = {r = 255/255, g = 165/255, b = 0/255, a = 1.0}  -- Orange
+    else
+        -- Normal cyan/blue-green similar to clock
+        fgColor = {r = 100/255, g = 200/255, b = 210/255, a = 1.0}
+    end
     
     -- Draw the progress bar at position 0,0 relative to this UI element
     self:drawProgressBar(0, 0, barWidth, barHeight, progress, fgColor)

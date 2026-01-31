@@ -5,10 +5,12 @@ UI_EN = {
     UI_ZSpaceship_NoOxygen = "No oxygen to start a fire!",
     UI_ZSpaceship_CantBreathe = "I can't breathe!",
     
-    UI_ZSpaceship_TeleportToCounty = "Teleport to Surface (%d MJ / %d MJ)",
-    UI_ZSpaceship_TeleportToBuilding = "Teleport into Building (%d MJ / %d MJ)",
-    UI_ZSpaceship_ReturnToSpaceship = "Return to Spaceship (%d MJ / %d MJ)",
+    UI_ZSpaceship_TeleportToCounty = "Teleport to Surface (%1 MJ / %2 MJ)",
+    UI_ZSpaceship_TeleportToBuilding = "Teleport into Building (%1 MJ / %2 MJ)",
+    UI_ZSpaceship_ReturnToSpaceship = "Return to Spaceship (%1 MJ / %2 MJ)",
     UI_ZSpaceship_InsufficientPower = "Insufficient power! Need %1 MJ, have %2 MJ",
+    UI_ZSpaceship_ScienceRequired = "Requires Science Level %1",
+    UI_ZSpaceship_TeleporterNotFound = "Teleporter location not found!",
     
     Tooltip_PowerCell = "Stores 1000 MJ of energy. <br>Used to power spaceship teleporter.",
     Tooltip_PowerCell_Empty = "A depleted power cell. <br>Can be recharged using a generator.",
