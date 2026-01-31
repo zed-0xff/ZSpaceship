@@ -799,8 +799,36 @@ class MapCompiler
     
     # Extract wall flags from palette.flags
     flags = palette['flags'] || {}
-    walln_chars = (flags['WallN'] || []).to_set
-    wallw_chars = (flags['WallW'] || []).to_set
+    walln_chars = Set.new
+    wallw_chars = Set.new
+    
+    # Process WallN flag: extract characters and tile names
+    if flags['WallN'] && flags['WallN'].is_a?(Array)
+      flags['WallN'].each do |item|
+        next unless item.is_a?(String)
+        if item.length == 1
+          # It's a character - add to walln_chars
+          walln_chars.add(item)
+        else
+          # It's a tile name - add to wall tiles list
+          @wall_tiles_ns.add(item)
+        end
+      end
+    end
+    
+    # Process WallW flag: extract characters and tile names
+    if flags['WallW'] && flags['WallW'].is_a?(Array)
+      flags['WallW'].each do |item|
+        next unless item.is_a?(String)
+        if item.length == 1
+          # It's a character - add to wallw_chars
+          wallw_chars.add(item)
+        else
+          # It's a tile name - add to wall tiles list
+          @wall_tiles_ew.add(item)
+        end
+      end
+    end
     
     # Extract generator flag - array containing generator characters
     generator_chars = Set.new

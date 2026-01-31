@@ -58,6 +58,8 @@ ZSpaceship.MapData.Default.Generators = {
 -- Lookup tables for faster validation (O(1) instead of O(n))
 -- North/South walls (getWall(true))
 ZSpaceship.MapData.AIRTIGHT_WALLS_NS_LOOKUP = {
+    ["constructedobjects_01_49"] = true,
+    ["constructedobjects_01_50"] = true,
     ["industry_railroad_05_25"] = true,
     ["industry_railroad_05_26"] = true,
     ["location_community_medical_01_169"] = true,
@@ -68,6 +70,8 @@ ZSpaceship.MapData.AIRTIGHT_WALLS_NS_LOOKUP = {
 
 -- East/West walls (getWall(false))
 ZSpaceship.MapData.AIRTIGHT_WALLS_EW_LOOKUP = {
+    ["constructedobjects_01_48"] = true,
+    ["constructedobjects_01_50"] = true,
     ["industry_railroad_05_24"] = true,
     ["industry_railroad_05_26"] = true,
     ["location_community_medical_01_168"] = true,

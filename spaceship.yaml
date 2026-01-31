@@ -45,8 +45,8 @@ elements:
     palette:
       "☐": [carpentry_02_104] # TODO: replace with space box
       flags:
-        WallN: ["┌", "─", "═", "━"]
-        WallW: ["┌", "│", "║", "┃"]
+        WallN: ["┌", "─", "═", "━", constructedobjects_01_49, constructedobjects_01_50] # crafted metal lvl2
+        WallW: ["┌", "│", "║", "┃", constructedobjects_01_48, constructedobjects_01_50]
         DoorN: ["^", "walls_garage_02_60"] # last one is the open door sprite, used in LUA
         DoorS: ["v"]
         DoorW: ["<", "walls_garage_02_57"]
