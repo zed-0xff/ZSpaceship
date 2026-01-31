@@ -430,12 +430,43 @@ class MapCompiler
         # Skip if no tile definition for this char
         next if val.nil?
 
-        if val.is_a?(Hash) && (val.key?('tile') || val.key?('tiles') || val.key?('teleporter'))
-          # Teleporter marker is no longer used (use ZSRooms.find("teleport_room") instead)
+        # Support nested hash syntax: [tile1, tile2, ..., { offset, tiles }] - independent tiles
+        if val.is_a?(Array)
+          # Collect all string tiles for current position
+          current_tiles = []
+          offset_hashes = []
           
+          val.each do |item|
+            if item.is_a?(String)
+              current_tiles << item
+            elsif item.is_a?(Hash) && (item.key?('tile') || item.key?('tiles'))
+              offset_hashes << item
+            end
+          end
+          
+          # Place tiles at current position if any
+          if !current_tiles.empty?
+            @defined_squares[[abs_x, abs_y, z]] = true
+            set_square_tiles(abs_x, abs_y, z, current_tiles)
+            
+            # Track first tile only (not decorative/lighting tiles)
+            if !current_tiles.empty?
+              track_first_tile(current_tiles.first, char, wall_flags, door_chars, door_facings)
+            end
+          end
+          
+          # Process offset tiles
+          offset_hashes.each do |offset_hash|
+            process_offset_tile(offset_hash, local_x, local_y, z, char, wall_flags, door_chars, door_facings)
+          end
+          
+          next if !current_tiles.empty? || !offset_hashes.empty?
+        end
+
+        if val.is_a?(Hash) && (val.key?('tile') || val.key?('tiles'))
           # Process tiles if present
           if val.key?('tile') || val.key?('tiles')
-            process_offset_tile(val, local_x, local_y, z, char, wall_flags)
+            process_offset_tile(val, local_x, local_y, z, char, wall_flags, door_chars, door_facings)
           end
           next
         end
@@ -444,7 +475,7 @@ class MapCompiler
         if char && wall_flags[char] && (val.is_a?(String) || val.is_a?(Array))
           # Convert simple string/array to hash format for process_offset_tile
           wall_def = val.is_a?(Array) ? { 'tiles' => val } : { 'tile' => val }
-          process_offset_tile(wall_def, local_x, local_y, z, char, wall_flags)
+          process_offset_tile(wall_def, local_x, local_y, z, char, wall_flags, door_chars, door_facings)
           next
         end
         
@@ -581,25 +612,20 @@ class MapCompiler
       
       # Track wall tiles for airtight wall lists
       # Only track the first tile (the actual wall tile, not decorative/lighting tiles)
-      # Check if this is a door tile - if so, add to door lists instead of wall lists
-      # north_wall/south_wall = N/S walls (getWall(true))
-      # east_wall/west_wall = E/W walls (getWall(false))
       first_tile = tiles.first
       if first_tile && !first_tile.empty?
+        # Determine direction from wall_key
+        is_ns_wall = ['north_wall', 'south_wall'].include?(wall_key)
+        is_ew_wall = ['east_wall', 'west_wall'].include?(wall_key)
+        
+        # Check if this is a door tile - if so, add to door lists instead of wall lists
         if @door_tiles.include?(first_tile)
-          # Add to door lists based on direction
-          if ['north_wall', 'south_wall'].include?(wall_key)
-            @door_tiles_ns.add(first_tile)
-          elsif ['east_wall', 'west_wall'].include?(wall_key)
-            @door_tiles_ew.add(first_tile)
-          end
+          @door_tiles_ns.add(first_tile) if is_ns_wall
+          @door_tiles_ew.add(first_tile) if is_ew_wall
         else
           # Add to wall lists (not a door)
-          if ['north_wall', 'south_wall'].include?(wall_key)
-            @wall_tiles_ns.add(first_tile)
-          elsif ['east_wall', 'west_wall'].include?(wall_key)
-            @wall_tiles_ew.add(first_tile)
-          end
+          @wall_tiles_ns.add(first_tile) if is_ns_wall
+          @wall_tiles_ew.add(first_tile) if is_ew_wall
         end
       end
     end
@@ -894,7 +920,55 @@ class MapCompiler
     :south
   end
   
-  def process_offset_tile(val, local_x, local_y, z, char = nil, wall_flags = {})
+  # Helper: Track a door tile based on facing direction
+  def track_door_tile(tile, facing, door_chars, door_facings)
+    return unless tile.is_a?(String) && !tile.empty?
+    
+    facing = facing || :south
+    is_ns_door = (facing == :north || facing == :south)
+    is_ew_door = (facing == :east || facing == :west)
+    
+    @door_tiles.add(tile)
+    @door_tiles_ns.add(tile) if is_ns_door
+    @door_tiles_ew.add(tile) if is_ew_door
+  end
+  
+  # Helper: Track a wall tile based on wall flags
+  def track_wall_tile(tile, wall_flags, char)
+    return unless tile.is_a?(String) && !tile.empty?
+    return unless char && wall_flags[char]
+    
+    directions = wall_flags[char]
+    directions = [directions] unless directions.is_a?(Array)
+    is_ns_wall = directions.include?(:north)
+    is_ew_wall = directions.include?(:west)
+    
+    # Check if this is a door tile - if so, add to door lists instead of wall lists
+    if @door_tiles.include?(tile)
+      @door_tiles_ns.add(tile) if is_ns_wall
+      @door_tiles_ew.add(tile) if is_ew_wall
+    else
+      # Add to wall lists (not a door)
+      @wall_tiles_ns.add(tile) if is_ns_wall
+      @wall_tiles_ew.add(tile) if is_ew_wall
+    end
+  end
+  
+  # Helper: Track first tile as door or wall (unified logic)
+  def track_first_tile(first_tile, char, wall_flags, door_chars, door_facings)
+    return unless first_tile.is_a?(String) && !first_tile.empty?
+    
+    # Check if this is a door character
+    if door_chars.include?(char)
+      facing = door_facings[char] || :south
+      track_door_tile(first_tile, facing, door_chars, door_facings)
+    # Check if this is a wall character with wall flags
+    elsif char && wall_flags[char]
+      track_wall_tile(first_tile, wall_flags, char)
+    end
+  end
+  
+  def process_offset_tile(val, local_x, local_y, z, char = nil, wall_flags = {}, door_chars = Set.new, door_facings = {})
     # Support both 'tile' (single) and 'tiles' (array)
     tiles = val['tiles'] || [val['tile']]
     tiles = [tiles] unless tiles.is_a?(Array)
@@ -927,48 +1001,11 @@ class MapCompiler
     set_square_tiles(abs_x, abs_y, z, tiles, replaces: replaces)
     @defined_squares[[abs_x, abs_y, z]] = true
     
-    # Track wall tiles for airtight wall lists
-    # Use wall flags if available, otherwise fallback to offset-based detection
-    # Only track the first tile (the actual wall tile, not decorative/lighting tiles)
-    # Include doors if they have wall flags or offsets (same logic as walls)
-    if bits != 0 && !tiles.empty?  # Only track if it's actually a wall
-      first_tile = tiles.first
-      if first_tile.is_a?(String) && !first_tile.empty?
-        # Determine wall direction from flags or offset
-        is_ns_wall = false
-        is_ew_wall = false
-        
-        if char && wall_flags[char]
-          # wall_flags[char] can be an array of directions
-          directions = wall_flags[char]
-          directions = [directions] unless directions.is_a?(Array)
-          is_ns_wall = directions.include?(:north)
-          is_ew_wall = directions.include?(:west)
-        else
-          # Fallback to offset-based detection
-          is_ns_wall = (y_offset != 0)
-          is_ew_wall = (x_offset != 0)
-        end
-        
-        # Check if this is a door tile - if so, add to door lists instead of wall lists
-        if @door_tiles.include?(first_tile)
-          # Add to door lists based on direction
-          if is_ns_wall
-            @door_tiles_ns.add(first_tile)
-          end
-          if is_ew_wall
-            @door_tiles_ew.add(first_tile)
-          end
-        else
-          # Add to wall lists (not a door)
-          if is_ns_wall
-            @wall_tiles_ns.add(first_tile)
-          end
-          if is_ew_wall
-            @wall_tiles_ew.add(first_tile)
-    end
-        end
-      end
+    # Track wall/door tiles for airtight lists
+    # Only track tiles that have wall flags or are door characters (actual walls/doors), not decorative/lighting tiles at offsets
+    # Only track the first tile (the actual wall/door tile, not decorative/lighting tiles)
+    if !tiles.empty?
+      track_first_tile(tiles.first, char, wall_flags, door_chars, door_facings)
     end
   end
   
