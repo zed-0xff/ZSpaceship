@@ -13,6 +13,8 @@ ZSpaceship.SpaceMaxY = (ZSpaceship.SpaceCellY + 1) * 256
 
 -- Check if coordinates are in space (full cell)
 function ZSpaceship.isInSpace(x, y)
+    if not x or not y then return false end
+
     return x >= ZSpaceship.SpaceMinX and x < ZSpaceship.SpaceMaxX and
            y >= ZSpaceship.SpaceMinY and y < ZSpaceship.SpaceMaxY
 end

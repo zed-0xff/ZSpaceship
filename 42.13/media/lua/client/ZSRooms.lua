@@ -9,7 +9,6 @@ ZSRooms = ZSRooms or {}
 local roomCache = {}
 local squareCache = {}
 local nameCache = {}
-local playerCache = {}
 
 -- Get room ID from room object
 local function getRoomId(room)
@@ -254,13 +253,3 @@ end)
 
 -- may fail to create rooms if current map is not "Space"
 Events.OnGameStart.Add(initRooms)
-
-Events.OnPlayerUpdate.Add(function(player)
-    local pid = player:getPlayerNum()
-    local curCell = player:getCell()
-    local prevCell = playerCache[pid]
-    if prevCell ~= curCell then
-        playerCache[pid] = curCell
-        print("[ZSpaceship] Player " .. pid .. " moved from cell " .. tostring(prevCell) .. " to cell " .. tostring(curCell))
-    end
-end)

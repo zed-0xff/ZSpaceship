@@ -74,13 +74,6 @@ function ISZSpaceshipTeleportAction:complete()
     local function finalizeTeleport()
         Events.OnTick.Remove(finalizeTeleport)
 
-
-        local sq = character:getSquare()
-        local csq = character:getCurrentSquare()
-        print("[ZSpaceship] sq: " .. tostring(sq:getX()) .. ", " .. tostring(sq:getY()) .. ", " .. tostring(sq:getZ()) .. ", csq: " .. tostring(csq:getX()) .. ", " .. tostring(csq:getY()) .. ", " .. tostring(csq:getZ()))
-        -- if ZSpaceship.isInSpace(targetX, targetY) then
-        --     ZSRooms.updateAllSlow()
-        -- end
         ZSpaceship.checkAndUpdateVacuumState(character)
         character:DoFootstepSound(2.0)
     end

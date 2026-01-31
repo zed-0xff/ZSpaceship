@@ -58,7 +58,7 @@ elements:
         "┃": walls_garage_02_16
         "┛": walls_garage_02_19
         "━": walls_garage_02_17
-        "┷": [walls_garage_02_17, lighting_indoor_02_46]
+        "┷": [walls_garage_02_17, { y: -1, tiles: [lighting_indoor_02_46] }]
         "┗": null
         "│": { x: +1, tiles: [location_community_medical_01_168] }
         "║": { x: +1, tiles: [location_community_medical_01_168, lighting_indoor_02_44] }
