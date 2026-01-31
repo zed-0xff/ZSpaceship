@@ -73,11 +73,12 @@ class TexturePackDevice
     page.numEntries = TexturePackPage.readInt(io)
     page.hasAlpha   = TexturePackPage.readInt(io) != 0
     page.sub        = page.numEntries.times.map{ TexturePackPage::SubTextureInfo.read(io) }
-    page.pngStart   = io.tell
     if @version == 0
+      page.pngStart = io.tell
       TexturePackPage.readIntByteUntil(io, 0xDEADBEEF)
     else
       length = TexturePackPage.readInt(io)
+      page.pngStart = io.tell
       io.seek(length, IO::SEEK_CUR)
     end
     page.pngSize = io.tell - page.pngStart
