@@ -84,7 +84,7 @@ local function drawOxygenBar(player)
     -- Position bar above character head (centered horizontally)
     -- Offset scales with zoom to maintain consistent visual distance
     local barX = sx - (BAR_WIDTH / 2)
-    local barY = sy - (130 / zoom)  -- Offset scales with zoom (increased from 80)
+    local barY = sy - (125 / zoom)  -- Offset scales with zoom
     
     -- Ensure barX and barY are valid numbers
     if not barX or not barY or type(barX) ~= "number" or type(barY) ~= "number" then return end
