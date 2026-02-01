@@ -100,6 +100,7 @@ ZSpaceship.MapData.Tiles = {
     "walls_garage_02_60"
   },
   ["Storage"] = {
+    "carpentry_02_104",
     "furniture_storage_02_28"
   },
   ["WallN"] = {

@@ -11,14 +11,6 @@ ZSpaceship.SpaceMaxX = (ZSpaceship.SpaceCellX + 1) * 256
 ZSpaceship.SpaceMinY = ZSpaceship.SpaceCellY * 256
 ZSpaceship.SpaceMaxY = (ZSpaceship.SpaceCellY + 1) * 256
 
--- Check if coordinates are in space (full cell)
-function ZSpaceship.isInSpace(x, y)
-    if not x or not y then return false end
-
-    return x >= ZSpaceship.SpaceMinX and x < ZSpaceship.SpaceMaxX and
-           y >= ZSpaceship.SpaceMinY and y < ZSpaceship.SpaceMaxY
-end
-
 -- Unlock a door/garage door object
 -- TODO: figure out if the door can be created initially unlocked
 local function unlockDoor(obj)
@@ -27,7 +19,7 @@ local function unlockDoor(obj)
     if not obj.getSquare then return end
 
     local sq = obj:getSquare()
-    if not sq or not ZSpaceship.isInSpace(sq:getX(), sq:getY()) then return end
+    if not sq or not ZSpaceship.isInSpace(sq) then return end
     
     if obj.setLockedByKey then
         obj:setLockedByKey(false)
@@ -81,23 +73,10 @@ Events.OnNewGame.Add(function()
     registerDoorUnlocks()
 
     -- furniture_storage_02_28 is the chest in teleport room (has container:locker)
-    MapObjects.OnNewWithSprite("furniture_storage_02_28", fillTeleportContainer, 10)
-end)
-
--- Hook campfire lightFire to prevent lighting in vacuum
-Events.OnGameStart.Add(function()
-    if not SCampfireGlobalObject then return end
-    
-    local originalLightFire = SCampfireGlobalObject.lightFire
-    SCampfireGlobalObject.lightFire = function(self)
-        local sq = self:getSquare()
-        if sq and ZSpaceship.isInSpace(sq:getX(), sq:getY()) then
-            local room = sq:getRoom()
-            -- No room or room is breached = vacuum = no fire
-            if not room then
-                return  -- Don't light
-            end
-        end
-        return originalLightFire(self)
+    -- Register all tiles with Storage flag
+    local storage_tiles = ZSpaceship.MapData.Tiles and ZSpaceship.MapData.Tiles["Storage"] or {}
+    for _, tile_name in ipairs(storage_tiles) do
+        MapObjects.OnNewWithSprite(tile_name, fillTeleportContainer, 10)
     end
 end)
+

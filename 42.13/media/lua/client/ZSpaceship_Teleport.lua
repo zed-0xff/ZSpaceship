@@ -59,8 +59,7 @@ function ZSpaceship.Teleport.isInBuilding(player)
         return false
     end
     -- Spaceship doesn't count as a building for teleport cost
-    local px, py = math.floor(player:getX()), math.floor(player:getY())
-    if ZSpaceship.isInSpace(px, py) then
+    if ZSpaceship.isInSpace(player) then
         return false
     end
     return true
@@ -255,7 +254,7 @@ local function doWorldContextMenu(playerNum, context, worldobjects, test)
         -- Return to Spaceship option when has communicator
         local communicator = player:getInventory():getItemFromTag(ZSpaceship.Tags.Communicator, true, true)
         if communicator then
-            local inSpace = ZSpaceship.isInSpace(player:getX(), player:getY())
+            local inSpace = ZSpaceship.isInSpace(player)
             local costReturn = ZSpaceship.Teleport.getCost(player, false, inSpace)
             addTeleportOption(context, player, costReturn, "UI_ZSpaceship_ReturnToSpaceship", function(p) ZSpaceship.Teleport.toShip(p, inSpace) end, communicator, ZSpaceship.Teleport.SCIENCE_LEVEL_MIN)
         end
@@ -280,8 +279,7 @@ local function doInventoryContextMenu(playerNum, context, items)
     end
     
     if clickedCommunicator then
-        local px, py = math.floor(player:getX()), math.floor(player:getY())
-        local inSpace = ZSpaceship.isInSpace(px, py)
+        local inSpace = ZSpaceship.isInSpace(player)
         local costReturn = ZSpaceship.Teleport.getCost(player, false, inSpace)
         addTeleportOption(context, player, costReturn, "UI_ZSpaceship_ReturnToSpaceship", function(p) ZSpaceship.Teleport.toShip(p, inSpace) end, clickedCommunicator, ZSpaceship.Teleport.SCIENCE_LEVEL_MIN)
     end

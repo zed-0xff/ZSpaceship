@@ -3,15 +3,15 @@
 
 ZSpaceship = ZSpaceship or {}
 
--- Helper to check if location is in vacuum
+-- Helper to check if location is in vacuum using cached ZSRoom state
 local function isInVacuum(sq)
     if not sq then return false end
-    if not ZSpaceship.isInSpace(sq:getX(), sq:getY()) then return false end
+    if not ZSpaceship.isInSpace(sq) then return false end
     
-    local room = sq:getRoom()
-    if not room then return true end
+    local zsRoom = ZSRooms.find(sq)
+    if not zsRoom then return true end  -- No room = vacuum
     
-    return ZSpaceship.isRoomBreached(room)
+    return zsRoom:isBreached()
 end
 
 -- Extinguish fires when created in vacuum (no oxygen)
@@ -79,13 +79,11 @@ local function canLightFire(target, playerObj)
 end
 
 -- Suppress all fires and heat sources in a room when it becomes breached
-local function suppressFiresInRoom(room)
-    if not room then return end
-    local squares = room:getSquares()
-    if not squares then return end
+local function suppressFiresInRoom(zsRoom)
+    if not zsRoom or not zsRoom.squares then return end
     
-    for i = 0, squares:size() - 1 do
-        local sq = squares:get(i)
+    -- Iterate through cached squares in the room (values are IsoGridSquare objects)
+    for _, sq in pairs(zsRoom.squares) do
         if sq then
             -- Stop any fires on this square
             sq:stopFire()
@@ -114,19 +112,19 @@ end
 -- Check for breach at a square and suppress fires in affected rooms
 local function checkBreachAtSquare(sq)
     if not sq then return end
-    if not ZSpaceship.isInSpace(sq:getX(), sq:getY()) then return end
+    if not ZSpaceship.isInSpace(sq) then return end
     
-    -- Check adjacent rooms for breach
+    -- Check adjacent rooms for breach using cached ZSRoom state
     local checkedRooms = {}
     for dx = -1, 1 do
         for dy = -1, 1 do
             local adjSq = getSquare(sq:getX() + dx, sq:getY() + dy, sq:getZ())
             if adjSq then
-                local room = adjSq:getRoom()
-                if room and not checkedRooms[room] then
-                    checkedRooms[room] = true
-                    if ZSpaceship.isRoomBreached(room) then
-                        suppressFiresInRoom(room)
+                local zsRoom = ZSRooms.find(adjSq)
+                if zsRoom and not checkedRooms[zsRoom] then
+                    checkedRooms[zsRoom] = true
+                    if zsRoom:isBreached() then
+                        suppressFiresInRoom(zsRoom)
                     end
                 end
             end
@@ -196,3 +194,22 @@ Events.OnDestroyIsoThumpable.Add(function(thumpable, owner)
     if not thumpable then return end
     checkBreachAtSquare(thumpable:getSquare())
 end)
+
+-- Hook campfire lightFire to prevent lighting in vacuum
+Events.OnGameStart.Add(function()
+    if not SCampfireGlobalObject then return end
+    
+    local originalLightFire = SCampfireGlobalObject.lightFire
+    SCampfireGlobalObject.lightFire = function(self)
+        local sq = self:getSquare()
+        if sq and ZSpaceship.isInSpace(sq) then
+            local room = sq:getRoom()
+            -- No room or room is breached = vacuum = no fire
+            if not room then
+                return  -- Don't light
+            end
+        end
+        return originalLightFire(self)
+    end
+end)
+

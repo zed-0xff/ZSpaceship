@@ -38,7 +38,7 @@ local function drawOxygenBar(player)
     
     -- Check if in vacuum
     local inVacuum = false
-    if ZSpaceship and ZSpaceship.isInSpace and ZSpaceship.isInSpace(sq:getX(), sq:getY()) then
+    if ZSpaceship.isInSpace(sq) then
         local room = sq:getRoom()
         if ZSpaceship.isRoomBreached and room then
             local breached = ZSpaceship.isRoomBreached(room)

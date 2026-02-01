@@ -165,8 +165,7 @@ function ISZSpaceshipTeleportAction:new(character, targetX, targetY, targetZ, st
     -- Calculate and store power cost
     -- Check if teleporting from space (for cheaper cost)
     -- Only apply cheap multiplier if BOTH origin and destination are in space
-    local px, py = math.floor(character:getX()), math.floor(character:getY())
-    local fromSpace = ZSpaceship.isInSpace(px, py)
+    local fromSpace = ZSpaceship.isInSpace(character)
     local toSpace = ZSpaceship.isInSpace(targetX, targetY)
     -- Only use cheap multiplier if teleporting within space (both from and to are in space)
     local useCheapMultiplier = fromSpace and toSpace

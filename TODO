@@ -28,6 +28,9 @@
 [ ] tiles: water storage 1x1 container from simon's tiles (screenshot in steam)
 
 [ ] realism: validate floor/ceil tiles using whitelist
+[ ] realism: suppress non-managed generators
+
+[ ] proper client/server
 
 [+] misc: missing thin wall at ┛ _internal_ corner
 [+] skill: Science, bitch!

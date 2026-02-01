@@ -23,7 +23,7 @@ function ZSpaceship.checkAndUpdateVacuumState(player)
     if not sq then return false end
     
     local inVacuum = false
-    if ZSpaceship.isInSpace(sq:getX(), sq:getY()) then
+    if ZSpaceship.isInSpace(sq) then
         local room = sq:getRoom()
         inVacuum = not room or ZSpaceship.isRoomBreached(room, {})
     end
@@ -128,7 +128,7 @@ function ZSpaceship.isCreatureInVacuum(creature)
     if not sq then return false end
     
     -- Must be in space zone
-    if not ZSpaceship.isInSpace(sq:getX(), sq:getY()) then
+    if not ZSpaceship.isInSpace(sq) then
         return false
     end
     
@@ -222,7 +222,7 @@ local function onPlayerUpdate(player)
     local sq = player:getCurrentSquare()
     if not sq then return end
     
-    local inSpace = ZSpaceship.isInSpace(sq:getX(), sq:getY())
+    local inSpace = ZSpaceship.isInSpace(sq)
     local climate = getClimateManager()
     
     if inSpace then

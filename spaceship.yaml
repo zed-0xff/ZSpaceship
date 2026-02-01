@@ -49,7 +49,7 @@ tiles:
   walls_garage_02_57:                 { flags: [Airtight, DoorW, OpenDoor] }
   walls_garage_02_60:                 { flags: [Airtight, DoorN, OpenDoor] }
   # furniture
-  carpentry_02_104:                   { alias: space_box } # TODO: texture
+  carpentry_02_104:                   { flags: [Storage], alias: space_box } # TODO: texture
   # floors
   industry_01_Simon_MD_118:           { flags: [Floor], alias: grate_floor, replaces: [invisible_floor] }
   floors_exterior_street_01_18:       { flags: [Floor], alias: invisible_floor }

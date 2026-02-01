@@ -63,6 +63,12 @@ function ZSRooms.getOrCreate(room) -- IsoRoom
     local roomId = getRoomId(room)
     if not roomId then return nil end
 
+    if room.getRandomSquare then
+        local sq = room:getRandomSquare()
+        if not sq then return nil end
+        if not ZSpaceship.isInSpace(sq) then return nil end
+    end
+
     if #roomCache == 0 then
         initRooms()
     end
@@ -230,7 +236,7 @@ function ZSRooms.dbgPrintCache()
 end
 
 Events.OnTileRemoved.Add(function(sq) -- IsoGridSquare
-    if sq and sq.getX and sq.getY and ZSpaceship.isInSpace(sq:getX(), sq:getY()) then
+    if sq and sq.getX and sq.getY and ZSpaceship.isInSpace(sq) then
         ZSRooms.updateAllSlow()
     end
 end)
@@ -238,7 +244,7 @@ end)
 Events.OnObjectAdded.Add(function(obj)
     if obj and obj.getSquare then
         local sq = obj:getSquare()
-        if sq and sq.getX and sq.getY and ZSpaceship.isInSpace(sq:getX(), sq:getY()) then
+        if sq and sq.getX and sq.getY and ZSpaceship.isInSpace(sq) then
             ZSRooms.updateAllSlow()
         end
     end

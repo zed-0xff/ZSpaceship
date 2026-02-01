@@ -11,8 +11,7 @@ local function preventFallDamageInSpace()
     local player = getPlayer()
     if not player then return end
     
-    local px, py = math.floor(player:getX()), math.floor(player:getY())
-    local inSpace = ZSpaceship.isInSpace(px, py)
+    local inSpace = ZSpaceship.isInSpace(player)
     
     -- Check if player is falling (using multiple methods for reliability)
     local isFalling = player:isbFalling() or 

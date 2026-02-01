@@ -27,8 +27,8 @@ function ProgressBarUI:render()
     
     -- Check if power is insufficient for teleporting to/from surface
     local insufficientPower = false
-    if player and ZSpaceship and ZSpaceship.Teleport and ZSpaceship.isInSpace then
-        local inSpace = ZSpaceship.isInSpace(player:getX(), player:getY())
+    if player and ZSpaceship.Teleport then
+        local inSpace = ZSpaceship.isInSpace(player)
         -- Calculate cost for teleporting to/from surface
         local cost = ZSpaceship.Teleport.getCost(player, false, inSpace)
         if currentPower < cost then
