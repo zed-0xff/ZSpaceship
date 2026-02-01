@@ -56,7 +56,7 @@ tiles:
   walls_garage_01_32:
     flags: [WallW]
     airtight: true
-  wallls_garage_01_33:
+  walls_garage_01_33:
     flags: [WallN]
     airtight: true
 
