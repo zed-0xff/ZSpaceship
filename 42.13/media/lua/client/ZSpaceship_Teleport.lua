@@ -59,26 +59,41 @@ function ZSpaceship.Teleport.isInBuilding(player)
         return false
     end
     -- Spaceship doesn't count as a building for teleport cost
-    if ZSpaceship.isInSpace(player) then
+    local px, py = math.floor(player:getX()), math.floor(player:getY())
+    if ZSpaceship.isInSpace(px, py) then
         return false
     end
     return true
 end
 
-function ZSpaceship.Teleport.getCost(player, toBuilding, fromSpace)
+-- Calculate teleport cost
+-- @param player: The player teleporting
+-- @param fromSpace: Whether teleporting FROM space (spaceship)
+-- @param toSpace: Whether teleporting TO space (spaceship)
+-- @param toBuilding: Whether teleporting TO a building (only valid when toSpace is false)
+function ZSpaceship.Teleport.getCost(player, fromSpace, toSpace, toBuilding)
+    toBuilding = toBuilding or false
     local mass = ZSpaceship.Teleport.getMass(player)
     local cost = mass * ZSpaceship.Teleport.COST_PER_KG
     
-    -- Much cheaper if teleporting from space
-    if fromSpace then
+    -- Much cheaper if teleporting within space (both from and to space)
+    if fromSpace and toSpace then
         cost = cost * ZSpaceship.Teleport.SPACE2SPACE_MULT
     else
-    -- +50% if from or to building (spaceship excluded)
-        local fromBuilding = ZSpaceship.Teleport.isInBuilding(player)
-    if fromBuilding or toBuilding then
+        -- +50% if from or to building (spaceship excluded)
+        local fromBuilding = false
+        if not fromSpace then
+            fromBuilding = ZSpaceship.Teleport.isInBuilding(player)
+        end
+        if fromBuilding or toBuilding then
             cost = cost * ZSpaceship.Teleport.BUILDING_MULT
         end
     end
+    
+    -- Apply Science perk discount: 5% per level
+    local scienceLevel = player:getPerkLevel(Perks.Science)
+    local discount = scienceLevel * 0.05  -- 5% per level
+    cost = cost * (1 - discount)
     
     return math.floor(cost)
 end
@@ -90,8 +105,8 @@ function ZSpaceship.Teleport.toRandom(player)
         return
     end
     
-    -- Check power before teleporting
-    local cost = ZSpaceship.Teleport.getCost(player, false, false)
+    -- Check power before teleporting (from space, to surface, not to building)
+    local cost = ZSpaceship.Teleport.getCost(player, true, false, false)
     if ZSpaceship and ZSpaceship.Power then
         local currentPower = ZSpaceship.Power.getCurrentAmount()
         if currentPower < cost then
@@ -144,8 +159,8 @@ function ZSpaceship.Teleport.toRandomBuilding(player)
         return
     end
     
-    -- Check power before teleporting
-    local cost = ZSpaceship.Teleport.getCost(player, true, false)
+    -- Check power before teleporting (from space, to surface, to building)
+    local cost = ZSpaceship.Teleport.getCost(player, true, false, true)
     if ZSpaceship and ZSpaceship.Power then
         local currentPower = ZSpaceship.Power.getCurrentAmount()
         if currentPower < cost then
@@ -204,8 +219,8 @@ function ZSpaceship.Teleport.toShip(player, fromSpace)
         return
     end
     
-    -- Check power before teleporting
-    local cost = ZSpaceship.Teleport.getCost(player, false, fromSpace)
+    -- Check power before teleporting (from surface or space, to space)
+    local cost = ZSpaceship.Teleport.getCost(player, fromSpace, true, false)
     if ZSpaceship and ZSpaceship.Power then
         local currentPower = ZSpaceship.Power.getCurrentAmount()
         if currentPower < cost then
@@ -220,8 +235,20 @@ function ZSpaceship.Teleport.toShip(player, fromSpace)
         return
     end
     
-    local x = tx + 0.5
-    local y = ty + 0.5
+    -- Get the square at the teleporter coordinates and center the player in it
+    local x, y, z
+    local sq = getSquare(math.floor(tx), math.floor(ty), tz)
+    if sq then
+        -- Use square's integer coordinates and add 0.5 to center
+        x = sq:getX() + 0.5
+        y = sq:getY() + 0.5
+        z = sq:getZ()
+    else
+        -- Fallback: use provided coordinates and add 0.5
+        x = math.floor(tx) + 0.5
+        y = math.floor(ty) + 0.5
+        z = tz
+    end
     
     -- Longer teleport time if inside a building (but not if coming from space)
     local timeMult = 1.0
@@ -232,7 +259,7 @@ function ZSpaceship.Teleport.toShip(player, fromSpace)
         end
     end
     
-    ISTimedActionQueue.add(ISZSpaceshipTeleportAction:new(player, x, y, tz, "Beam me up, Scotty!", timeMult, false, false))
+    ISTimedActionQueue.add(ISZSpaceshipTeleportAction:new(player, x, y, z, "Beam me up, Scotty!", timeMult, false, false))
 end
 
 -- Context Menu for Teleporter (World Object)
@@ -241,21 +268,65 @@ local function doWorldContextMenu(playerNum, context, worldobjects, test)
     local player = getSpecificPlayer(playerNum)
     if not player then return end
     
+    -- Only add teleport options if right-clicked on player or player's cell (including adjacent squares x-1, y-1)
+    local isPlayerCell = false
+    local playerSquare = player:getCurrentSquare()
+    
+    if playerSquare then
+        local playerX = playerSquare:getX()
+        local playerY = playerSquare:getY()
+        local playerZ = playerSquare:getZ()
+        
+        -- Get adjacent squares (x-1, y-1, and both)
+        local adjacentSquares = {}
+        adjacentSquares[playerSquare] = true
+        local adjSq1 = getSquare(playerX - 1, playerY, playerZ)
+        if adjSq1 then adjacentSquares[adjSq1] = true end
+        local adjSq2 = getSquare(playerX, playerY - 1, playerZ)
+        if adjSq2 then adjacentSquares[adjSq2] = true end
+        local adjSq3 = getSquare(playerX - 1, playerY - 1, playerZ)
+        if adjSq3 then adjacentSquares[adjSq3] = true end
+        
+        for i = 1, #worldobjects do
+            local obj = worldobjects[i]
+            if obj then
+                -- Check if object is the player
+                if instanceof(obj, "IsoPlayer") and obj == player then
+                    isPlayerCell = true
+                    break
+                end
+                -- Check if object is on player's square or adjacent squares
+                local objSquare = nil
+                if obj.getSquare then
+                    objSquare = obj:getSquare()
+                elseif obj.getCurrentSquare then
+                    objSquare = obj:getCurrentSquare()
+                end
+                if objSquare and adjacentSquares[objSquare] then
+                    isPlayerCell = true
+                    break
+                end
+            end
+        end
+    end
+    
+    if not isPlayerCell then return end
+    
     -- Check if standing in teleport room
     local room = ZSRooms.find(player)
     
     if room and room:getName() == "teleport_room" then
         local communicator = player:getInventory():getItemFromTag(ZSpaceship.Tags.Communicator, true, true)
-        local costSurface = ZSpaceship.Teleport.getCost(player, false, false)
-        local costBuilding = ZSpaceship.Teleport.getCost(player, true, false)
+        local costSurface = ZSpaceship.Teleport.getCost(player, true, false, false)  -- from space, to surface, not to building
+        local costBuilding = ZSpaceship.Teleport.getCost(player, true, false, true)   -- from space, to surface, to building
         addTeleportOption(context, player, costSurface, "UI_ZSpaceship_TeleportToCounty", ZSpaceship.Teleport.toRandom, communicator, ZSpaceship.Teleport.SCIENCE_LEVEL_MIN)
         addTeleportOption(context, player, costBuilding, "UI_ZSpaceship_TeleportToBuilding", ZSpaceship.Teleport.toRandomBuilding, communicator, ZSpaceship.Teleport.SCIENCE_LEVEL_BUILDING)
     else
         -- Return to Spaceship option when has communicator
         local communicator = player:getInventory():getItemFromTag(ZSpaceship.Tags.Communicator, true, true)
         if communicator then
-            local inSpace = ZSpaceship.isInSpace(player)
-            local costReturn = ZSpaceship.Teleport.getCost(player, false, inSpace)
+            local inSpace = ZSpaceship.isInSpace(player:getX(), player:getY())
+            local costReturn = ZSpaceship.Teleport.getCost(player, inSpace, true, false)  -- from surface/space, to space
             addTeleportOption(context, player, costReturn, "UI_ZSpaceship_ReturnToSpaceship", function(p) ZSpaceship.Teleport.toShip(p, inSpace) end, communicator, ZSpaceship.Teleport.SCIENCE_LEVEL_MIN)
         end
     end
@@ -279,8 +350,9 @@ local function doInventoryContextMenu(playerNum, context, items)
     end
     
     if clickedCommunicator then
-        local inSpace = ZSpaceship.isInSpace(player)
-        local costReturn = ZSpaceship.Teleport.getCost(player, false, inSpace)
+        local px, py = math.floor(player:getX()), math.floor(player:getY())
+        local inSpace = ZSpaceship.isInSpace(px, py)
+        local costReturn = ZSpaceship.Teleport.getCost(player, inSpace, true, false)  -- from surface/space, to space
         addTeleportOption(context, player, costReturn, "UI_ZSpaceship_ReturnToSpaceship", function(p) ZSpaceship.Teleport.toShip(p, inSpace) end, clickedCommunicator, ZSpaceship.Teleport.SCIENCE_LEVEL_MIN)
     end
 end

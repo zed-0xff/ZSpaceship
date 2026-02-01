@@ -29,25 +29,31 @@ function ProgressBarUI:render()
     local insufficientPower = false
     if player and ZSpaceship.Teleport then
         local inSpace = ZSpaceship.isInSpace(player)
-        -- Calculate cost for teleporting to/from surface
-        local cost = ZSpaceship.Teleport.getCost(player, false, inSpace)
+        -- Calculate cost for teleporting to space (from surface or space)
+        local cost = ZSpaceship.Teleport.getCost(player, inSpace, not inSpace, false)
         if currentPower < cost then
             insufficientPower = true
         end
     end
     
-    -- Foreground color: orange/yellow if insufficient power, otherwise cyan/blue-green
-    local fgColor
-    if insufficientPower then
-        -- Orange/yellow color (not red) when power is insufficient
-        fgColor = {r = 255/255, g = 165/255, b = 0/255, a = 1.0}  -- Orange
+    -- Draw red empty box if power is zero, otherwise draw progress bar
+    if currentPower <= 0 then
+        -- Draw red border (empty box) when power is zero
+        self:drawRectBorder(0, 0, barWidth, barHeight, 1.0, 255/255, 0/255, 0/255)  -- Red border
     else
-        -- Normal cyan/blue-green similar to clock
-        fgColor = {r = 100/255, g = 200/255, b = 210/255, a = 1.0}
+        -- Foreground color: orange if insufficient power, otherwise cyan/blue-green
+        local fgColor
+        if insufficientPower then
+            -- Orange/yellow color when power is insufficient for teleport
+            fgColor = {r = 255/255, g = 165/255, b = 0/255, a = 1.0}  -- Orange
+        else
+            -- Normal cyan/blue-green similar to clock
+            fgColor = {r = 100/255, g = 200/255, b = 210/255, a = 1.0}
+        end
+        
+        -- Draw the progress bar at position 0,0 relative to this UI element
+        self:drawProgressBar(0, 0, barWidth, barHeight, progress, fgColor)
     end
-    
-    -- Draw the progress bar at position 0,0 relative to this UI element
-    self:drawProgressBar(0, 0, barWidth, barHeight, progress, fgColor)
 end
 
 local progressBarUI = nil

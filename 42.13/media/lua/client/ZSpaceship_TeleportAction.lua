@@ -163,13 +163,11 @@ function ISZSpaceshipTeleportAction:new(character, targetX, targetY, targetZ, st
     o.requiredPerkLevel = (toBuilding == true) and ZSpaceship.Teleport.SCIENCE_LEVEL_BUILDING or ZSpaceship.Teleport.SCIENCE_LEVEL_MIN
     
     -- Calculate and store power cost
-    -- Check if teleporting from space (for cheaper cost)
-    -- Only apply cheap multiplier if BOTH origin and destination are in space
-    local fromSpace = ZSpaceship.isInSpace(character)
+    -- Check if teleporting from/to space
+    local px, py = math.floor(character:getX()), math.floor(character:getY())
+    local fromSpace = ZSpaceship.isInSpace(px, py)
     local toSpace = ZSpaceship.isInSpace(targetX, targetY)
-    -- Only use cheap multiplier if teleporting within space (both from and to are in space)
-    local useCheapMultiplier = fromSpace and toSpace
-    o.powerCost = ZSpaceship.Teleport.getCost(character, toBuilding or false, useCheapMultiplier)
+    o.powerCost = ZSpaceship.Teleport.getCost(character, fromSpace, toSpace, toBuilding or false)
     
     return o
 end
