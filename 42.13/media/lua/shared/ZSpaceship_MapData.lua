@@ -8,14 +8,6 @@ ZSpaceship.MapData = ZSpaceship.MapData or {}
 ZSpaceship.MapData.CellX = 78
 ZSpaceship.MapData.CellY = 78
 
--- Door sprites (first entry from each door definition in YAML)
-ZSpaceship.MapData.DoorSprites = {
-  ["walls_garage_02_60"] = true,
-  ["walls_garage_02_57"] = true,
-  ["walls_garage_02_52"] = true,
-  ["walls_garage_02_49"] = true
-}
-
 -- Default data (compiled from map YAML)
 ZSpaceship.MapData.Default = ZSpaceship.MapData.Default or {}
 
@@ -49,48 +41,129 @@ ZSpaceship.MapData.Default.Rooms = {
   { x = 20100, y = 20103, z = 10, name = "hall" }
 }
 
--- Generator coordinates
-ZSpaceship.MapData.Default.Generators = {
-  { x = 20100, y = 20089, z = 10 }
+-- Location coordinates (grouped by type)
+ZSpaceship.MapData.Default.Locations = {
+  ["CloningConsole"] = {
+    { x = 20087, y = 20097, z = 10 }
+  },
+  ["Generator"] = {
+    { x = 20100, y = 20089, z = 10 }
+  }
 }
 
--- Airtight wall and door tile lookup tables
--- Lookup tables for faster validation (O(1) instead of O(n))
--- North/South walls (getWall(true))
-ZSpaceship.MapData.AIRTIGHT_WALLS_NS_LOOKUP = {
-    ["constructedobjects_01_49"] = true,
-    ["constructedobjects_01_50"] = true,
-    ["industry_railroad_05_25"] = true,
-    ["industry_railroad_05_26"] = true,
-    ["location_community_medical_01_169"] = true,
-    ["location_community_medical_01_170"] = true,
-    ["walls_garage_01_33"] = true,
-    ["walls_garage_02_17"] = true
+-- Tiles with flags (from tiles: section in YAML), grouped by flag
+ZSpaceship.MapData.Tiles = {
+  ["Airtight"] = {
+    "constructedobjects_01_48",
+    "constructedobjects_01_49",
+    "constructedobjects_01_50",
+    "floors_exterior_street_01_0",
+    "floors_exterior_tilesandstone_01_13",
+    "floors_interior_tilesandwood_01_28",
+    "industry_railroad_05_24",
+    "industry_railroad_05_25",
+    "industry_railroad_05_26",
+    "location_community_medical_01_168",
+    "location_community_medical_01_169",
+    "location_community_medical_01_170",
+    "walls_garage_01_32",
+    "walls_garage_01_33",
+    "walls_garage_01_35",
+    "walls_garage_02_16",
+    "walls_garage_02_17",
+    "walls_garage_02_19",
+    "walls_garage_02_49",
+    "walls_garage_02_52",
+    "walls_garage_02_57",
+    "walls_garage_02_60"
+  },
+  ["DoorN"] = {
+    "walls_garage_02_52",
+    "walls_garage_02_60"
+  },
+  ["DoorW"] = {
+    "walls_garage_02_49",
+    "walls_garage_02_57"
+  },
+  ["EnergyStorage"] = {
+    "industry_02_175"
+  },
+  ["Floor"] = {
+    "floors_exterior_street_01_0",
+    "floors_exterior_street_01_18",
+    "floors_exterior_tilesandstone_01_13",
+    "floors_interior_tilesandwood_01_28",
+    "industry_01_Simon_MD_118"
+  },
+  ["OpenDoor"] = {
+    "walls_garage_02_57",
+    "walls_garage_02_60"
+  },
+  ["Storage"] = {
+    "furniture_storage_02_28"
+  },
+  ["WallN"] = {
+    "constructedobjects_01_49",
+    "constructedobjects_01_50",
+    "industry_railroad_05_25",
+    "industry_railroad_05_26",
+    "location_community_medical_01_169",
+    "location_community_medical_01_170",
+    "walls_garage_01_33",
+    "walls_garage_02_17"
+  },
+  ["WallSE"] = {
+    "walls_garage_01_35",
+    "walls_garage_02_19"
+  },
+  ["WallW"] = {
+    "constructedobjects_01_48",
+    "constructedobjects_01_50",
+    "industry_railroad_05_24",
+    "industry_railroad_05_26",
+    "location_community_medical_01_168",
+    "location_community_medical_01_170",
+    "walls_garage_01_32",
+    "walls_garage_02_16"
+  }
 }
 
--- East/West walls (getWall(false))
-ZSpaceship.MapData.AIRTIGHT_WALLS_EW_LOOKUP = {
-    ["constructedobjects_01_48"] = true,
-    ["constructedobjects_01_50"] = true,
-    ["industry_railroad_05_24"] = true,
-    ["industry_railroad_05_26"] = true,
-    ["location_community_medical_01_168"] = true,
-    ["location_community_medical_01_170"] = true,
-    ["walls_garage_01_32"] = true,
-    ["walls_garage_02_16"] = true
-}
+-- Generate door sprites from MapData.Tiles (tiles with DoorN or DoorW flags)
+ZSpaceship.MapData.DoorSprites = {}
+local door_n_tiles = ZSpaceship.MapData.Tiles["DoorN"] or {}
+local door_w_tiles = ZSpaceship.MapData.Tiles["DoorW"] or {}
+for _, tile_name in ipairs(door_n_tiles) do
+    ZSpaceship.MapData.DoorSprites[tile_name] = true
+end
+for _, tile_name in ipairs(door_w_tiles) do
+    ZSpaceship.MapData.DoorSprites[tile_name] = true
+end
 
--- Door tiles (North/South direction)
-ZSpaceship.MapData.AIRTIGHT_DOORS_NS_LOOKUP = {
-    ["industry_01_Simon_MD_118"] = true,
-    ["walls_garage_02_52"] = true,
-    ["walls_garage_02_60"] = true
-}
+-- Generate airtight wall and door tile lookup tables from MapData.Tiles
+-- Only includes tiles that have both "Airtight" flag and the direction flag
+local airtight_set = {}
+for _, tile_name in ipairs(ZSpaceship.MapData.Tiles["Airtight"]) do
+    airtight_set[tile_name] = true
+end
 
--- Door tiles (East/West direction)
-ZSpaceship.MapData.AIRTIGHT_DOORS_EW_LOOKUP = {
-    ["industry_01_Simon_MD_118"] = true,
-    ["lighting_indoor_02_47"] = true,
-    ["walls_garage_02_49"] = true,
-    ["walls_garage_02_57"] = true
-}
+local function buildAirtightLookupTable(direction_flag_list)
+    local lookup = {}
+    for _, tile_name in ipairs(direction_flag_list) do
+        if airtight_set[tile_name] then
+            lookup[tile_name] = true
+        end
+    end
+    return lookup
+end
+
+-- North/South walls (getWall(true)) - from WallN flag, only if also Airtight
+ZSpaceship.MapData.AIRTIGHT_WALLS_NS_LOOKUP = buildAirtightLookupTable(ZSpaceship.MapData.Tiles["WallN"])
+
+-- East/West walls (getWall(false)) - from WallW flag, only if also Airtight
+ZSpaceship.MapData.AIRTIGHT_WALLS_EW_LOOKUP = buildAirtightLookupTable(ZSpaceship.MapData.Tiles["WallW"])
+
+-- Door tiles (North/South direction) - from DoorN flag, only if also Airtight
+ZSpaceship.MapData.AIRTIGHT_DOORS_NS_LOOKUP = buildAirtightLookupTable(ZSpaceship.MapData.Tiles["DoorN"])
+
+-- Door tiles (East/West direction) - from DoorW flag, only if also Airtight
+ZSpaceship.MapData.AIRTIGHT_DOORS_EW_LOOKUP = buildAirtightLookupTable(ZSpaceship.MapData.Tiles["DoorW"])

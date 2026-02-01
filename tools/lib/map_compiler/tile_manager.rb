@@ -2,7 +2,20 @@ class MapCompiler
   module TileManager
     def get_tile_params(tile_name)
       return {} unless tile_name && @tile_params
-      @tile_params[tile_name] || {}
+      
+      # Check exact match first
+      return @tile_params[tile_name] if @tile_params[tile_name]
+      
+      # Check wildcard patterns
+      if @wildcard_patterns
+        @wildcard_patterns.each do |pattern_key, pattern_data|
+          if pattern_data[:pattern].match?(tile_name)
+            return pattern_data[:definition]
+          end
+        end
+      end
+      
+      {}
     end
     
     # Resolve tile alias to actual tile name
@@ -11,13 +24,32 @@ class MapCompiler
       @tile_aliases[tile_name] || tile_name
     end
     
+    # Validate that a tile is defined in tiles: section
+    def validate_tile_defined(tile_name)
+      resolved = resolve_tile_alias(tile_name)
+      
+      # Check exact match
+      return resolved if @defined_tiles.include?(resolved)
+      
+      # Check wildcard patterns
+      if @wildcard_patterns
+        @wildcard_patterns.each do |pattern_key, pattern_data|
+          if pattern_data[:pattern].match?(resolved)
+            return resolved
+          end
+        end
+      end
+      
+      raise "Tile '#{tile_name}' (resolved: '#{resolved}') is not defined in tiles: section"
+    end
+    
     # Get or create a Square object for the given coordinates
     def get_or_create_square(abs_x, abs_y, z)
       key = [abs_x, abs_y, z]
       @squares[key] ||= MapCompiler::Square.new(abs_x, abs_y, z)
     end
     
-    def set_square_tiles(abs_x, abs_y, z, new_tiles, replaces: [], floor_tiles: [])
+    def set_square_tiles(abs_x, abs_y, z, new_tiles, replaces: [])
       square = get_or_create_square(abs_x, abs_y, z)
       square.is_defined = true
       
@@ -25,21 +57,23 @@ class MapCompiler
       key = [abs_x, abs_y, z]
       replaces.each { |t| @replaced_tiles[key].add(t) }
       
-      # Resolve aliases to actual tile names
-      new_tiles = new_tiles.map { |t| resolve_tile_alias(t) }
+      # Validate and resolve aliases to actual tile names
+      new_tiles = new_tiles.map { |t| validate_tile_defined(t) }
       
       # Filter out new tiles that were previously replaced or in current replaces list
       new_tiles = new_tiles.reject { |t| @replaced_tiles[key].include?(t) || replaces.include?(t) }
-      
-      # Resolve aliases in floor_tiles parameter as well
-      floor_tiles = floor_tiles.map { |t| resolve_tile_alias(t) }
       
       # Create Tile objects with proper flags and replaces
       tile_objects = new_tiles.map do |tile_name|
         tile = MapCompiler::Tile.new(tile_name)
         
-        # Get tile definition from tiles: section
-        tile_def = @tile_definitions[tile_name] || {}
+        # Get tile definition from tiles: section (check wildcards too)
+        tile_def = @tile_definitions[tile_name] || get_tile_params(tile_name)
+        
+        # Set alias from tile definition
+        if tile_def['alias']
+          tile.alias = tile_def['alias']
+        end
         
         # Get replaces from tile params (from floors:/walls: sections) first
         tile_params = get_tile_params(tile_name)
@@ -57,12 +91,8 @@ class MapCompiler
           tile.set_door if tile_def['flags'].include?('Door')
         end
         
-        # Set floor flag if explicitly passed or defined in floors: section
-        # (Floor flag from tile definition is already applied above)
-        if floor_tiles.include?(tile_name) || 
-           (@floor_tiles_set && @floor_tiles_set.include?(tile_name))
-          tile.set_floor
-        end
+        # Floor flag is set from tile definition flags above
+        # No need to check floor_tiles parameter since it was removed
         
         tile
       end
@@ -78,8 +108,8 @@ class MapCompiler
       tiles = tiles.select { |t| t.is_a?(String) && !t.empty? && t != "WILDERNESS" }
       return if tiles.empty?
       
-      # Resolve aliases to actual tile names
-      tiles = tiles.map { |t| resolve_tile_alias(t) }
+      # Validate and resolve aliases to actual tile names
+      tiles = tiles.map { |t| validate_tile_defined(t) }
       
       x_offset = val['x'] || 0
       y_offset = val['y'] || 0
@@ -105,17 +135,14 @@ class MapCompiler
       
       # Get replaces from tile params for all tiles (after alias resolution)
       replaces = []
-      floor_tiles_list = []
       tiles.each do |tile_name|
         tile_params = get_tile_params(tile_name)
         if tile_params['replaces']
           replaces = (replaces + tile_params['replaces']).uniq
         end
-        # Track if this tile is a floor tile
-        floor_tiles_list << tile_name if @floor_tiles_set.include?(tile_name)
       end
       
-      set_square_tiles(abs_x, abs_y, z, tiles, replaces: replaces, floor_tiles: floor_tiles_list)
+      set_square_tiles(abs_x, abs_y, z, tiles, replaces: replaces)
       
       # Track wall/door tiles for airtight lists
       # Only track tiles that have wall flags or are door characters (actual walls/doors), not decorative/lighting tiles at offsets
@@ -136,8 +163,8 @@ class MapCompiler
           square = get_or_create_square(abs_x, abs_y, 0)
           next if square.is_defined
           
-          # Add default floor to undefined squares (resolve alias first)
-          actual_default_floor = resolve_tile_alias(@default_floor)
+          # Add default floor to undefined squares (validate and resolve alias first)
+          actual_default_floor = validate_tile_defined(@default_floor)
           default_tile = MapCompiler::Tile.new(actual_default_floor)
           default_tile.set_floor
           square.add_tile(default_tile)

@@ -36,41 +36,47 @@ class MapCompiler
     # Extract and merge defaults into all elements
     @defaults = @elements.delete('defaults') || {}
     
+    # Load locations from defaults (moved from defaults.palette.locations to defaults.locations)
+    @root_locations = @defaults['locations'] || {}
+    
+    # Load allowed flags list from root-level 'flags:' section
+    @allowed_flags = Set.new(@config['flags'] || [])
+    
     # Load tile definitions from root-level 'tiles:' section
     @tile_definitions = @config['tiles'] || {}
     
-    # Extract tile parameters from defaults (floors:, walls:, etc.)
-    # Note: floors: and walls: are nested under defaults.palette
-    @tile_params = {}
-    @floor_tiles_set = Set.new  # Track tiles defined in floors: section
-    palette = @defaults['palette'] || {}
-    if palette['floors'] && palette['floors'].is_a?(Hash)
-      palette['floors'].each do |tile_name, params|
-        @tile_params[tile_name] = params.dup if params.is_a?(Hash)
-        @floor_tiles_set.add(tile_name)
-      end
-    end
-    if palette['walls'] && palette['walls'].is_a?(Hash)
-      palette['walls'].each do |tile_name, params|
-        # Merge with existing params if tile already has params
-        if @tile_params[tile_name]
-          if params.is_a?(Hash) && params['replaces'] && @tile_params[tile_name]['replaces']
-            @tile_params[tile_name]['replaces'] = (@tile_params[tile_name]['replaces'] + params['replaces']).uniq
-          end
-          @tile_params[tile_name].merge!(params) if params.is_a?(Hash)
-        else
-          @tile_params[tile_name] = params.dup if params.is_a?(Hash)
-        end
-      end
-    end
+    # Track all tiles with their flags for export
+    @tiles_with_flags = {}  # tile_name => { flags: [...], airtight: bool, replaces: [...] }
     
-    # Build alias -> tile_name mapping and merge tile definitions into tile_params
-    # Also track floor tiles from definitions
+    # Track wildcard patterns for tile matching
+    @wildcard_patterns = {}  # Map wildcard pattern -> { pattern: Regexp, definition: Hash }
+    
+    # Build tile_params and tile_aliases from tile_definitions only
+    # All tiles must be defined in tiles: section
+    @tile_params = {}
     @tile_aliases = {}  # Map alias -> actual tile name
     @tile_definitions.each do |tile_name, definition|
-      if definition.is_a?(Hash)
-        @tile_params[tile_name] ||= {}
-        @tile_params[tile_name].merge!(definition)
+      if tile_name.include?('*')
+        # Wildcard pattern - store for pattern matching
+        pattern = tile_name.gsub('*', '.*')
+        wildcard_def = definition.is_a?(Hash) ? definition.dup : {}
+        
+        # Validate flags in wildcard definition
+        if wildcard_def['flags'] && wildcard_def['flags'].is_a?(Array)
+          validate_flags(wildcard_def['flags'], "tile '#{tile_name}'")
+        end
+        
+        @wildcard_patterns[tile_name] = {
+          pattern: Regexp.new("^#{pattern}$"),
+          definition: wildcard_def
+        }
+      elsif definition.is_a?(Hash)
+        # Validate flags
+        if definition['flags'] && definition['flags'].is_a?(Array)
+          validate_flags(definition['flags'], "tile '#{tile_name}'")
+        end
+        
+        @tile_params[tile_name] = definition.dup
         
         # Track aliases
         if definition['alias']
@@ -78,12 +84,18 @@ class MapCompiler
           @tile_aliases[alias_name] = tile_name
         end
         
-        # Track floor tiles from flags
-        if definition['flags'] && definition['flags'].is_a?(Array) && definition['flags'].include?('Floor')
-          @floor_tiles_set.add(tile_name)
+        # Track tiles with flags for export
+        if definition['flags'] && definition['flags'].is_a?(Array) && !definition['flags'].empty?
+          @tiles_with_flags[tile_name] = {
+            flags: definition['flags'].dup
+          }
         end
       end
     end
+    
+    # Track all defined tile names (including aliases) for validation
+    @defined_tiles = Set.new(@tile_definitions.keys.reject { |k| k.include?('*') })
+    @defined_tiles.merge(@tile_aliases.keys)  # Add aliases as valid tile names
     
     @elements.each do |name, elem|
       @elements[name] = deep_merge(@defaults.dup, elem)
@@ -132,7 +144,7 @@ class MapCompiler
     # Track special locations (spawn points, etc.)
     @room_spawn_points = []  # Track room centers for spawn points (excluding corridors)
     @all_rooms = []  # Track all room centers including halls (for MapData.DefaultRooms)
-    @generators = []  # Track generator coordinates
+    @locations_by_type = Hash.new { |h, k| h[k] = [] }  # Track location coordinates by type
     
     # Collect door sprites (first entry from each door definition)
     @door_sprites = Set.new
@@ -153,6 +165,16 @@ class MapCompiler
     
     # Single building for the entire spaceship
     @spaceship_building = nil
+  end
+  
+  # Validate flags against allowed flags list
+  def validate_flags(flags, context = "")
+    return if flags.empty? || @allowed_flags.empty?
+    
+    invalid_flags = flags.reject { |f| @allowed_flags.include?(f) }
+    unless invalid_flags.empty?
+      raise "Invalid flags #{invalid_flags.inspect} in #{context}. Allowed flags: #{@allowed_flags.to_a.sort.inspect}"
+    end
   end
 
   def compile(out_dir)
@@ -204,12 +226,12 @@ class MapCompiler
 end
 
 if __FILE__ == $0
-  options = { output: "output_map" }
+  options = { output: "out" }
 
   OptionParser.new do |opts|
     opts.banner = "Usage: compiler.rb [options] <map.yaml>"
 
-    opts.on("-o", "--output DIR", "Output directory (default: output_map)") do |o|
+    opts.on("-o", "--output DIR", "Output directory (default: out)") do |o|
       options[:output] = o
     end
 

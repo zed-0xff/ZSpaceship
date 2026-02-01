@@ -84,9 +84,9 @@ class MapCompiler
       end
     end
     
-    # Detect interior cells using flood-fill from outside
-    # Returns Set of [x, y] coordinates that are enclosed by walls/doors
-    def detect_interior_cells(lines, boundary_chars)
+    # Detect interior cells using explicit boundaries
+    # Returns Set of [x, y] coordinates that are inside the boundaries
+    def detect_interior_cells(lines, boundaries)
       return Set.new if lines.empty?
       
       height = lines.length
@@ -98,47 +98,41 @@ class MapCompiler
         return Set.new([[0, 0]])
       end
       
-      # Pad grid by 1 on each side to allow flood-fill from outside
-      padded_width = width + 2
-      padded_height = height + 2
+      # Find boundary positions
+      top_left = nil
+      bottom_right = nil
       
-      # Build grid: true = blocked (wall/door), false = open
-      blocked = Array.new(padded_height) { Array.new(padded_width, false) }
       lines.each_with_index do |line, ly|
         line.chars.each_with_index do |char, lx|
-          blocked[ly + 1][lx + 1] = boundary_chars.include?(char)
+          boundary_type = boundaries[char]
+          case boundary_type
+          when 'TopLeft'
+            top_left = [lx, ly]
+          when 'BottomRight'
+            bottom_right = [lx, ly]
+          end
         end
       end
       
-      # Flood-fill from (0,0) to find all exterior cells
-      exterior = Set.new
-      queue = [[0, 0]]
-      exterior.add([0, 0])
-      
-      while !queue.empty?
-        x, y = queue.shift
-        [[0, 1], [0, -1], [1, 0], [-1, 0]].each do |dx, dy|
-          nx, ny = x + dx, y + dy
-          next if nx < 0 || nx >= padded_width || ny < 0 || ny >= padded_height
-          next if blocked[ny][nx]
-          next if exterior.include?([nx, ny])
-          exterior.add([nx, ny])
-          queue << [nx, ny]
+      # If we have corner boundaries, use them to define the interior rectangle
+      if top_left && bottom_right
+        # Interior is all cells between top_left and bottom_right (exclusive of boundaries)
+        min_x = [top_left[0], bottom_right[0]].min
+        max_x = [top_left[0], bottom_right[0]].max
+        min_y = [top_left[1], bottom_right[1]].min
+        max_y = [top_left[1], bottom_right[1]].max
+        
+        interior = Set.new
+        (min_y + 1).upto(max_y - 1) do |ly|
+          (min_x + 1).upto(max_x - 1) do |lx|
+            interior.add([lx, ly])
+          end
         end
+        return interior
       end
       
-      # Interior = cells that are not exterior and not blocked (in original coords)
-      interior = Set.new
-      height.times do |ly|
-        width.times do |lx|
-          padded_x, padded_y = lx + 1, ly + 1
-          next if blocked[padded_y][padded_x]  # Skip walls/doors
-          next if exterior.include?([padded_x, padded_y])  # Skip exterior
-          interior.add([lx, ly])
-        end
-      end
-      
-      interior
+      # Fallback: if no boundaries found, return empty set
+      Set.new
     end
   end
 end

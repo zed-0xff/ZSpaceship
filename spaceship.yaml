@@ -28,6 +28,57 @@ metamap: |
   k^b
    E
 
+flags:
+  - Airtight
+  - EnergyStorage
+  - Floor
+  - WallW
+  - WallN
+  - WallSE
+  - DoorW
+  - DoorN
+  - OpenDoor
+  - Storage
+
+tiles:
+  # crafted metal wall lvl2
+  constructedobjects_01_48:           { flags: [Airtight, WallW] }
+  constructedobjects_01_49:           { flags: [Airtight, WallN] }
+  constructedobjects_01_50:           { flags: [Airtight, WallN, WallW] }
+  # open door sprites
+  walls_garage_02_57:                 { flags: [Airtight, DoorW, OpenDoor] }
+  walls_garage_02_60:                 { flags: [Airtight, DoorN, OpenDoor] }
+  # furniture
+  carpentry_02_104:                   { alias: space_box } # TODO: texture
+  # floors
+  industry_01_Simon_MD_118:           { flags: [Floor], alias: grate_floor, replaces: [invisible_floor] }
+  floors_exterior_street_01_18:       { flags: [Floor], alias: invisible_floor }
+  floors_interior_tilesandwood_01_28: { flags: [Airtight, Floor], replaces: [grate_floor, invisible_floor] }
+  floors_exterior_street_01_0:        { flags: [Airtight, Floor] }
+  # walls
+  location_community_medical_01_168:  { flags: [Airtight, WallW] }
+  location_community_medical_01_169:  { flags: [Airtight, WallN] }
+  location_community_medical_01_170:  { flags: [Airtight, WallN, WallW], replaces: [location_community_medical_01_168, location_community_medical_01_169] }
+  walls_garage_01_32:                 { flags: [Airtight, WallW] }
+  walls_garage_01_33:                 { flags: [Airtight, WallN] }
+  walls_garage_01_35:                 { flags: [Airtight, WallSE] }
+  walls_garage_02_16:                 { flags: [Airtight, WallW] }
+  walls_garage_02_17:                 { flags: [Airtight, WallN] }
+  walls_garage_02_19:                 { flags: [Airtight, WallSE] }
+  # doors
+  walls_garage_02_49:                 { flags: [Airtight, DoorW] }
+  walls_garage_02_52:                 { flags: [Airtight, DoorN] }
+  # cosmetic
+  lighting_indoor_02_44:
+  lighting_indoor_02_45:
+  lighting_indoor_02_46:
+  lighting_indoor_02_47:
+  # some cosmetics around doors
+  industry_trucks_01_16:
+  industry_trucks_01_17:
+  industry_trucks_01_18:
+  industry_trucks_01_19:
+
 auto_corridors:
   floor: floors_interior_tilesandwood_01_28
   roof:  floors_exterior_street_01_0
@@ -36,68 +87,42 @@ auto_corridors:
   east_wall:  [walls_garage_01_32]
   west_wall:  [walls_garage_01_32]
 
-tiles:
-  floors_interior_tilesandwood_01_28:
-    flags: [Floor]
-    airtight: true
-    replaces: [industry_01_Simon_MD_118, floors_exterior_street_01_18]
-  industry_01_Simon_MD_118:
-    alias: grate_floor
-    flags: [Floor]
-    airtight: false
-  floors_exterior_street_01_18:
-    alias: invisible_floor
-    flags: [Floor]
-    airtight: false
-  location_community_medical_01_170:
-    flags: [WallN, WallW]
-    airtight: true
-    replaces: [location_community_medical_01_168, location_community_medical_01_169]
-  walls_garage_01_32:
-    flags: [WallW]
-    airtight: true
-  walls_garage_01_33:
-    flags: [WallN]
-    airtight: true
-
 elements:
   defaults:
     room: true
     level: 10
     floor: floors_interior_tilesandwood_01_28
     roof:  floors_exterior_street_01_0
+    boundaries:
+      "┌": TopLeft
+      "┛": BottomRight
     palette:
-      "☐": carpentry_02_104 # TODO: replace with space box
+      "☐": space_box
       "┓": grate_floor
       "┗": grate_floor
-      flags:
-        WallN: ["┌", "─", "═", "━", constructedobjects_01_49, constructedobjects_01_50] # crafted metal lvl2
-        WallW: ["┌", "│", "║", "┃", constructedobjects_01_48, constructedobjects_01_50]
-        DoorN: ["^", "walls_garage_02_60"] # last one is the open door sprite, used in LUA
-        DoorS: ["v"]
-        DoorW: ["<", "walls_garage_02_57"]
-        DoorE: [">"]
-        Generator: ["⌁"]
-      floors:
-        grate_floor: { replaces: [invisible_floor] }
-        floors_interior_tilesandwood_01_28: { replaces: [grate_floor] }
-      walls:
-        "┌": [{ tile: location_community_medical_01_170, x: +1, y: +1 }, grate_floor]
-        "─": [{ y: +1, tiles: [location_community_medical_01_169] }, grate_floor]
-        "═": [{ y: +1, tiles: [location_community_medical_01_169, lighting_indoor_02_45] }, grate_floor]
-        "┃": [walls_garage_02_16, grate_floor]
-        "┛": [walls_garage_02_19, grate_floor]
-        "━": [walls_garage_02_17, grate_floor]
-        "┷": [walls_garage_02_17, grate_floor, { y: -1, tiles: [lighting_indoor_02_46] }]
-        "│": [{ x: +1, tiles: [location_community_medical_01_168] }, grate_floor]
-        "║": [{ x: +1, tiles: [location_community_medical_01_168, lighting_indoor_02_44] }, grate_floor]
-      doors:
-        "^": [{ y: +1, tiles: [walls_garage_02_52, lighting_indoor_02_45, walls_garage_01_35] }, grate_floor]
-        "v": [walls_garage_02_52, industry_trucks_01_19, industry_trucks_01_17, lighting_indoor_02_46, grate_floor]
-        "<": { x: +1, tiles: [walls_garage_02_49, lighting_indoor_02_44, walls_garage_01_35] }
-        ">": [walls_garage_02_49, industry_trucks_01_16, industry_trucks_01_18, {x: -1, tile: lighting_indoor_02_47}, grate_floor]
+      # walls
+      "┌": [{ tile: location_community_medical_01_170, x: +1, y: +1 }, grate_floor]
+      "─": [{ y: +1, tiles: [location_community_medical_01_169] }, grate_floor]
+      "═": [{ y: +1, tiles: [location_community_medical_01_169, lighting_indoor_02_45] }, grate_floor]
+      "┃": [walls_garage_02_16, grate_floor]
+      "┛": [walls_garage_02_19, grate_floor]
+      "━": [walls_garage_02_17, grate_floor]
+      "┷": [walls_garage_02_17, grate_floor, { y: -1, tiles: [lighting_indoor_02_46] }]
+      "│": [{ x: +1, tiles: [location_community_medical_01_168] }, grate_floor]
+      "║": [{ x: +1, tiles: [location_community_medical_01_168, lighting_indoor_02_44] }, grate_floor]
+      # doors
+      "^": [{ y: +1, tiles: [walls_garage_02_52, lighting_indoor_02_45, walls_garage_01_35] }, grate_floor]
+      "v": [walls_garage_02_52, industry_trucks_01_19, industry_trucks_01_17, lighting_indoor_02_46, grate_floor]
+      "<": { x: +1, tiles: [walls_garage_02_49, lighting_indoor_02_44, walls_garage_01_35] }
+      ">": [walls_garage_02_49, industry_trucks_01_16, industry_trucks_01_18, {x: -1, tile: lighting_indoor_02_47}, grate_floor]
 
   cockpit:
+    tiles:
+      appliances_com_01_52:
+      location_community_medical_01_172:
+      location_community_medical_01_173:
+      security_01_0:
+      security_01_4:
     palette:
       a: [security_01_4, security_01_0]
       A: [security_01_4, appliances_com_01_52]
@@ -111,6 +136,22 @@ elements:
       ┗━v━┛
 
   bathroom:
+    tiles:
+      fixtures_bathroom_01_28:
+      fixtures_bathroom_01_33:
+      fixtures_bathroom_01_34:
+      fixtures_bathroom_01_36:
+      fixtures_bathroom_02_4:
+      fixtures_bathroom_02_19:
+      fixtures_bathroom_02_20:
+      fixtures_bathroom_02_23:
+      fixtures_bathroom_02_31:
+      # treadmill
+      recreational_sports_01_36:
+      recreational_sports_01_37:
+      # benchpress
+      recreational_sports_01_42:
+      recreational_sports_01_43:
     palette:
       B: [recreational_sports_01_42, fixtures_bathroom_02_20]
       R: [recreational_sports_01_36, fixtures_bathroom_01_34]
@@ -129,7 +170,16 @@ elements:
       ┗━┷━┛
 
   medbayL:
-    name: medical
+    name: medical # XXX used by lua to find medbay room
+    tiles:
+      industry_02_Simon_MD_*:
+      location_community_medical_01_*:
+      quarantine_Simon_MD_63:
+      fixtures_counters_*:
+      fixtures_sinks_01_19:
+      industry_02_Simon_MD_124:           { alias: cloning_console }
+    locations:
+      "*": CloningConsole
     palette:
       1: [industry_02_Simon_MD_96, location_community_medical_01_219]
       2: [industry_02_Simon_MD_96, location_community_medical_01_230]
@@ -143,7 +193,7 @@ elements:
       b: [industry_02_Simon_MD_98,  location_community_medical_01_23]
       -: [industry_02_Simon_MD_102]
 
-      t: [industry_02_Simon_MD_124]
+      "*": [cloning_console]
 
       T: [quarantine_Simon_MD_63]
       X: [location_community_medical_01_76]
@@ -156,14 +206,17 @@ elements:
     map: |
       ┌─═──═──═─┓
       │127Bb-CCC┃
-      ║34t      >
+      ║34*      >
       │56TXx msc┃
       ┗━┷━━┷━━┷━┛
 
   library:
+    tiles:
+      furniture_seating_indoor_03_123:
+      appliances_television_01_0:
     palette:
       S: furniture_seating_indoor_03_123
-      T: [carpentry_02_104, appliances_television_01_0]
+      T: [space_box, appliances_television_01_0]
     map: |
       ┌─═─┓
       │☐☐☐┃
@@ -189,6 +242,12 @@ elements:
 
   kitchenL:
     name: kitchen
+    tiles:
+      appliances_cooking_01_29:
+      appliances_laundry_01_0:
+      appliances_refrigeration_01_9:
+      fixtures_counters_*:
+      fixtures_sinks_01_16:
     palette:
       r: [fixtures_counters_01_36, fixtures_counters_01_172, appliances_cooking_01_29]
       -: [fixtures_counters_01_30, fixtures_counters_01_37]
@@ -207,6 +266,10 @@ elements:
 
   bedroomR:
     name: bedroom
+    tiles:
+      furniture_bedding_01_86:
+      furniture_bedding_01_87:
+      furniture_storage_02_6:
     palette:
       B: furniture_bedding_01_86
       b: furniture_bedding_01_87
@@ -240,11 +303,15 @@ elements:
       ┗━v━┛
 
   longhub_with_generator:
+    locations:
+      G: Generator
+    palette:
+      G: null
     name: longhub
     map: |
       ┌─^─┓
       │   ┃
-      < ⌁ >
+      < G >
       │   ┃
       ║   ┃
       │   ┃
@@ -253,6 +320,8 @@ elements:
       ┗━v━┛
 
   energy_storage:
+    tiles:
+      industry_02_175: {flags: [EnergyStorage]}
     palette:
       b: industry_02_175
     map: |
@@ -265,19 +334,41 @@ elements:
       ┗━━━┛
 
   teleport_room: # XXX lua finds this room by its name, i.e. "teleport_room"
+    tiles:
+      appliances_com_01_53:
+      floors_burnt_01_1:
+      floors_exterior_tilesandstone_01_13: { flags: [Floor, Airtight], replaces: [invisible_floor] }
+      furniture_storage_02_28: { flags: [Storage] }
+      industry_01_39:
+      industry_02_180:
+      industry_02_181:
+      industry_02_187:
+      industry_02_188:
+      industry_02_193:
+      industry_02_194:
+      industry_02_195:
+      industry_railroad_05_24: { flags: [Airtight, WallW] }
+      industry_railroad_05_25: { flags: [Airtight, WallN] }
+      industry_railroad_05_26: { flags: [Airtight, WallN, WallW], replaces: [industry_railroad_05_24, industry_railroad_05_25] }
+      lighting_indoor_02_44:
+      lighting_indoor_02_45:
+      location_community_school_overlays_*:
+      overlay_*:
+      radio_tower_*:
     floor: industry_01_39
     palette:
-      walls:
-        "┌": [{ tile: industry_railroad_05_26, x: +1, y: +1, replaces: [industry_railroad_05_24, industry_railroad_05_25] }, grate_floor]
-        "─": { y: +1, tiles: [industry_railroad_05_25] }
-        "═": { y: +1, tiles: [industry_railroad_05_25, lighting_indoor_02_45] }
-        "┓": null
-        "┃": walls_garage_02_16
-        "┛": walls_garage_02_19
-        "━": walls_garage_02_17
-        "┗": null
-        "│": [{ x: +1, tiles: [industry_railroad_05_24] }, grate_floor]
-        "║": [{ x: +1, tiles: [industry_railroad_05_24, lighting_indoor_02_44] }, grate_floor]
+      # walls
+      "┌": [{ tile: industry_railroad_05_26, x: +1, y: +1}, grate_floor]
+      "─": { y: +1, tiles: [industry_railroad_05_25] }
+      "═": { y: +1, tiles: [industry_railroad_05_25, lighting_indoor_02_45] }
+      "┓": null
+      "┃": walls_garage_02_16
+      "┛": walls_garage_02_19
+      "━": walls_garage_02_17
+      "┗": null
+      "│": [{ x: +1, tiles: [industry_railroad_05_24] }, grate_floor]
+      "║": [{ x: +1, tiles: [industry_railroad_05_24, lighting_indoor_02_44] }, grate_floor]
+      # contents
       A: [overlay_blood_floor_01_26, overlay_blood_wall_01_3, overlay_blood_wall_01_7, radio_tower_113, radio_tower_115, radio_tower_103, overlay_grime_wall_01_22, overlay_grime_wall_01_20, location_community_school_overlays_34, location_community_school_overlays_3, industry_02_195]
       B: [overlay_blood_wall_01_38, overlay_blood_wall_01_30, radio_tower_115, radio_tower_99, overlay_grime_wall_01_21, location_community_school_overlays_4, industry_02_180, industry_02_193]
       C: [radio_tower_115, overlay_grime_wall_01_21, location_community_school_overlays_5, overlay_blood_floor_01_24, overlay_blood_wall_01_55, industry_02_187, furniture_storage_02_28]

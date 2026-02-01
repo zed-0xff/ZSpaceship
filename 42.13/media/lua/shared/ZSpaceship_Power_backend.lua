@@ -73,13 +73,18 @@ local function initGenerator(x, y, z)
     return true
 end
 
--- Configure all generators from MapData.Generators
+-- Configure all generators from MapData.Default.Locations["Generator"]
 local function checkGenerators()
-    if not ZSpaceship.MapData or not ZSpaceship.MapData.Generators then
+    if not ZSpaceship.MapData or not ZSpaceship.MapData.Default or not ZSpaceship.MapData.Default.Locations then
         return
     end
     
-    for i, gen in ipairs(ZSpaceship.MapData.Generators) do
+    local generators = ZSpaceship.MapData.Default.Locations["Generator"]
+    if not generators then
+        return
+    end
+    
+    for i, gen in ipairs(generators) do
         initGenerator(gen.x, gen.y, gen.z)
     end
 end

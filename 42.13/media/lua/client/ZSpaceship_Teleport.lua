@@ -7,7 +7,7 @@ ZSpaceship.Teleport = ZSpaceship.Teleport or {}
 -- Energy cost: 10 MJ/kg base, +50% if from/to building
 ZSpaceship.Teleport.COST_PER_KG = 10  -- MJ/kg
 ZSpaceship.Teleport.BUILDING_MULT = 1.5
-ZSpaceship.Teleport.SPACE2SPACE_MULT = 0.1  -- 10% cost when teleporting from space (much cheaper)
+ZSpaceship.Teleport.SPACE2SPACE_MULT = 0.2  -- cheaper cost when teleporting from space
 
 -- Science perk level requirements
 ZSpaceship.Teleport.SCIENCE_LEVEL_MIN = 1  -- Minimum Science level for basic teleports

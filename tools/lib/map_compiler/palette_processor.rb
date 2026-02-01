@@ -49,13 +49,16 @@ class MapCompiler
         end
       end
       
+      # Extract location characters from locations mapping (locations is at root level, not in palette)
+      location_chars = Set.new
+      # Note: locations will be passed separately, not from palette
+      
       # Extract door flags (DoorN, DoorS, DoorW, DoorE) - arrays containing characters and tile names
-      door_flags = {
-        'DoorN' => flags['DoorN'] || [],
-        'DoorS' => flags['DoorS'] || [],
-        'DoorW' => flags['DoorW'] || [],
-        'DoorE' => flags['DoorE'] || []
-      }
+      # Only include flags that are actually defined
+      door_flags = {}
+      ['DoorN', 'DoorS', 'DoorW', 'DoorE'].each do |flag_name|
+        door_flags[flag_name] = flags[flag_name] if flags[flag_name]
+      end
       
       # Process door flags: extract characters and open door sprites
       door_flags.each do |flag_name, flag_value|
@@ -96,60 +99,123 @@ class MapCompiler
         end
       end
       
+      # Palette is now flat - no categories like 'walls', 'doors', 'floors'
       palette.each do |key, value|
         case key
         when 0..9
           key = key.to_s # Convert numeric keys to strings
         end
 
-        if value.is_a?(Hash) && !value.key?('tile') && !value.key?('tiles')
-          # It's a category (like 'walls', 'doors'), flatten its contents
-          is_boundary = %w[walls doors].include?(key)
-          is_door = key == 'doors'
-          value.each do |k, v|
-            flat[k] = v
-            boundary_chars.add(k) if is_boundary
-            if is_door
-              door_chars.add(k)
-              # Determine facing from definition (only if not already set from flags)
-              door_facings[k] = infer_door_facing(k, v) unless door_facings.key?(k)
-              # Track offset for corridor matching
-              if v.is_a?(Hash)
-                door_offsets[k] = [v['x'] || 0, v['y'] || 0]
-              else
-                door_offsets[k] = [0, 0]
-              end
-              # Collect first sprite from door definition
-              if v.is_a?(Array) && v.first.is_a?(String)
-                @door_sprites.add(v.first)
-                @door_tiles.add(v.first)
-              elsif v.is_a?(Hash) && v['tiles'].is_a?(Array) && v['tiles'].first.is_a?(String)
-                @door_sprites.add(v['tiles'].first)
-                @door_tiles.add(v['tiles'].first)
-              elsif v.is_a?(Hash) && v['tile'].is_a?(String)
-                @door_sprites.add(v['tile'])
-                @door_tiles.add(v['tile'])
-              end
+        # Skip non-tile keys (like 'flags')
+        next if key == 'flags'
+        
+        # Direct char -> tile mapping
+        flat[key] = value
+        
+        # Extract first tile name from value to check if it has wall flags
+        first_tile = nil
+        if value.is_a?(String)
+          first_tile = value
+        elsif value.is_a?(Array)
+          # Find first string tile name in array, or extract from hash structures
+          value.each do |item|
+            if item.is_a?(String)
+              first_tile = item
+              break
+            elsif item.is_a?(Hash)
+              first_tile = item['tile'] || (item['tiles'] && item['tiles'].first)
+              break if first_tile
             end
-            
-            # Check if this character has wall flags (can be in both)
-            directions = []
-            directions << :north if walln_chars.include?(k)
-            directions << :west if wallw_chars.include?(k)
-            wall_flags[k] = directions unless directions.empty?
           end
-        else
-          # Direct char -> tile mapping - NOT a boundary (only walls/doors categories are)
-          flat[key] = value
-          
-          # Check if this character has wall flags (can be in both)
-          directions = []
-          directions << :north if walln_chars.include?(key)
-          directions << :west if wallw_chars.include?(key)
-          wall_flags[key] = directions unless directions.empty?
+        elsif value.is_a?(Hash)
+          first_tile = value['tile'] || (value['tiles'] && value['tiles'].first)
+        end
+        
+        # Resolve alias if needed
+        if first_tile && @tile_aliases && @tile_aliases[first_tile]
+          first_tile = @tile_aliases[first_tile]
+        end
+        
+        # Check if this character has wall flags (can be in both)
+        directions = []
+        directions << :north if walln_chars.include?(key)
+        directions << :west if wallw_chars.include?(key)
+        
+        # Also check if the tile this character maps to has wall flags
+        if first_tile && @tile_params && @tile_params[first_tile]
+          tile_flags = @tile_params[first_tile]['flags'] || []
+          # Handle both string and symbol flags
+          directions << :north if tile_flags.include?('WallN') || tile_flags.include?(:WallN)
+          directions << :west if tile_flags.include?('WallW') || tile_flags.include?(:WallW)
+        end
+        
+        wall_flags[key] = directions unless directions.empty?
+        
+        # Add wall characters to boundary_chars (they enclose interior cells)
+        if walln_chars.include?(key) || wallw_chars.include?(key) || !directions.empty?
+          boundary_chars.add(key)
+        end
+        
+        # Check if this character is a door (from flags)
+        # Only check for flags that are actually defined
+        is_door = false
+        if flags['DoorN'] && flags['DoorN'].include?(key)
+          door_chars.add(key)
+          door_facings[key] = :north unless door_facings.key?(key)
+          is_door = true
+        elsif flags['DoorW'] && flags['DoorW'].include?(key)
+          door_chars.add(key)
+          door_facings[key] = :west unless door_facings.key?(key)
+          is_door = true
+        end
+        # Note: DoorS and DoorE are not currently defined in the flags list
+        
+        # Also check if the tile this character maps to has door flags
+        if !is_door && first_tile && @tile_params && @tile_params[first_tile]
+          tile_flags = @tile_params[first_tile]['flags'] || []
+          # Handle both string and symbol flags
+          # Only check for flags that are actually defined (DoorN and DoorW)
+          if tile_flags.include?('DoorN') || tile_flags.include?(:DoorN)
+            door_chars.add(key)
+            door_facings[key] = :north unless door_facings.key?(key)
+            is_door = true
+          elsif tile_flags.include?('DoorW') || tile_flags.include?(:DoorW)
+            door_chars.add(key)
+            door_facings[key] = :west unless door_facings.key?(key)
+            is_door = true
+          end
+          # Note: DoorS and DoorE are not currently defined in the flags list
+        end
+        
+        # Add doors to boundary_chars (they also enclose interior cells)
+        if is_door
+          boundary_chars.add(key)
+        end
+        
+        # Track door offsets and sprites
+        if door_chars.include?(key)
+          if value.is_a?(Hash)
+            door_offsets[key] = [value['x'] || 0, value['y'] || 0]
+          else
+            door_offsets[key] = [0, 0]
+          end
+          # Collect first sprite from door definition
+          if value.is_a?(Array) && value.first.is_a?(String)
+            @door_sprites.add(value.first)
+            @door_tiles.add(value.first)
+          elsif value.is_a?(Hash) && value['tiles'].is_a?(Array) && value['tiles'].first.is_a?(String)
+            @door_sprites.add(value['tiles'].first)
+            @door_tiles.add(value['tiles'].first)
+          elsif value.is_a?(Hash) && value['tile'].is_a?(String)
+            @door_sprites.add(value['tile'])
+            @door_tiles.add(value['tile'])
+          elsif value.is_a?(String)
+            @door_sprites.add(value)
+            @door_tiles.add(value)
+          end
         end
       end
-      [flat, boundary_chars, door_chars, door_facings, door_offsets, wall_flags, generator_chars]
+      [flat, boundary_chars, door_chars, door_facings, door_offsets, wall_flags, generator_chars, location_chars]
     end
     
     # Infer door facing from its definition

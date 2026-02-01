@@ -1,11 +1,12 @@
 class MapCompiler
   class Tile
-    attr_accessor :name
+    attr_accessor :name, :alias
     attr_accessor :replaces, :is_wall, :is_door, :is_floor, :facing
     attr_accessor :wall_direction, :is_decorative
     
     def initialize(name)
       @name = name
+      @alias = nil
       @replaces = []
       @is_wall = false
       @is_door = false
@@ -55,6 +56,10 @@ class MapCompiler
     
     def needs_replacement?
       !@replaces.empty?
+    end
+
+    def replaces?(other_tile)
+      @replaces.include?(other_tile.name) || (other_tile.alias && @replaces.include?(other_tile.alias))
     end
 
     def equal?(other)

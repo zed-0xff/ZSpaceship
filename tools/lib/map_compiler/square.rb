@@ -21,10 +21,10 @@ class MapCompiler
     def resolve_conflict(cur_tile, new_tile)
       return new_tile if cur_tile.nil?
       return cur_tile if new_tile.equal?(cur_tile)
-      return new_tile if cur_tile.replaces.include?(new_tile.name)
-      return cur_tile if new_tile.replaces.include?(cur_tile.name)
+      return new_tile if new_tile.replaces?(cur_tile)
+      return cur_tile if cur_tile.replaces?(new_tile)
 
-      raise "Conflict resolution failed for #{cur_tile.name} and #{new_tile.name}"
+      raise "Conflict resolution failed for #{cur_tile.inspect} and #{new_tile.inspect}"
     end
     
     def add_tile(tile)
