@@ -33,7 +33,11 @@ end
 -- Static helper: Check if square is open space
 function ZSRoom.isOpenSpace(sq)
     if not sq then return false end
-    if ZSpaceship.isInSpace(sq) then return true end -- XXX wrong!!!
+    if not ZSpaceship.isInSpace(sq) then return false end
+
+    if sq.isOutside and sq:isOutside() then
+        return true
+    end
     local hasFloor = sq.getFloor and sq:getFloor() ~= nil
     local hasRoof = sq.getRoof and sq:getRoof() ~= nil
     return not hasFloor or not hasRoof
