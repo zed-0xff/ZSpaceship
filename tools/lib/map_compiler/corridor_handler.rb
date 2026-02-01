@@ -96,18 +96,20 @@ class MapCompiler
       
       # Place floor
       if config['floor']
-        tile_params = get_tile_params(config['floor'])
+        # Resolve alias for corridor floor
+        actual_floor = resolve_tile_alias(config['floor'])
+        tile_params = get_tile_params(actual_floor)
         replaces = tile_params['replaces'] || []
-        set_square_tiles(abs_x, abs_y, z, [config['floor']], replaces: replaces)
-        @defined_squares[[abs_x, abs_y, z]] = true
+        set_square_tiles(abs_x, abs_y, z, [actual_floor], replaces: replaces, floor_tiles: [actual_floor])
       end
       
       # Place roof
       if config['roof']
-        tile_params = get_tile_params(config['roof'])
+        # Resolve alias for corridor roof
+        actual_roof = resolve_tile_alias(config['roof'])
+        tile_params = get_tile_params(actual_roof)
         replaces = tile_params['replaces'] || []
-        set_square_tiles(abs_x, abs_y, z + 1, [config['roof']], replaces: replaces)
-        @defined_squares[[abs_x, abs_y, z + 1]] = true
+        set_square_tiles(abs_x, abs_y, z + 1, [actual_roof], replaces: replaces)
         @header.maxLevel = [(@header.maxLevel || 0), z + 1].max
       end
       
@@ -130,18 +132,24 @@ class MapCompiler
         tiles = tiles.select { |t| t.is_a?(String) && !t.empty? }
         next if tiles.empty?
         
+        # Resolve aliases to actual tile names
+        tiles = tiles.map { |t| resolve_tile_alias(t) }
+        
         # Get replaces from tile params for all tiles
         replaces = []
+        floor_tiles_list = []
         tiles.each do |tile_name|
           tile_params = get_tile_params(tile_name)
           if tile_params['replaces']
             replaces = (replaces + tile_params['replaces']).uniq
           end
+          # Track if this tile is a floor tile
+          floor_tiles_list << tile_name if @floor_tiles_set.include?(tile_name)
         end
         
         ox, oy = wall_offsets[wall_key]
         wall_x, wall_y = abs_x + ox, abs_y + oy
-        set_square_tiles(wall_x, wall_y, z, tiles, replaces: replaces)
+        set_square_tiles(wall_x, wall_y, z, tiles, replaces: replaces, floor_tiles: floor_tiles_list)
         
         # Track wall tiles for airtight wall lists
         # Only track the first tile (the actual wall tile, not decorative/lighting tiles)

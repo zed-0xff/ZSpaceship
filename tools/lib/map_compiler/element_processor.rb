@@ -66,16 +66,18 @@ class MapCompiler
           # Place floor and roof on interior cells (enclosed by walls/doors)
           if interior_cells && interior_cells.include?([lx, ly])
             if room_floor
-              tile_params = get_tile_params(room_floor)
+              # Resolve alias for room floor
+              actual_floor = resolve_tile_alias(room_floor)
+              tile_params = get_tile_params(actual_floor)
               replaces = tile_params['replaces'] || []
-              set_square_tiles(abs_x, abs_y, z, [room_floor], replaces: replaces)
-              @defined_squares[[abs_x, abs_y, z]] = true
+              set_square_tiles(abs_x, abs_y, z, [actual_floor], replaces: replaces, floor_tiles: [actual_floor])
             end
             if room_roof
-              tile_params = get_tile_params(room_roof)
+              # Resolve alias for room roof
+              actual_roof = resolve_tile_alias(room_roof)
+              tile_params = get_tile_params(actual_roof)
               replaces = tile_params['replaces'] || []
-              set_square_tiles(abs_x, abs_y, z + 1, [room_roof], replaces: replaces)
-              @defined_squares[[abs_x, abs_y, z + 1]] = true
+              set_square_tiles(abs_x, abs_y, z + 1, [actual_roof], replaces: replaces)
               @header.maxLevel = [(@header.maxLevel || 0), z + 1].max
             end
           end
@@ -99,16 +101,21 @@ class MapCompiler
             
             # Place tiles at current position if any
             if !current_tiles.empty?
-              @defined_squares[[abs_x, abs_y, z]] = true
+              # Resolve aliases to actual tile names
+              current_tiles = current_tiles.map { |t| resolve_tile_alias(t) }
+              
               # Get replaces from tile params for all tiles
               replaces = []
+              floor_tiles_list = []
               current_tiles.each do |tile_name|
                 tile_params = get_tile_params(tile_name)
                 if tile_params['replaces']
                   replaces = (replaces + tile_params['replaces']).uniq
                 end
+                # Track if this tile is a floor tile
+                floor_tiles_list << tile_name if @floor_tiles_set.include?(tile_name)
               end
-              set_square_tiles(abs_x, abs_y, z, current_tiles, replaces: replaces)
+              set_square_tiles(abs_x, abs_y, z, current_tiles, replaces: replaces, floor_tiles: floor_tiles_list)
               
               # Track first tile only (not decorative/lighting tiles)
               if !current_tiles.empty?
@@ -139,13 +146,16 @@ class MapCompiler
             process_offset_tile(wall_def, local_x, local_y, z, char, wall_flags, door_chars, door_facings)
             next
           end
-          
-          @defined_squares[[abs_x, abs_y, z]] = true
 
           tiles = val.is_a?(Array) ? val : [val]
           tiles = tiles.select { |t| t.is_a?(String) && !t.empty? && t != "WILDERNESS" }
           
-          set_square_tiles(abs_x, abs_y, z, tiles)
+          # Resolve aliases to actual tile names
+          tiles = tiles.map { |t| resolve_tile_alias(t) }
+          
+          # Check if any tiles are floor tiles
+          floor_tiles_list = tiles.select { |t| @floor_tiles_set.include?(t) }
+          set_square_tiles(abs_x, abs_y, z, tiles, floor_tiles: floor_tiles_list)
         end
       end
     end

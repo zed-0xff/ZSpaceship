@@ -1,6 +1,6 @@
 id: "Spaceship Z-001"
 origin: [78, 78]
-default_floor: floors_exterior_street_01_18
+default_floor: invisible_floor
 
 metapalette:
   B: bathroom
@@ -28,13 +28,27 @@ metamap: |
   k^b
    E
 
-auto_corridors:
-  floor: floors_interior_tilesandwood_01_28
-  roof:  floors_exterior_street_01_0
-  north_wall: [walls_garage_01_33]
-  south_wall: [walls_garage_01_33]
-  east_wall:  [walls_garage_01_32]
-  west_wall:  [walls_garage_01_32]
+# auto_corridors:
+#   floor: floors_interior_tilesandwood_01_28
+#   roof:  floors_exterior_street_01_0
+#   north_wall: [walls_garage_01_33]
+#   south_wall: [walls_garage_01_33]
+#   east_wall:  [walls_garage_01_32]
+#   west_wall:  [walls_garage_01_32]
+
+tiles:
+  industry_01_Simon_MD_118:
+    alias: grate_floor
+    flags: [Floor]
+    airtight: false
+  floors_exterior_street_01_18:
+    alias: invisible_floor
+    flags: [Floor]
+    airtight: false
+  location_community_medical_01_170:
+    flags: [WallN, WallW]
+    airtight: true
+    replaces: [location_community_medical_01_168, location_community_medical_01_169]
 
 elements:
   defaults:
@@ -43,7 +57,9 @@ elements:
     floor: floors_interior_tilesandwood_01_28
     roof:  floors_exterior_street_01_0
     palette:
-      "☐": [carpentry_02_104] # TODO: replace with space box
+      "☐": carpentry_02_104 # TODO: replace with space box
+      "┓": grate_floor
+      "┗": grate_floor
       flags:
         WallN: ["┌", "─", "═", "━", constructedobjects_01_49, constructedobjects_01_50] # crafted metal lvl2
         WallW: ["┌", "│", "║", "┃", constructedobjects_01_48, constructedobjects_01_50]
@@ -52,23 +68,24 @@ elements:
         DoorW: ["<", "walls_garage_02_57"]
         DoorE: [">"]
         Generator: ["⌁"]
+      floors:
+        grate_floor: { replaces: [invisible_floor] }
+        floors_interior_tilesandwood_01_28: { replaces: [grate_floor] }
       walls:
-        "┌": { tile: location_community_medical_01_170, x: +1, y: +1, replaces: [location_community_medical_01_168, location_community_medical_01_169] }
-        "─": { y: +1, tiles: [location_community_medical_01_169] }
-        "═": { y: +1, tiles: [location_community_medical_01_169, lighting_indoor_02_45] }
-        "┓": null
-        "┃": walls_garage_02_16
-        "┛": walls_garage_02_19
-        "━": walls_garage_02_17
-        "┷": [walls_garage_02_17, { y: -1, tiles: [lighting_indoor_02_46] }]
-        "┗": null
-        "│": { x: +1, tiles: [location_community_medical_01_168] }
-        "║": { x: +1, tiles: [location_community_medical_01_168, lighting_indoor_02_44] }
+        "┌": [{ tile: location_community_medical_01_170, x: +1, y: +1 }, grate_floor]
+        "─": [{ y: +1, tiles: [location_community_medical_01_169] }, grate_floor]
+        "═": [{ y: +1, tiles: [location_community_medical_01_169, lighting_indoor_02_45] }, grate_floor]
+        "┃": [walls_garage_02_16, grate_floor]
+        "┛": [walls_garage_02_19, grate_floor]
+        "━": [walls_garage_02_17, grate_floor]
+        "┷": [walls_garage_02_17, grate_floor, { y: -1, tiles: [lighting_indoor_02_46] }]
+        "│": [{ x: +1, tiles: [location_community_medical_01_168] }, grate_floor]
+        "║": [{ x: +1, tiles: [location_community_medical_01_168, lighting_indoor_02_44] }, grate_floor]
       doors:
-        "^": { y: +1, tiles: [walls_garage_02_52, lighting_indoor_02_45] }
-        "v": { tiles: [walls_garage_02_52, industry_trucks_01_19, industry_trucks_01_17, lighting_indoor_02_46] }
+        "^": [{ y: +1, tiles: [walls_garage_02_52, lighting_indoor_02_45] }, grate_floor]
+        "v": [walls_garage_02_52, industry_trucks_01_19, industry_trucks_01_17, lighting_indoor_02_46, grate_floor]
         "<": { x: +1, tiles: [walls_garage_02_49, lighting_indoor_02_44] }
-        ">": { tiles: [walls_garage_02_49, industry_trucks_01_16, industry_trucks_01_18, lighting_indoor_02_47], facing: east }
+        ">": [walls_garage_02_49, industry_trucks_01_16, industry_trucks_01_18, {x: -1, tile: lighting_indoor_02_47}, grate_floor]
 
   cockpit:
     palette:

@@ -33,20 +33,7 @@ ZSpaceship.MapData.Default.Rooms = {
   { x = 20104, y = 20097, z = 10, name = "smallR" },
   { x = 20096, y = 20101, z = 10, name = "kitchen" },
   { x = 20104, y = 20101, z = 10, name = "bedroom" },
-  { x = 20100, y = 20106, z = 10, name = "energy_storage" },
-  { x = 20100, y = 20087, z = 10, name = "hall" },
-  { x = 20098, y = 20089, z = 10, name = "hall" },
-  { x = 20102, y = 20089, z = 10, name = "hall" },
-  { x = 20098, y = 20093, z = 10, name = "hall" },
-  { x = 20102, y = 20093, z = 10, name = "hall" },
-  { x = 20100, y = 20095, z = 10, name = "hall" },
-  { x = 20104, y = 20091, z = 10, name = "hall" },
-  { x = 20094, y = 20097, z = 10, name = "hall" },
-  { x = 20098, y = 20097, z = 10, name = "hall" },
-  { x = 20102, y = 20097, z = 10, name = "hall" },
-  { x = 20098, y = 20101, z = 10, name = "hall" },
-  { x = 20102, y = 20101, z = 10, name = "hall" },
-  { x = 20100, y = 20103, z = 10, name = "hall" }
+  { x = 20100, y = 20106, z = 10, name = "energy_storage" }
 }
 
 -- Generator coordinates
@@ -64,7 +51,6 @@ ZSpaceship.MapData.AIRTIGHT_WALLS_NS_LOOKUP = {
     ["industry_railroad_05_26"] = true,
     ["location_community_medical_01_169"] = true,
     ["location_community_medical_01_170"] = true,
-    ["walls_garage_01_33"] = true,
     ["walls_garage_02_17"] = true
 }
 
@@ -76,18 +62,20 @@ ZSpaceship.MapData.AIRTIGHT_WALLS_EW_LOOKUP = {
     ["industry_railroad_05_26"] = true,
     ["location_community_medical_01_168"] = true,
     ["location_community_medical_01_170"] = true,
-    ["walls_garage_01_32"] = true,
     ["walls_garage_02_16"] = true
 }
 
 -- Door tiles (North/South direction)
 ZSpaceship.MapData.AIRTIGHT_DOORS_NS_LOOKUP = {
+    ["industry_01_Simon_MD_118"] = true,
     ["walls_garage_02_52"] = true,
     ["walls_garage_02_60"] = true
 }
 
 -- Door tiles (East/West direction)
 ZSpaceship.MapData.AIRTIGHT_DOORS_EW_LOOKUP = {
+    ["industry_01_Simon_MD_118"] = true,
+    ["lighting_indoor_02_47"] = true,
     ["walls_garage_02_49"] = true,
     ["walls_garage_02_57"] = true
 }

@@ -5,19 +5,9 @@ require 'fileutils'
 require 'optparse'
 require 'set'
 
-Dir[File.join(File.dirname(__FILE__), "lib", "*.rb")].each do |libf|
+Dir[File.join(File.dirname(__FILE__), "lib", "**", "*.rb")].each do |libf|
   load libf
 end
-
-# Load MapCompiler modules first
-require_relative 'lib/map_compiler/utilities'
-require_relative 'lib/map_compiler/map_parser'
-require_relative 'lib/map_compiler/palette_processor'
-require_relative 'lib/map_compiler/tile_manager'
-require_relative 'lib/map_compiler/room_builder'
-require_relative 'lib/map_compiler/element_processor'
-require_relative 'lib/map_compiler/corridor_handler'
-require_relative 'lib/map_compiler/output_generator'
 
 # --- Compiler Logic ---
 
@@ -46,15 +36,22 @@ class MapCompiler
     # Extract and merge defaults into all elements
     @defaults = @elements.delete('defaults') || {}
     
+    # Load tile definitions from root-level 'tiles:' section
+    @tile_definitions = @config['tiles'] || {}
+    
     # Extract tile parameters from defaults (floors:, walls:, etc.)
+    # Note: floors: and walls: are nested under defaults.palette
     @tile_params = {}
-    if @defaults['floors'] && @defaults['floors'].is_a?(Hash)
-      @defaults['floors'].each do |tile_name, params|
+    @floor_tiles_set = Set.new  # Track tiles defined in floors: section
+    palette = @defaults['palette'] || {}
+    if palette['floors'] && palette['floors'].is_a?(Hash)
+      palette['floors'].each do |tile_name, params|
         @tile_params[tile_name] = params.dup if params.is_a?(Hash)
+        @floor_tiles_set.add(tile_name)
       end
     end
-    if @defaults['walls'] && @defaults['walls'].is_a?(Hash)
-      @defaults['walls'].each do |tile_name, params|
+    if palette['walls'] && palette['walls'].is_a?(Hash)
+      palette['walls'].each do |tile_name, params|
         # Merge with existing params if tile already has params
         if @tile_params[tile_name]
           if params.is_a?(Hash) && params['replaces'] && @tile_params[tile_name]['replaces']
@@ -63,6 +60,27 @@ class MapCompiler
           @tile_params[tile_name].merge!(params) if params.is_a?(Hash)
         else
           @tile_params[tile_name] = params.dup if params.is_a?(Hash)
+        end
+      end
+    end
+    
+    # Build alias -> tile_name mapping and merge tile definitions into tile_params
+    # Also track floor tiles from definitions
+    @tile_aliases = {}  # Map alias -> actual tile name
+    @tile_definitions.each do |tile_name, definition|
+      if definition.is_a?(Hash)
+        @tile_params[tile_name] ||= {}
+        @tile_params[tile_name].merge!(definition)
+        
+        # Track aliases
+        if definition['alias']
+          alias_name = definition['alias']
+          @tile_aliases[alias_name] = tile_name
+        end
+        
+        # Track floor tiles from flags
+        if definition['flags'] && definition['flags'].is_a?(Array) && definition['flags'].include?('Floor')
+          @floor_tiles_set.add(tile_name)
         end
       end
     end
@@ -104,6 +122,9 @@ class MapCompiler
     # Track replaced tiles per square - these are blocked from being added later
     @replaced_tiles = Hash.new { |h, k| h[k] = Set.new }
     
+    # Intermediate representation: Square objects keyed by [x, y, z]
+    @squares = {}
+    
     # Room counter for unique IDs
     @room_index = 0
     @building_index = 0
@@ -136,7 +157,6 @@ class MapCompiler
 
   def compile(out_dir)
     FileUtils.mkdir_p(out_dir)
-    @defined_squares = {}
     
     # Create a single building for all rooms
     @spaceship_building = BuildingDef.new
@@ -154,6 +174,20 @@ class MapCompiler
     process_auto_corridors if @auto_corridors['floor']
     
     set_default_floors_for_cell
+    
+    # Finalize all Square objects: convert to final output format
+    finalize_squares
+    
+    # Print compilation statistics
+    stats = get_compilation_stats
+    puts "\nCompilation Statistics:"
+    puts "  Total squares: #{stats[:total_squares]}"
+    puts "  Defined squares: #{stats[:defined_squares]}"
+    puts "  Squares with floors: #{stats[:squares_with_floor]}"
+    puts "  Squares with walls: #{stats[:squares_with_walls]}"
+    puts "  Total tiles placed: #{stats[:total_tiles]}"
+    puts "  Unique tile types: #{stats[:unique_tiles]}"
+    puts "  Squares by z-level: #{stats[:squares_by_z].sort.map { |z, count| "z#{z}=#{count}" }.join(', ')}"
 
     @header.save(File.join(out_dir, "#{@cell_x}_#{@cell_y}.lotheader"))
     @pack.save(File.join(out_dir, "world_#{@cell_x}_#{@cell_y}.lotpack"))
@@ -165,7 +199,7 @@ class MapCompiler
     # Output spawn points Lua file
     save_spawnpoints_lua(out_dir)
     
-    puts "Compiled cell [#{@cell_x}, #{@cell_y}] to #{out_dir}"
+    puts "\nCompiled cell [#{@cell_x}, #{@cell_y}] to #{out_dir}"
   end
 end
 
