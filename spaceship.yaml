@@ -92,9 +92,9 @@ elements:
         "│": [{ x: +1, tiles: [location_community_medical_01_168] }, grate_floor]
         "║": [{ x: +1, tiles: [location_community_medical_01_168, lighting_indoor_02_44] }, grate_floor]
       doors:
-        "^": [{ y: +1, tiles: [walls_garage_02_52, lighting_indoor_02_45] }, grate_floor]
+        "^": [{ y: +1, tiles: [walls_garage_02_52, lighting_indoor_02_45, walls_garage_01_35] }, grate_floor]
         "v": [walls_garage_02_52, industry_trucks_01_19, industry_trucks_01_17, lighting_indoor_02_46, grate_floor]
-        "<": { x: +1, tiles: [walls_garage_02_49, lighting_indoor_02_44] }
+        "<": { x: +1, tiles: [walls_garage_02_49, lighting_indoor_02_44, walls_garage_01_35] }
         ">": [walls_garage_02_49, industry_trucks_01_16, industry_trucks_01_18, {x: -1, tile: lighting_indoor_02_47}, grate_floor]
 
   cockpit:

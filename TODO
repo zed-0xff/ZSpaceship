@@ -2,7 +2,15 @@
 
 [ ] room: storage / workshop
 
-[ ] item: space suits
+[ ] item: space suit(s)
+    [ ] has oxygen
+    [ ] has water
+    [ ] can refill oxygen
+    [ ] can refill water
+    [ ] auto-toggle oxygen consumption in hazardous area
+    [ ] protects from bites/scratches
+    [ ] limits vision
+    [ ] limits speed
 
 [ ] mechanics: recycler
 [ ] mechanics: oxygen synthesizer
@@ -19,8 +27,9 @@
 
 [ ] tiles: water storage 1x1 container from simon's tiles (screenshot in steam)
 
-[ ] misc: missing thin wall at ┛ _internal_ corner
+[ ] realism: validate floor/ceil tiles using whitelist
 
+[+] misc: missing thin wall at ┛ _internal_ corner
 [+] skill: Science, bitch!
 [+] mechanics: vacuum
 [+] mechanics: energy
