@@ -51,44 +51,38 @@ class MapCompiler
       
       room_name = @auto_corridors['name'] || 'hall'
       
-      # Group tiles by z-level
-      tiles_by_z = tiles.group_by { |t| t[2] }
-      
-      tiles_by_z.each do |z, z_tiles|
-        # Compute bounding box
-        min_x = z_tiles.map { |t| t[0] }.min
-        max_x = z_tiles.map { |t| t[0] }.max
-        min_y = z_tiles.map { |t| t[1] }.min
-        max_y = z_tiles.map { |t| t[1] }.max
+      # Create a separate 1x1 room for each corridor tile
+      tiles.uniq.each do |tile|
+        abs_x, abs_y, z = tile
         
-        # Create room definition
         room_id = RoomID.makeID(@cell_x, @cell_y, @room_index)
         @room_index += 1
         
         room = RoomDef.new(room_id, room_name)
         room.level = z
         
+        # 1x1 room at this tile
         rect = Rect.new
-        rect.x = min_x
-        rect.y = min_y
-        rect.w = max_x - min_x + 1
-        rect.h = max_y - min_y + 1
+        rect.x = abs_x
+        rect.y = abs_y
+        rect.w = 1
+        rect.h = 1
         room.rects << rect
         
-        # Calculate room center
-        center_x = min_x + (max_x - min_x) / 2.0
-        center_y = min_y + (max_y - min_y) / 2.0
-        room_data = { x: center_x.round, y: center_y.round, z: z, name: room_name }
+        # Room center is the tile itself
+        room_data = { x: abs_x, y: abs_y, z: z, name: room_name }
         
-        # Add to all rooms (for MapData.DefaultRooms) but NOT to spawn points
+        # Add to all rooms (for MapData.DefaultRooms, but not spawnpoints)
         @all_rooms << room_data
         
         @header.rooms[room_id] = room
         
-        # Add room to the single spaceship building
+        # Add to the single spaceship building
         @spaceship_building.rooms << room
         room.building = @spaceship_building
       end
+      
+      puts "  Created #{tiles.uniq.length} corridor rooms '#{room_name}'"
     end
     
     def place_corridor(abs_x, abs_y, z, direction)

@@ -28,15 +28,19 @@ metamap: |
   k^b
    E
 
-# auto_corridors:
-#   floor: floors_interior_tilesandwood_01_28
-#   roof:  floors_exterior_street_01_0
-#   north_wall: [walls_garage_01_33]
-#   south_wall: [walls_garage_01_33]
-#   east_wall:  [walls_garage_01_32]
-#   west_wall:  [walls_garage_01_32]
+auto_corridors:
+  floor: floors_interior_tilesandwood_01_28
+  roof:  floors_exterior_street_01_0
+  north_wall: [walls_garage_01_33]
+  south_wall: [walls_garage_01_33]
+  east_wall:  [walls_garage_01_32]
+  west_wall:  [walls_garage_01_32]
 
 tiles:
+  floors_interior_tilesandwood_01_28:
+    flags: [Floor]
+    airtight: true
+    replaces: [industry_01_Simon_MD_118, floors_exterior_street_01_18]
   industry_01_Simon_MD_118:
     alias: grate_floor
     flags: [Floor]
@@ -49,6 +53,12 @@ tiles:
     flags: [WallN, WallW]
     airtight: true
     replaces: [location_community_medical_01_168, location_community_medical_01_169]
+  walls_garage_01_32:
+    flags: [WallW]
+    airtight: true
+  wallls_garage_01_33:
+    flags: [WallN]
+    airtight: true
 
 elements:
   defaults:
@@ -256,7 +266,7 @@ elements:
     floor: industry_01_39
     palette:
       walls:
-        "┌": { tile: industry_railroad_05_26, x: +1, y: +1, replaces: [industry_railroad_05_24, industry_railroad_05_25] }
+        "┌": [{ tile: industry_railroad_05_26, x: +1, y: +1, replaces: [industry_railroad_05_24, industry_railroad_05_25] }, grate_floor]
         "─": { y: +1, tiles: [industry_railroad_05_25] }
         "═": { y: +1, tiles: [industry_railroad_05_25, lighting_indoor_02_45] }
         "┓": null
@@ -264,8 +274,8 @@ elements:
         "┛": walls_garage_02_19
         "━": walls_garage_02_17
         "┗": null
-        "│": { x: +1, tiles: [industry_railroad_05_24] }
-        "║": { x: +1, tiles: [industry_railroad_05_24, lighting_indoor_02_44] }
+        "│": [{ x: +1, tiles: [industry_railroad_05_24] }, grate_floor]
+        "║": [{ x: +1, tiles: [industry_railroad_05_24, lighting_indoor_02_44] }, grate_floor]
       A: [overlay_blood_floor_01_26, overlay_blood_wall_01_3, overlay_blood_wall_01_7, radio_tower_113, radio_tower_115, radio_tower_103, overlay_grime_wall_01_22, overlay_grime_wall_01_20, location_community_school_overlays_34, location_community_school_overlays_3, industry_02_195]
       B: [overlay_blood_wall_01_38, overlay_blood_wall_01_30, radio_tower_115, radio_tower_99, overlay_grime_wall_01_21, location_community_school_overlays_4, industry_02_180, industry_02_193]
       C: [radio_tower_115, overlay_grime_wall_01_21, location_community_school_overlays_5, overlay_blood_floor_01_24, overlay_blood_wall_01_55, industry_02_187, furniture_storage_02_28]
