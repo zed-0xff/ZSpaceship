@@ -278,7 +278,8 @@ function ZSRoom:getWallsDoorsN()
         local x, y, z = sq:getX(), sq:getY(), sq:getZ()
         -- Check for wall on the north side of this square
         -- true = north wall
-        local wall = sq:getWall(true) or sq:getDoor(true)
+        -- checking doors first because getWall may return that thin SW 'wall' stub
+        local wall = sq:getDoor(true) or sq:getWall(true)
         if wall then
             local tileName = nil
             if wall.getSpriteName then
@@ -353,7 +354,7 @@ function ZSRoom:getWallsDoorsS()
         -- For south walls, check the square to the south (y+1) for its north wall
         local southSq = getSquare(x, y + 1, z)
         -- north wall of south square = south wall of current
-        local wall = southSq and (southSq:getWall(true) or southSq:getDoor(true))
+        local wall = southSq and (southSq:getDoor(true) or southSq:getWall(true))
         if wall then
             local tileName = nil
             if wall.getSpriteName then
@@ -388,7 +389,7 @@ function ZSRoom:getWallsDoorsE()
         -- For east walls, check the square to the east (x+1) for its west wall
         local eastSq = getSquare(x + 1, y, z)
         -- west wall of east square = east wall of current
-        local wall = eastSq and (eastSq:getWall(false) or eastSq:getDoor(false))
+        local wall = eastSq and (eastSq:getDoor(false) or eastSq:getWall(false))
         if wall then
             local tileName = nil
             if wall.getSpriteName then
@@ -421,7 +422,7 @@ function ZSRoom:getWallsDoorsW()
     for _, sq in ipairs(westSquares) do
         local x, y, z = sq:getX(), sq:getY(), sq:getZ()
         -- false = west wall
-        local wall = sq:getWall(false) or sq:getDoor(false)
+        local wall = sq:getDoor(false) or sq:getWall(false)
         if wall then
             local tileName = nil
             if wall.getSpriteName then
