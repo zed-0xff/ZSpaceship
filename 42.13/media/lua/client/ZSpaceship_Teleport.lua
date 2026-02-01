@@ -116,14 +116,47 @@ function ZSpaceship.Teleport.toRandom(player)
     end
     
     -- Teleport to random location in the county (2000-13000), avoiding water and empty cells
+    -- Bias toward civilization: prefer locations near buildings (50% of attempts)
     local x, y
     local maxAttempts = 100
     local metaGrid = getWorld():getMetaGrid()
     local found = false
+    local buildings = metaGrid:getBuildings()
+    local buildingCount = buildings and buildings:size() or 0
     
     for i = 1, maxAttempts do
-        x = ZombRand(2000, 16000)
-        y = ZombRand(2000, 16000)
+        -- 50% of attempts: try to land near buildings (civilization)
+        -- 50% of attempts: pure random (still looks random)
+        if buildingCount > 0 and ZombRand(100) < 50 then
+            -- Pick a random building and land near it (30-150 tiles away)
+            local building = buildings:get(ZombRand(buildingCount))
+            if building then
+                local bx, by = building:getX(), building:getY()
+                -- Only use buildings within vanilla county bounds
+                if bx >= 2000 and bx <= 16000 and by >= 2000 and by <= 16000 then
+                    -- Random offset from building (30-150 tiles away)
+                    local angle = ZombRandFloat(0, 2 * math.pi)
+                    local distance = ZombRandFloat(10, 150)
+                    x = math.floor(bx + math.cos(angle) * distance)
+                    y = math.floor(by + math.sin(angle) * distance)
+                    -- Clamp to valid range
+                    x = math.max(2000, math.min(16000, x))
+                    y = math.max(2000, math.min(16000, y))
+                else
+                    -- Building out of bounds, fallback to random
+                    x = ZombRand(2000, 16000)
+                    y = ZombRand(2000, 16000)
+                end
+            else
+                -- Fallback to random
+                x = ZombRand(2000, 16000)
+                y = ZombRand(2000, 16000)
+            end
+        else
+            -- Pure random
+            x = ZombRand(2000, 16000)
+            y = ZombRand(2000, 16000)
+        end
         
         -- Check if chunk has map data
         local chunkX = math.floor(x / 10)
@@ -265,6 +298,7 @@ end
 -- Context Menu for Teleporter (World Object)
 local function doWorldContextMenu(playerNum, context, worldobjects, test)
     if test then return end
+
     local player = getSpecificPlayer(playerNum)
     if not player then return end
     
