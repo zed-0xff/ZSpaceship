@@ -39,6 +39,7 @@ flags:
   - DoorN
   - OpenDoor
   - Storage
+  - WaterStorage
 
 tiles:
   # crafted metal wall lvl2
@@ -48,7 +49,7 @@ tiles:
   # open door sprites
   walls_garage_02_57:                 { flags: [Airtight, DoorW, OpenDoor] }
   walls_garage_02_60:                 { flags: [Airtight, DoorN, OpenDoor] }
-  # furniture
+  # containers
   carpentry_02_104:                   { flags: [Storage], alias: space_box } # TODO: texture
   # floors
   industry_01_Simon_MD_118:           { flags: [Floor], alias: grate_floor, replaces: [invisible_floor] }
@@ -243,25 +244,25 @@ elements:
   kitchenL:
     name: kitchen
     tiles:
+      quarantine_Simon_MD_54:             { flags: [WaterStorage], alias: water_container }
       appliances_cooking_01_29:
-      appliances_laundry_01_0:
-      appliances_refrigeration_01_9:
+      appliances_laundry_01_0:            { alias: washer_dryer }
+      appliances_refrigeration_01_8:      { alias: fridge }
       fixtures_counters_*:
       fixtures_sinks_01_16:
     palette:
       r: [fixtures_counters_01_36, fixtures_counters_01_172, appliances_cooking_01_29]
       -: [fixtures_counters_01_30, fixtures_counters_01_37]
-      W: [appliances_laundry_01_0, fixtures_counters_01_30]
       s: [fixtures_counters_01_31, fixtures_counters_01_35, fixtures_sinks_01_16]
       L: [fixtures_counters_01_31, fixtures_counters_01_34]
       m: [fixtures_counters_01_33, appliances_cooking_01_31, lighting_indoor_02_46]
-      F: [appliances_refrigeration_01_9, fixtures_counters_01_31]
-      l: [lighting_indoor_02_47]
+      F: [fridge, fixtures_counters_01_30]
+      C: [water_container, fixtures_counters_01_31]
     map: |
       ┌─═─┓
-      │r-W┃
+      │r-F┃
       ║s  >
-      │F☐☐┃
+      │C ☐┃
       ┗━┷━┛
 
   bedroomR:

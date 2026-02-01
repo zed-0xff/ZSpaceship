@@ -126,6 +126,9 @@ ZSpaceship.MapData.Tiles = {
     "location_community_medical_01_170",
     "walls_garage_01_32",
     "walls_garage_02_16"
+  },
+  ["WaterStorage"] = {
+    "quarantine_Simon_MD_54"
   }
 }
 

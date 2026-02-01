@@ -68,6 +68,40 @@ local function fillTeleportContainer(obj)
     end
 end
 
+-- Initialize water storage with FluidContainer
+local function initWaterStorage(obj)
+    if not obj or not obj.getSquare then return end
+    
+    local sq = obj:getSquare()
+    if not sq or not ZSpaceship.isInSpace(sq) then return end
+    
+    -- Skip if already has FluidContainer (avoid duplicates on reload)
+    if obj:getFluidContainer() then return end
+    
+    -- Get WaterAmount from sprite properties, fallback to 100
+    local waterAmount = 100.0
+    if obj:getSprite() and obj:getSprite():getProperties() then
+        local props = obj:getSprite():getProperties()
+        if props then
+            local amountStr = props:get(IsoPropertyType.WaterAmount)
+            if amountStr then
+                waterAmount = tonumber(amountStr) or 100.0
+            end
+        end
+    end
+    
+    -- Create and add FluidContainer component
+    local fluidContainer = ComponentType.FluidContainer:CreateComponent()
+    fluidContainer:setCapacity(waterAmount)
+    fluidContainer:addFluid(FluidType.Water, 30.0)
+    GameEntityFactory.AddComponent(obj, true, fluidContainer)
+    
+    -- Sync to clients
+    if isServer() then
+        obj:sync()
+    end
+end
+
 -- Register on new game start (when map is created)
 Events.OnNewGame.Add(function()
     registerDoorUnlocks()
@@ -77,6 +111,12 @@ Events.OnNewGame.Add(function()
     local storage_tiles = ZSpaceship.MapData.Tiles and ZSpaceship.MapData.Tiles["Storage"] or {}
     for _, tile_name in ipairs(storage_tiles) do
         MapObjects.OnNewWithSprite(tile_name, fillTeleportContainer, 10)
+    end
+    
+    -- Register all tiles with WaterStorage flag
+    local water_storage_tiles = ZSpaceship.MapData.Tiles and ZSpaceship.MapData.Tiles["WaterStorage"] or {}
+    for _, tile_name in ipairs(water_storage_tiles) do
+        MapObjects.OnNewWithSprite(tile_name, initWaterStorage, 10)
     end
 end)
 
