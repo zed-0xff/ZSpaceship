@@ -7,7 +7,7 @@ local function onNewGame(player, square)
         inv:clear()
         
         -- Add vanilla Hazmat Suit (required for protection in B42)
-        local suit = inv:AddItem("Base.HazmatSuit")
+        local suit = inv:AddItem("ZSpaceship.SpaceSuitA")
         
         -- Wear it
         player:setWornItem(suit:getBodyLocation(), suit)
@@ -18,6 +18,11 @@ local function onNewGame(player, square)
         end
         suit:setUsedDelta(ZombRandFloat(0.5, 1.0))
         suit:setActivated(true)
+
+        local fluidContainer = suit:getComponent(ComponentType.FluidContainer)
+        if fluidContainer and fluidContainer.addFluid then
+            fluidContainer:addFluid(FluidType.Water, 1.0)
+        end
         
         -- Add Screwdriver to inventory
         inv:AddItem("Base.Screwdriver")
