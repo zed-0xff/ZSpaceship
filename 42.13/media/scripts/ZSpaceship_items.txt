@@ -47,4 +47,41 @@ module ZSpaceship
         Tooltip = Tooltip_PowerCell_Schematic,
         TeachRecipes = Craft Power Storage Unit,
     }
+
+    item SpaceSuitA
+    {
+        DisplayCategory = ProtectiveGear,
+        ItemType = base:clothing,
+        Icon = Hazmatsuit,
+        BiteDefense = 100,
+        BloodLocation = Trousers;Jumper;Head;Neck;Hands;Shoes,
+        BodyLocation = base:fullsuithead,
+        ClothingItem = ZSpaceSuitA,
+        Insulation = 1.0,
+        RunSpeedModifier = 0.5,
+        CombatSpeedModifier = 0.5,
+        ScratchDefense = 100,
+        WindResistance = 1.0,
+        WorldStaticModel = Hazmat_Ground,
+        Tags = base:hazmatsuit; base:scba; base:ignorezombiedensity; base:isdisguise; base:OmitEmptyFromName; base:pickaramidthread; base:HeavyItem; base:WeldingMask; base:HasMetal,
+        KeepOnDeplete = true,
+        ActivatedItem = true,
+        OnCreate = SpecialLootSpawns.OnCreateSCBA,
+        Tooltip = Tooltip_item_SCBA_NoBackpack,
+        VisionModifier = 0.5,
+        HearingModifier = 0.5,
+        DiscomfortModifier = 0.75,
+        Weight = 20.0,
+        BulletDefense = 50,
+        WaterResistance = 1.0,
+        ConditionLowerChanceOneIn = 2,
+        StompPower = 2.0,
+        ChanceToFall = 0,
+        CanHaveHoles = true,
+        component FluidContainer
+        {
+            ContainerName = SpaceSuit,
+            Capacity = 2.0,
+        }
+    }
 }

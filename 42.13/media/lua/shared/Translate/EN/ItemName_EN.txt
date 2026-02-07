@@ -1,6 +1,4 @@
 ItemName_EN = {
-    ItemName_ZSpaceship.Spacesuit_Helmet = "Spacesuit Helmet",
-    ItemName_ZSpaceship.Spacesuit_Body = "Spacesuit Body",
     ItemName_ZSpaceship.Spaceship_Battery = "Spaceship Battery",
     ItemName_ZSpaceship.Spaceship_Battery_Broken = "Broken Spaceship Battery",
     ItemName_ZSpaceship.Spaceship_SolarPanel = "Spaceship Solar Panel",
@@ -12,4 +10,5 @@ ItemName_EN = {
     ItemName_ZSpaceship.PowerCell_Empty = "Empty Power Cell",
     ItemName_ZSpaceship.PowerStorage = "Power Storage Unit",
     ItemName_ZSpaceship.PowerCell_Schematic = "Power Systems Manual",
+    ItemName_ZSpaceship.SpaceSuitA = "Space Suit",
 }

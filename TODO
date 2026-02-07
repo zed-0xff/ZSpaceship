@@ -3,14 +3,14 @@
 [ ] room: storage / workshop
 
 [ ] item: space suit(s)
-    [ ] has oxygen
-    [ ] has water
+    [+] has oxygen
+    [+] has water
     [ ] can refill oxygen
-    [ ] can refill water
+    [+] can refill water
     [ ] auto-toggle oxygen consumption in hazardous area
-    [ ] protects from bites/scratches
-    [ ] limits vision
-    [ ] limits speed
+    [+] protects from bites/scratches
+    [+] limits vision
+    [+] limits speed
 
 [ ] mechanics: recycler
 [ ] mechanics: oxygen synthesizer
@@ -29,6 +29,7 @@
 
 [ ] realism: validate floor/ceil tiles using whitelist
 [ ] realism: suppress non-managed generators
+[ ] realism: no damage from overweight
 
 [ ] proper client/server
 
