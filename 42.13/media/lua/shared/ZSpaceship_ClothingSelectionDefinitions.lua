@@ -1,0 +1,13 @@
+-- TODO
+--ClothingSelectionDefinitions = ClothingSelectionDefinitions or {}
+--
+--local outfit = {
+--	FullSuitHead = {
+--		items = {"ZSpaceship.SpaceSuitA"},
+--	},
+--}
+--
+--ClothingSelectionDefinitions.astronaut = {
+--	Male = outfit,
+--	Female = outfit,
+--}
