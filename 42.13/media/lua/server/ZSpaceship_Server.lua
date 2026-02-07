@@ -102,6 +102,36 @@ local function initWaterStorage(obj)
     end
 end
 
+-- Remove all animals from the space cell
+local function removeAnimalsFromSpace()
+    local cell = getCell()
+    if not cell then return 0 end
+
+    local removed = 0
+    local objects = cell:getObjectList()
+    if not objects then return 0 end
+
+    -- Iterate backwards since we're removing
+    for i = objects:size() - 1, 0, -1 do
+        local obj = objects:get(i)
+        if obj and instanceof(obj, "IsoAnimal") and ZSpaceship.isInSpace(obj) then
+            obj:removeFromWorld()
+            obj:removeFromSquare()
+            removed = removed + 1
+        end
+    end
+    return removed
+end
+
+-- One-time delayed cleanup: waits for cell to load, removes animals, unregisters itself
+local function initialAnimalCleanup()
+    local removed = removeAnimalsFromSpace()
+    if removed > 0 then
+        print("[ZSpaceship] Initial cleanup: removed " .. removed .. " animals from space cell")
+    end
+    Events.EveryOneMinute.Remove(initialAnimalCleanup)
+end
+
 -- Register on new game start (when map is created)
 Events.OnNewGame.Add(function()
     registerDoorUnlocks()
@@ -118,5 +148,8 @@ Events.OnNewGame.Add(function()
     for _, tile_name in ipairs(water_storage_tiles) do
         MapObjects.OnNewWithSprite(tile_name, initWaterStorage, 10)
     end
+
+    -- Delayed animal cleanup (gives time for cell to fully load and animals to spawn)
+    Events.EveryOneMinute.Add(initialAnimalCleanup)
 end)
 
