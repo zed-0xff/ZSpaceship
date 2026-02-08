@@ -20,7 +20,7 @@ ZSpaceship.MapData.Default.Rooms = {
   { x = 20096, y = 20093, z = 10, name = "zs_teleport_room" },
   { x = 20104, y = 20093, z = 10, name = "hub" },
   { x = 20089, y = 20097, z = 10, name = "medical" },
-  { x = 20096, y = 20097, z = 10, name = "library" },
+  { x = 20096, y = 20097, z = 10, name = "zs_library" },
   { x = 20100, y = 20099, z = 10, name = "zs_longhub" },
   { x = 20104, y = 20097, z = 10, name = "smallR" },
   { x = 20096, y = 20101, z = 10, name = "zs_kitchen" },

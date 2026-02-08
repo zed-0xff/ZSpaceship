@@ -23,6 +23,11 @@ class MapCompiler
       return tile_name unless tile_name && @tile_aliases
       @tile_aliases[tile_name] || tile_name
     end
+
+    # Expand a replaces list to include both aliases and their resolved tile names
+    def expand_replaces(replaces_list)
+      replaces_list.flat_map { |t| [t, resolve_tile_alias(t)] }.uniq
+    end
     
     # Validate that a tile is defined in tiles: section
     def validate_tile_defined(tile_name)
@@ -53,15 +58,18 @@ class MapCompiler
       square = get_or_create_square(abs_x, abs_y, z)
       square.is_defined = true
       
+      # Expand replaces to include both aliases and resolved actual tile names
+      expanded_replaces = expand_replaces(replaces)
+      
       # Track replaced tiles globally - they can't be added later
       key = [abs_x, abs_y, z]
-      replaces.each { |t| @replaced_tiles[key].add(t) }
+      expanded_replaces.each { |t| @replaced_tiles[key].add(t) }
       
       # Validate and resolve aliases to actual tile names
       new_tiles = new_tiles.map { |t| validate_tile_defined(t) }
       
       # Filter out new tiles that were previously replaced or in current replaces list
-      new_tiles = new_tiles.reject { |t| @replaced_tiles[key].include?(t) || replaces.include?(t) }
+      new_tiles = new_tiles.reject { |t| @replaced_tiles[key].include?(t) || expanded_replaces.include?(t) }
       
       # Create Tile objects with proper flags and replaces
       tile_objects = new_tiles.map do |tile_name|
@@ -75,14 +83,14 @@ class MapCompiler
           tile.alias = tile_def['alias']
         end
         
-        # Get replaces from tile params (from floors:/walls: sections) first
+        # Get replaces from tile params, expanded to include resolved aliases
         tile_params = get_tile_params(tile_name)
         if tile_params['replaces']
-          tile.add_replaces(tile_params['replaces'])
+          tile.add_replaces(expand_replaces(tile_params['replaces']))
         end
         
-        # Also add replaces passed as parameter (from local definition)
-        tile.add_replaces(replaces) if !replaces.empty?
+        # Also add expanded replaces passed as parameter (from local definition)
+        tile.add_replaces(expanded_replaces) if !expanded_replaces.empty?
         
         # Apply flags from tile definition
         if tile_def['flags'] && tile_def['flags'].is_a?(Array)

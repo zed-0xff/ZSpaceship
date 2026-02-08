@@ -6,7 +6,7 @@ ProceduralDistributions.list["zsSpaceStuff"] = {
     rolls = 2,
     items = {
         "ZSpaceship.SpaceSuitA",         1,
-        "ZSpaceship.Communicator_Left",  2,
+        "ZSpaceship.Communicator_Left",  4,
         "ZSpaceCrate",                   1,
         "ZScienceSkill.BookScience1",    1,
         "ZScienceSkill.BookScience2",    0.5,
@@ -61,14 +61,26 @@ local zsDistr = {
             }
         },
         crate = {
-            procedural = true,
-            procList = {
-                {name="CrateCannedFood",           min=2, max=99, weightChance=100},
-                {name="KitchenCannedFood",         min=2, max=99, weightChance=100},
-                {name="KitchenDryFood",            min=2, max=99, weightChance=100},
-                {name="CrateWaterDispenserBottle", min=1, max= 2, weightChance= 50},
-                {name="GigamartCannedFood",        min=1, max=99, weightChance=100},
-                {name="GigamartBakingMisc",        min=1, max=10, weightChance=100},
+            rolls = 4,
+            items = {
+                "CannedBolognese",      40,
+                "CannedChili",          40,
+                "CannedCornedBeef",     40,
+                "CannedCorn",           30,
+                "CannedPeas",           30,
+                "CannedCarrots2",       30,
+                "CannedPeaches",        30,
+                "CannedFruitCocktail",  30,
+                "CannedMushroomSoup",   30,
+                "CannedTomato2",        30,
+                "CannedMilk",           20,
+                "Cereal",               20,
+                "Oatmeal",              20,
+                "Pasta",                30,
+                "Rice",                 30,
+                "Flour",                15,
+                "Sugar",                15,
+                "WaterBottleFull",      40,
             },
         },
         freezer = {
@@ -76,7 +88,7 @@ local zsDistr = {
             procList = {
                 {name="FreezerFrozenFood", min=1, max=99, weightChance=100},
                 {name="FreezerGeneric",    min=1, max=99, weightChance= 50},
-                {name="SafehouseFreezer",  min=0, max=99, weightChance= 20},
+                {name="SafehouseFreezer",  min=1, max=99, weightChance= 20},
             }
         },
     },
@@ -95,12 +107,25 @@ local zsDistr = {
         },
     },
 
+    zs_library = {
+        crate = {
+            procedural = true,
+            procList = {
+              {name="zsSpaceStuff",     min=0, max= 1, weightChance=10},
+              {name="LibraryScience",   min=1, max= 5, weightChance=80},
+              {name="LibraryBooks",     min=1, max= 5, weightChance=80},
+              {name="LibraryMagazines", min=1, max= 5, weightChance=80},
+              {name="CrateVHSTapes",    min=0, max=99, weightChance=30},
+            },
+        },
+    },
+
     zs_teleport_room = {
         crate = {
-            rolls = 5,
+            rolls = 6,
             items = {
-                "ZSpaceship.SpaceSuitA",         1,
-                "ZSpaceship.Communicator_Left", 20,
+                "ZSpaceship.SpaceSuitA",        10,
+                "ZSpaceship.Communicator_Left", 50,
                 "Base.LargeMeteorite",           0.01,
             },
         },

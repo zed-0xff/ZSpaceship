@@ -45,27 +45,31 @@ function ZSpaceship.isProtectedFromVacuum(creature)
     
     local isZombie = instanceof(creature, "IsoZombie")
     
-    -- For zombies, check outfit name (their wornItems don't have real item tags)
+    -- For zombies, check outfit name first (randomly spawned zombies)
     if isZombie then
         local outfitName = creature:getOutfitName()
         if outfitName and string.find(string.lower(outfitName), "hazard") then
             return true
         end
-        return false
     end
     
-    -- For players/animals, check actual worn items
+    -- Check actual worn items (works for players, animals, and reanimated player zombies)
     local wornItems = creature:getWornItems()
     if not wornItems then return false end
     
     for i = 0, wornItems:size() - 1 do
         local item = wornItems:getItemByIndex(i)
-        -- Only check actual Clothing items (not AlarmClockClothing, etc.)
-        if item and instanceof(item, "Clothing") then
-            -- Check for SCBA (Hazmat suit) - use ItemTag enum, not string
-            if item:hasTag(ItemTag.SCBA) then
-                -- Players need oxygen in the tank
-                if item:isActivated() and item:hasTank() and item:getUsedDelta() > 0.0 then
+        if item then
+            -- Space suit or SCBA (Hazmat) - zombies don't breathe, players need oxygen + intact suit
+            local isSuit = item:getFullType() == "ZSpaceship.SpaceSuitA"
+            local isSCBA = instanceof(item, "Clothing") and item:hasTag(ItemTag.SCBA)
+            if isSuit or isSCBA then
+                if isZombie then
+                    return true
+                end
+                local hasOxygen = item:isActivated() and item:hasTank() and item:getUsedDelta() > 0.0
+                local isIntact = not item.getHolesNumber or item:getHolesNumber() == 0
+                if hasOxygen and isIntact then
                     return true
                 end
             end

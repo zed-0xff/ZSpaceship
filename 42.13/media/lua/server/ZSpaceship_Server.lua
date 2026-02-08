@@ -70,6 +70,7 @@ end
 
 -- Initialize water storage with FluidContainer
 local function initWaterStorage(obj)
+    print("Initializing water storage for: " .. tostring(obj))
     if not obj or not obj.getSquare then return end
     
     local sq = obj:getSquare()

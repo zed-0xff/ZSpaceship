@@ -30,7 +30,18 @@ class MapCompiler
     def add_tile(tile)
       raise ArgumentError, "tile must be a Tile object" unless tile.is_a?(MapCompiler::Tile)
 
-      @floor = resolve_conflict(@floor, tile) if tile.floor?
+      if tile.floor?
+        old_floor = @floor
+        @floor = resolve_conflict(@floor, tile)
+        # Remove the losing floor from @tiles so it doesn't leak as a non-floor tile
+        if old_floor && @floor.name != old_floor.name
+          @tiles.reject! { |t| t.name == old_floor.name }
+        end
+      end
+
+      # Remove any existing tiles that this new tile replaces
+      @tiles.reject! { |t| tile.replaces?(t) } if tile.needs_replacement?
+
       @tiles << tile unless @tiles.any? { |t| t.name == tile.name }
     end
     

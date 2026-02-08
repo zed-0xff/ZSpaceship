@@ -49,7 +49,7 @@ function ISZSpaceshipTeleportAction:start()
     
     self:setActionAnim("Loot")
     self.character:Say(self.startMessage or "Energizing...")
-    self.sound = self.character:playSound("PZ_Owl_02")
+    self.sound = self.character:playSound("RadioStatic")
 end
 
 function ISZSpaceshipTeleportAction:stop()
@@ -142,17 +142,23 @@ function ISZSpaceshipTeleportAction:complete()
     return true
 end
 
+function ISZSpaceshipTeleportAction:getDuration()
+    if self.character:isTimedActionInstant() then return 1 end
+    -- Base 400 ticks (~12s), halved when teleporting from the ship (better equipment)
+    local duration = self.fromSpace and 200 or 400
+    duration = duration - self.character:getPerkLevel(Perks.Science) * 30
+    if self.timeMult then
+        duration = duration * self.timeMult
+    end
+    return math.max(duration, 50)
+end
+
 function ISZSpaceshipTeleportAction:new(character, targetX, targetY, targetZ, startMessage, timeMult, findFreeTile, toBuilding)
     local o = ISBaseTimedAction.new(self, character)
     o.targetX = targetX
     o.targetY = targetY
     o.targetZ = targetZ
-    o.maxTime = 100  -- ticks (~3 seconds)
-    if character:isTimedActionInstant() then
-        o.maxTime = 1
-    elseif timeMult then
-        o.maxTime = o.maxTime * timeMult
-    end
+    o.timeMult = timeMult
     o.startMessage = startMessage
     o.findFreeTile = findFreeTile or false
     o.stopOnWalk = true
@@ -165,9 +171,11 @@ function ISZSpaceshipTeleportAction:new(character, targetX, targetY, targetZ, st
     -- Calculate and store power cost
     -- Check if teleporting from/to space
     local px, py = math.floor(character:getX()), math.floor(character:getY())
-    local fromSpace = ZSpaceship.isInSpace(px, py)
+    o.fromSpace = ZSpaceship.isInSpace(px, py)
     local toSpace = ZSpaceship.isInSpace(targetX, targetY)
-    o.powerCost = ZSpaceship.Teleport.getCost(character, fromSpace, toSpace, toBuilding or false)
+    o.powerCost = ZSpaceship.Teleport.getCost(character, o.fromSpace, toSpace, toBuilding or false)
+    
+    o.maxTime = o:getDuration()
     
     return o
 end
