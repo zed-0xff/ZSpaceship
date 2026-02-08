@@ -17,7 +17,7 @@ metapalette:
   r: smallR
   k: kitchenL
   b: bedroomR
-  M: medbayL
+  M: labL
 
 metamap_gap: -1
 metamap: |
@@ -170,7 +170,7 @@ elements:
       │SRr┃
       ┗━┷━┛
 
-  medbayL:
+  labL:
     name: medical # XXX used by lua to find medbay room
     tiles:
       industry_02_Simon_MD_*:
@@ -200,13 +200,16 @@ elements:
       X: [location_community_medical_01_76]
       x: [location_community_medical_01_77]
 
-      C: [location_community_medical_01_154]
+      d: [fixtures_counters_01_37, location_community_medical_01_55, location_community_medical_01_156]
+      e: [fixtures_counters_01_37, location_community_medical_01_55, location_community_medical_01_157]
+      f: [fixtures_counters_01_37, location_community_medical_01_55, location_community_medical_01_166]
+
       m: [fixtures_counters_01_33, location_community_medical_01_139]
       s: [fixtures_counters_01_33, fixtures_sinks_01_19]
       c: [fixtures_counters_01_33]
     map: |
       ┌─═──═──═─┓
-      │127Bb-CCC┃
+      │127Bb-def┃
       ║34*      >
       │56TXx msc┃
       ┗━┷━━┷━━┷━┛
@@ -242,7 +245,7 @@ elements:
       ┗━┷━┛
 
   kitchenL:
-    name: kitchen
+    name: zs_kitchen
     tiles:
       quarantine_Simon_MD_54:             { flags: [WaterStorage], alias: water_container }
       appliances_cooking_01_29:
@@ -266,7 +269,7 @@ elements:
       ┗━┷━┛
 
   bedroomR:
-    name: bedroom
+    name: zs_bedroom
     tiles:
       furniture_bedding_01_86:
       furniture_bedding_01_87:
@@ -292,6 +295,7 @@ elements:
       ┗━v━┛
 
   longhub:
+    name: zs_longhub
     map: |
       ┌─^─┓
       │   ┃
@@ -308,7 +312,7 @@ elements:
       G: Generator
     palette:
       G: null
-    name: longhub
+    name: zs_longhub
     map: |
       ┌─^─┓
       │   ┃
@@ -334,12 +338,12 @@ elements:
       │bbb┃
       ┗━━━┛
 
-  teleport_room: # XXX lua finds this room by its name, i.e. "teleport_room"
+  teleport_room:
+    name: zs_teleport_room # XXX lua finds this room by its name
     tiles:
       appliances_com_01_53:
       floors_burnt_01_1:
       floors_exterior_tilesandstone_01_13: { flags: [Floor, Airtight], replaces: [invisible_floor] }
-      furniture_storage_02_28: { flags: [Storage] }
       industry_01_39:
       industry_02_180:
       industry_02_181:
@@ -372,7 +376,7 @@ elements:
       # contents
       A: [overlay_blood_floor_01_26, overlay_blood_wall_01_3, overlay_blood_wall_01_7, radio_tower_113, radio_tower_115, radio_tower_103, overlay_grime_wall_01_22, overlay_grime_wall_01_20, location_community_school_overlays_34, location_community_school_overlays_3, industry_02_195]
       B: [overlay_blood_wall_01_38, overlay_blood_wall_01_30, radio_tower_115, radio_tower_99, overlay_grime_wall_01_21, location_community_school_overlays_4, industry_02_180, industry_02_193]
-      C: [radio_tower_115, overlay_grime_wall_01_21, location_community_school_overlays_5, overlay_blood_floor_01_24, overlay_blood_wall_01_55, industry_02_187, furniture_storage_02_28]
+      C: [radio_tower_115, overlay_grime_wall_01_21, location_community_school_overlays_5, overlay_blood_floor_01_24, overlay_blood_wall_01_55, industry_02_187, space_crate]
       D: [overlay_blood_floor_01_15, overlay_blood_wall_01_9, radio_tower_113, radio_tower_98, overlay_grime_wall_01_20, location_community_school_overlays_33, industry_02_181, industry_02_194]
       E: { teleporter: true, tiles: [floors_exterior_tilesandstone_01_13, floors_burnt_01_1] }
       F: [overlay_blood_floor_01_7, radio_tower_97]

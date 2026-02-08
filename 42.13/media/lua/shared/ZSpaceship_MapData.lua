@@ -15,16 +15,16 @@ ZSpaceship.MapData.Default = ZSpaceship.MapData.Default or {}
 ZSpaceship.MapData.Default.Rooms = {
   { x = 20100, y = 20085, z = 10, name = "cockpit" },
   { x = 20096, y = 20089, z = 10, name = "bathroom" },
-  { x = 20100, y = 20091, z = 10, name = "longhub" },
+  { x = 20100, y = 20091, z = 10, name = "zs_longhub" },
   { x = 20104, y = 20089, z = 10, name = "hub" },
-  { x = 20096, y = 20093, z = 10, name = "teleport_room" },
+  { x = 20096, y = 20093, z = 10, name = "zs_teleport_room" },
   { x = 20104, y = 20093, z = 10, name = "hub" },
   { x = 20089, y = 20097, z = 10, name = "medical" },
   { x = 20096, y = 20097, z = 10, name = "library" },
-  { x = 20100, y = 20099, z = 10, name = "longhub" },
+  { x = 20100, y = 20099, z = 10, name = "zs_longhub" },
   { x = 20104, y = 20097, z = 10, name = "smallR" },
-  { x = 20096, y = 20101, z = 10, name = "kitchen" },
-  { x = 20104, y = 20101, z = 10, name = "bedroom" },
+  { x = 20096, y = 20101, z = 10, name = "zs_kitchen" },
+  { x = 20104, y = 20101, z = 10, name = "zs_bedroom" },
   { x = 20100, y = 20106, z = 10, name = "energy_storage" },
   { x = 20100, y = 20087, z = 10, name = "hall" },
   { x = 20098, y = 20089, z = 10, name = "hall" },
@@ -100,7 +100,6 @@ ZSpaceship.MapData.Tiles = {
     "walls_garage_02_60"
   },
   ["Storage"] = {
-    "furniture_storage_02_28",
     "zspaceship_0"
   },
   ["WallN"] = {

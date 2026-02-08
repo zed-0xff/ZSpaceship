@@ -349,7 +349,7 @@ local function doWorldContextMenu(playerNum, context, worldobjects, test)
     -- Check if standing in teleport room
     local room = ZSRooms.find(player)
     
-    if room and room:getName() == "teleport_room" then
+    if room and room:getName() == "zs_teleport_room" then
         local communicator = player:getInventory():getItemFromTag(ZSpaceship.Tags.Communicator, true, true)
         local costSurface = ZSpaceship.Teleport.getCost(player, true, false, false)  -- from space, to surface, not to building
         local costBuilding = ZSpaceship.Teleport.getCost(player, true, false, true)   -- from space, to surface, to building

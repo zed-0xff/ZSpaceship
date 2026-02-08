@@ -8,7 +8,7 @@ ZSpaceship.MapData = ZSpaceship.MapData or {}
 function ZSpaceship.getTeleporterCoords()
     -- First try: use ZSRooms cache
     if ZSRooms then
-        local teleportRoom = ZSRooms.find("teleport_room")
+        local teleportRoom = ZSRooms.find("zs_teleport_room")
         if teleportRoom and teleportRoom.center then
             return teleportRoom.center.x, teleportRoom.center.y, teleportRoom.center.z
         end
@@ -17,7 +17,7 @@ function ZSpaceship.getTeleporterCoords()
     -- Second try: search in MapData.Rooms (runtime data, may be from save file)
     if ZSpaceship.MapData and ZSpaceship.MapData.Rooms then
         for _, room in ipairs(ZSpaceship.MapData.Rooms) do
-            if room.name == "teleport_room" then
+            if room.name == "zs_teleport_room" then
                 return room.x, room.y, room.z
             end
         end
@@ -26,7 +26,7 @@ function ZSpaceship.getTeleporterCoords()
     -- Third try: search in MapData.Default.Rooms (compiled data)
     if ZSpaceship.MapData and ZSpaceship.MapData.Default and ZSpaceship.MapData.Default.Rooms then
         for _, room in ipairs(ZSpaceship.MapData.Default.Rooms) do
-            if room.name == "teleport_room" then
+            if room.name == "zs_teleport_room" then
                 return room.x, room.y, room.z
             end
         end

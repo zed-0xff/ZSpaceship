@@ -45,28 +45,28 @@ local function registerDoorUnlocks()
     doorUnlockRegistered = true
 end
 
--- Add communicators to the teleport room container
-local function fillTeleportContainer(obj)
-    if not obj.getSquare then return end
-    
-    local sq = obj:getSquare()
-    if not sq then return end
-    
-    -- Check if in a teleport room
-    local room = sq:getRoom()
-    if not room or not string.find(room:getName(), "teleport") then return end
-    
-    local container = obj:getContainer()
-    if not container then return end
-    
-    -- Only fill if empty (avoid duplicates on reload)
-    if container:getItems():size() >= 5 then return end
-    
-    -- Add 5 space communicators
-    for i = 1, 5 do
-        container:AddItem("ZSpaceship.Communicator_Left")
-    end
-end
+-- Add communicators to the teleport room container -- now filled via distributions
+--local function fillTeleportContainer(obj)
+--    if not obj.getSquare then return end
+--    
+--    local sq = obj:getSquare()
+--    if not sq then return end
+--    
+--    -- Check if in a teleport room
+--    local room = sq:getRoom()
+--    if not room or not string.find(room:getName(), "teleport") then return end
+--    
+--    local container = obj:getContainer()
+--    if not container then return end
+--    
+--    -- Only fill if empty (avoid duplicates on reload)
+--    if container:getItems():size() >= 5 then return end
+--    
+--    -- Add 5 space communicators
+--    for i = 1, 5 do
+--        container:AddItem("ZSpaceship.Communicator_Left")
+--    end
+--end
 
 -- Initialize water storage with FluidContainer
 local function initWaterStorage(obj)
@@ -136,12 +136,11 @@ end
 Events.OnNewGame.Add(function()
     registerDoorUnlocks()
 
-    -- furniture_storage_02_28 is the chest in teleport room (has container:locker)
     -- Register all tiles with Storage flag
-    local storage_tiles = ZSpaceship.MapData.Tiles and ZSpaceship.MapData.Tiles["Storage"] or {}
-    for _, tile_name in ipairs(storage_tiles) do
-        MapObjects.OnNewWithSprite(tile_name, fillTeleportContainer, 10)
-    end
+--    local storage_tiles = ZSpaceship.MapData.Tiles and ZSpaceship.MapData.Tiles["Storage"] or {}
+--    for _, tile_name in ipairs(storage_tiles) do
+--        MapObjects.OnNewWithSprite(tile_name, fillTeleportContainer, 10)
+--    end
     
     -- Register all tiles with WaterStorage flag
     local water_storage_tiles = ZSpaceship.MapData.Tiles and ZSpaceship.MapData.Tiles["WaterStorage"] or {}

@@ -64,8 +64,8 @@ class MapCompiler
     
     def get_floor_tiles
       if @floor
-        # @floor is a string, create a Tile object for it
-        floor_tile = MapCompiler::Tile.new(@floor)
+        name = @floor.is_a?(MapCompiler::Tile) ? @floor.name : @floor
+        floor_tile = MapCompiler::Tile.new(name)
         floor_tile.set_floor
         [floor_tile]
       else
