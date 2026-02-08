@@ -47,7 +47,7 @@ def extract_PACK_tile(fname, page, sub)
     src = ZPNG::Image.new(png_data)
     dst = ZPNG::Image.new(sub.fx, sub.fy)
     dst.copy_from(src, src_x: sub.x, src_y: sub.y, src_width: sub.w, src_height: sub.h, dst_x: sub.ox, dst_y: sub.oy)
-    dst.chunks << ZPNG::Chunk::TEXT.new(keyword: "src.json", text: sub.to_h.to_json)
+    #dst.chunks << ZPNG::Chunk::TEXT.new(keyword: "src.json", text: sub.to_h.to_json)
     dst_fname = File.join(@outdir, sub.name + ".png")
     dst.save(dst_fname)
   end
