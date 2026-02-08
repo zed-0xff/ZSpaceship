@@ -1,0 +1,19 @@
+{
+  "BlocksPlacement": "",
+  "CanScrap": "",
+  "ContainerCapacity": "64",
+  "ContainerPosition": "Low",
+  "CustomName": "Crate",
+  "Facing": "E",
+  "GroupName": "Fancy Metal",
+  "IsLow": "",
+  "IsMoveAble": "",
+  "IsStackable": "",
+  "IsTable": "",
+  "Material": "AluminumScrap",
+  "Material2": "AluminumFragments",
+  "PickUpWeight": "64",
+  "Surface": "32",
+  "container": "crate",
+  "solidtrans": ""
+}

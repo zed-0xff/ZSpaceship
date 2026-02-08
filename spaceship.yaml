@@ -50,7 +50,7 @@ tiles:
   walls_garage_02_57:                 { flags: [Airtight, DoorW, OpenDoor] }
   walls_garage_02_60:                 { flags: [Airtight, DoorN, OpenDoor] }
   # containers
-  carpentry_02_104:                   { flags: [Storage], alias: space_box } # TODO: texture
+  zspaceship_0:                       { flags: [Storage], alias: space_crate }
   # floors
   industry_01_Simon_MD_118:           { flags: [Floor], alias: grate_floor, replaces: [invisible_floor] }
   floors_exterior_street_01_18:       { flags: [Floor], alias: invisible_floor }
@@ -98,7 +98,7 @@ elements:
       "┌": TopLeft
       "┛": BottomRight
     palette:
-      "☐": space_box
+      "☐": space_crate
       "┓": grate_floor
       "┗": grate_floor
       # walls
@@ -217,7 +217,7 @@ elements:
       appliances_television_01_0:
     palette:
       S: furniture_seating_indoor_03_123
-      T: [space_box, appliances_television_01_0]
+      T: [space_crate, appliances_television_01_0]
     map: |
       ┌─═─┓
       │☐☐☐┃

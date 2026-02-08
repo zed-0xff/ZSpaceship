@@ -25,14 +25,14 @@
 [ ] UI: ship doors
 [ ] UI: ship top
 
-[ ] tiles: water storage 1x1 container from simon's tiles (screenshot in steam)
-
 [ ] realism: validate floor/ceil tiles using whitelist
 [ ] realism: suppress non-managed generators
 [ ] realism: no damage from overweight
 
 [ ] proper client/server
 
+[+] tiles: space crate
+[+] tiles: water storage 1x1 container from simon's tiles (screenshot in steam)
 [+] misc: missing thin wall at ┛ _internal_ corner
 [+] skill: Science, bitch!
 [+] mechanics: vacuum

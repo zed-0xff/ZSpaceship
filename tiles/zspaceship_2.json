@@ -1,0 +1,14 @@
+{
+  "CanScrap": "",
+  "ContainerCapacity": "64",
+  "ContainerPosition": "High",
+  "IsPaintable": "",
+  "IsStackable": "",
+  "Material": "AluminumScrap",
+  "Material2": "AluminumFragments",
+  "PaintingType": "crates",
+  "StackReplaceTileOffset": "-2",
+  "Surface": "96",
+  "container": "crate",
+  "solidtrans": ""
+}

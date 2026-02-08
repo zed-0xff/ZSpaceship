@@ -1,0 +1,23 @@
+module Base
+{
+    entity ZSpaceCrate
+    {
+        component UiConfig
+        {
+            xuiSkin = default,
+            entityStyle = ES_Metal_Crate_Lvl2,
+            uiEnabled = false,
+        }
+        component SpriteConfig
+        {
+            canBePadlocked = true,
+            face E
+            {
+                layer
+                {
+                    row = zspaceship_0,
+                }
+            }
+        }
+    }
+}

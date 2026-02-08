@@ -3,4 +3,7 @@ id=ZSpaceship
 description=A retrofuturistic spaceship mod with teleporters, space suits, and vacuum mechanics.
 poster=poster.png
 
+pack=zspaceship
+tiledef=zspaceship 255
+
 require=\ZUnfussyTrait,\ZScienceSkill,\simonMDsTiles

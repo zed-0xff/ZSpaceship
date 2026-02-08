@@ -1,0 +1,8 @@
+tileDepthTextureAssignments
+{
+    VERSION = 1,
+
+    zspaceship_0 = carpentry_01_19,
+    zspaceship_1 = carpentry_01_20,
+    zspaceship_2 = carpentry_01_21,
+}
