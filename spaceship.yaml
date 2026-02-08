@@ -215,6 +215,7 @@ elements:
       ┗━┷━━┷━━┷━┛
 
   library:
+    name: zs_library
     tiles:
       furniture_seating_indoor_03_123:
       appliances_television_01_0:
