@@ -19,7 +19,7 @@ module TexturePackPage
     end
   end
 
-  class SubTextureInfo < IOStruct.new("i8", :w, :h, :x, :y, :ox, :oy, :fx, :fy, :name, inspect: :dec)
+  class SubTextureInfo < IOStruct.new("i8", :x, :y, :w, :h, :ox, :oy, :fx, :fy, :name, inspect: :dec)
     def self.read(io)
       name = TexturePackPage.ReadString(io)
       super(io).tap do |x|

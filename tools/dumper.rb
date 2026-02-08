@@ -6,6 +6,8 @@ require 'iostruct'
 require 'zhexdump'
 require 'optparse'
 require 'fileutils'
+require 'json'
+require 'zpng'
 
 ZHexdump.defaults[:width] = 32
 
@@ -34,6 +36,23 @@ def process_file(fname)
   end
 end
 
+def extract_PACK_tile(fname, page, sub)
+  out_fname = File.join(@outdir, sub.name + ".png")
+  puts "[=] #{out_fname}"
+
+  FileUtils.mkdir_p(@outdir)
+  File.open(fname, "rb") do |f|
+    f.seek(page.pngStart)
+    png_data = f.read(page.pngSize)
+    src = ZPNG::Image.new(png_data)
+    dst = ZPNG::Image.new(sub.fx, sub.fy)
+    dst.copy_from(src, src_x: sub.x, src_y: sub.y, src_width: sub.w, src_height: sub.h, dst_x: sub.ox, dst_y: sub.oy)
+    dst.chunks << ZPNG::Chunk::TEXT.new(keyword: "src.json", text: sub.to_h.to_json)
+    dst_fname = File.join(@outdir, sub.name + ".png")
+    dst.save(dst_fname)
+  end
+end
+
 def process_PACK_file(fname)
   puts "Processing #{fname} (#{File.size(fname)} bytes)".cyan
   TexturePackDevice.open(fname) do |tpd|
@@ -43,6 +62,7 @@ def process_PACK_file(fname)
 
       p.sub.each_with_index do |sub, sub_idx|
         printf "          %4d: %s\n", sub_idx, sub.to_table
+        extract_PACK_tile(fname, p, sub) if @extract_tiles[sub.name]
       end
 
       if @extract
@@ -57,6 +77,16 @@ def process_PACK_file(fname)
         end
       end
     end
+  end
+end
+
+def extract_tdef_tile(name, props)
+  out_fname = File.join(@outdir, name + ".json")
+  puts "[=] #{out_fname}"
+
+  FileUtils.mkdir_p(@outdir)
+  File.open(out_fname, "w") do |f|
+    f.write(JSON.pretty_generate(props))
   end
 end
 
@@ -105,10 +135,14 @@ def process_tdef_file(fname)
           props[prop] = val
         end
 
-        if true # props.any?
+        if props.any? || @verbosity > 0 || @extract_tiles.any?
           name2 = "%s_%d" % [name, tile_idx]
+          next if @extract_tiles.any? && !@extract_tiles[name2]
+
           printf "%-24s: ", name2
           puts props.map{ |k,v| v == "" ? k : "#{k}:#{v}" }.join(", ")
+
+          extract_tdef_tile(name2, props) if @extract_tiles[name2]
         end
       end
       puts
@@ -240,6 +274,7 @@ end
 @headers = {}
 @verbosity = 0
 @outdir = "out"
+@extract_tiles = {}
 
 def process_LOTH_file(fname)
   puts "Processing #{fname}".cyan
@@ -261,6 +296,9 @@ OptionParser.new do |opts|
   end
   opts.on("-x", "--extract", "Extract files") do
     @extract = true
+  end
+  opts.on("--tile TILE", "Extract specific tile") do |tile|
+    @extract_tiles[tile] = true
   end
 end.parse!
 
