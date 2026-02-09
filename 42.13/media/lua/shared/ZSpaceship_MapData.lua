@@ -25,7 +25,7 @@ ZSpaceship.MapData.Default.Rooms = {
   { x = 20104, y = 20097, z = 10, name = "smallR" },
   { x = 20096, y = 20101, z = 10, name = "zs_kitchen" },
   { x = 20104, y = 20101, z = 10, name = "zs_bedroom" },
-  { x = 20100, y = 20106, z = 10, name = "energy_storage" },
+  { x = 20100, y = 20106, z = 10, name = "zs_energy_storage" },
   { x = 20100, y = 20087, z = 10, name = "hall" },
   { x = 20098, y = 20089, z = 10, name = "hall" },
   { x = 20102, y = 20089, z = 10, name = "hall" },

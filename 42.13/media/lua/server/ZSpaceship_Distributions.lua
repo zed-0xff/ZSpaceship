@@ -61,7 +61,8 @@ local zsDistr = {
             }
         },
         crate = {
-            rolls = 4,
+            ignoreZombieDensity = true,
+            rolls = 5,
             items = {
                 "CannedBolognese",      40,
                 "CannedChili",          40,
@@ -122,6 +123,7 @@ local zsDistr = {
 
     zs_teleport_room = {
         crate = {
+            ignoreZombieDensity = true,
             rolls = 6,
             items = {
                 "ZSpaceship.SpaceSuitA",        10,
@@ -130,6 +132,16 @@ local zsDistr = {
             },
         },
     },
+
+    zs_energy_storage = {
+        BatteryBank = {
+            ignoreZombieDensity = true,
+            rolls = 20,
+            items = {
+                "Base.CarBattery2", 100,
+            },
+        }
+    }
 }
 
 table.insert(Distributions, zsDistr)
