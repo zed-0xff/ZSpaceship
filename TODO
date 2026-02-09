@@ -28,10 +28,10 @@
 
 [ ] realism: validate floor/ceil tiles using whitelist
 [ ] realism: suppress non-managed generators
-[ ] realism: no damage from overweight
 
 [ ] proper client/server
 
+[+] realism: no damage from overweight
 [+] tiles: space crate
 [+] tiles: water storage 1x1 container from simon's tiles (screenshot in steam)
 [+] misc: missing thin wall at ┛ _internal_ corner

@@ -49,7 +49,12 @@ function ISZSpaceshipTeleportAction:start()
     
     self:setActionAnim("Loot")
     self.character:Say(self.startMessage or "Energizing...")
-    self.sound = self.character:playSound("RadioStatic")
+    local emitter = self.character:getEmitter()
+    self.sound = emitter:playSound("modem")
+    emitter:setVolume(self.sound, 0.5)
+    -- Pitch scales with duration: short (50) = 1.5x, long (400) = 0.7x
+    local t = (self.maxTime - 50) / 350  -- 0..1 (fast..slow)
+    emitter:setPitch(self.sound, 1.5 - t * 0.8)
 end
 
 function ISZSpaceshipTeleportAction:stop()

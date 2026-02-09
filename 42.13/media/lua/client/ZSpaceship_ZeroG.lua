@@ -1,11 +1,11 @@
--- ZSpaceship Space Physics - Zero gravity effects in Space area
--- 1. No fall damage: Uses setbClimbing(true) trick so DoLand()/handleLandingImpact() skip damage
+-- ZSpaceship Zero-G - Zero gravity effects in Space area
+-- 1. No fall damage: setbClimbing(true) trick so DoLand()/handleLandingImpact() skip damage
 -- 2. No heavy load: Boosts maxWeight so HeavyLoad moodle stays at 0
 
 ZSpaceship = ZSpaceship or {}
 
+local ZERO_G_MAX_WEIGHT = 500
 local wasFallingInSpace = false
-local savedMaxWeight = nil
 
 local function updateSpacePhysics()
     local player = getPlayer()
@@ -14,23 +14,17 @@ local function updateSpacePhysics()
     local inSpace = ZSpaceship.isInSpace(player)
     
     if not inSpace then
-        -- Restore normal state when leaving space
         if wasFallingInSpace then
             player:setbClimbing(false)
             wasFallingInSpace = false
-        end
-        if savedMaxWeight then
-            player:setMaxWeight(savedMaxWeight)
-            savedMaxWeight = nil
         end
         return
     end
     
     -- Zero gravity: no heavy load moodle
-    local currentMax = player:getMaxWeight()
-    if currentMax < 500 then
-        savedMaxWeight = savedMaxWeight or currentMax
-        player:setMaxWeight(500)
+    -- BodyDamage recalculates maxWeight from maxWeightBase naturally, so no manual restore needed
+    if player:getMaxWeight() < ZERO_G_MAX_WEIGHT then
+        player:setMaxWeight(ZERO_G_MAX_WEIGHT)
     end
     
     -- Zero gravity: no fall damage

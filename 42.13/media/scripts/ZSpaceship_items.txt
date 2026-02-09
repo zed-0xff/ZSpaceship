@@ -63,7 +63,7 @@ module ZSpaceship
         ScratchDefense = 100,
         WindResistance = 1.0,
         WorldStaticModel = Hazmat_Ground,
-        Tags = base:hazmatsuit; base:scba; base:ignorezombiedensity; base:isdisguise; base:OmitEmptyFromName; base:pickaramidthread; base:HeavyItem; base:WeldingMask; base:HasMetal,
+        Tags = base:hazmatsuit; base:scba; base:ignorezombiedensity; base:isdisguise; base:OmitEmptyFromName; base:pickaramidthread; base:HeavyItem; base:WeldingMask; base:HasMetal; base:CanEat,
         KeepOnDeplete = true,
         ActivatedItem = true,
         OnCreate = SpecialLootSpawns.OnCreateSCBA,
