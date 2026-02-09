@@ -1,0 +1,35 @@
+tileGeometry
+{
+    VERSION = 2,
+
+    tileset
+    {
+        name = ZSpaceship_tiles,
+
+        tile
+        {
+            xy = 0x0,
+
+            box
+            {
+                translate = -9518x0x0,
+                rotate = 0x0x0,
+                min = -5000x0x-5000,
+                max = 5000x24495x5000,
+            }
+        }
+
+        tile
+        {
+            xy = 1x0,
+
+            box
+            {
+                translate = -9621x-187x0,
+                rotate = 0x0x0,
+                min = -5000x0x-5000,
+                max = 5000x24495x5000,
+            }
+        }
+    }
+}
