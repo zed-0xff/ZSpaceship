@@ -327,16 +327,16 @@ elements:
 
   energy_storage:
     tiles:
-      industry_02_175: {flags: [EnergyStorage]}
+      solarmod_tileset_01_0: { flags: [EnergyStorage], alias: battery_rack }
     palette:
-      b: industry_02_175
+      b: battery_rack
     map: |
       ┌─^─┓
       │   ┃
       ║   ┃
-      │   ┃
-      ║   ┃
-      │bbb┃
+      │b  ┃
+      ║b  ┃
+      │b  ┃
       ┗━━━┛
 
   teleport_room:

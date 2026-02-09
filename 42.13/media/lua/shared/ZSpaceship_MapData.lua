@@ -86,7 +86,7 @@ ZSpaceship.MapData.Tiles = {
     "walls_garage_02_57"
   },
   ["EnergyStorage"] = {
-    "industry_02_175"
+    "solarmod_tileset_01_0"
   },
   ["Floor"] = {
     "floors_exterior_street_01_0",
