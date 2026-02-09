@@ -13,6 +13,25 @@ ZSpaceship.SpaceMaxX = (ZSpaceship.SpaceCellX + 1) * 256
 ZSpaceship.SpaceMinY = ZSpaceship.SpaceCellY * 256
 ZSpaceship.SpaceMaxY = (ZSpaceship.SpaceCellY + 1) * 256
 
+function zsHook(obj, hooks)
+    if not obj or not hooks then return end
+
+    for methodName, wrapper in pairs(hooks) do
+        local orig = obj[methodName]
+        if type(orig) == "function" then
+            if  type(wrapper) == "function" then
+                obj[methodName] = function(...)
+                    return wrapper(orig, ...)
+                end
+            else
+                print("[!] zsHook: " .. tostring(methodName) .. " has no wrapper, but " .. tostring(type(wrapper)))
+            end
+        else
+            print("[?] zsHook: " .. tostring(methodName) .. " is not a function, but " .. tostring(type(orig)))
+        end
+    end
+end
+
 function ZSpaceship.isInSpaceXY(x, y)
     if not x or not y then return false end
 

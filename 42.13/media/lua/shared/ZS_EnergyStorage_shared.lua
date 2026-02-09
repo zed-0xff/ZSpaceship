@@ -1,18 +1,8 @@
 require "ZS_MapData"
+require "ZS_EnergyStorage_constants"
+-- TODO: split to client/server
 
--- Battery racks: accept only car batteries, max 20 per rack. Reuses vanilla Ah capacities.
-ZSpaceship = ZSpaceship or {}
-local EnergyStorage = {}
-ZSpaceship.EnergyStorage = EnergyStorage
-
--- Car battery capacities (Ah), matching vanilla
-EnergyStorage.batteryAh = {
-    ["Base.CarBattery1"] = 50,
-    ["Base.CarBattery2"] = 100,
-    ["Base.CarBattery3"] = 75,
-}
-
-EnergyStorage.MAX_BATTERIES_PER_RACK = 20
+local EnergyStorage = ZSpaceship.EnergyStorage
 
 -- Rack sprite(s) from ZSpaceship.MapData.Tiles.EnergyStorage (built at load time)
 local function buildRackSprites()
@@ -36,21 +26,21 @@ local function isRackObject(isoObject)
 end
 EnergyStorage.isRackObject = isRackObject
 
-local function isCarBattery(item)
+local function isCarBattery(item) -- used by client, server: TBD
     if not item then return false end
     local fullType = item:getFullType()
-    return EnergyStorage.batteryAh[fullType] ~= nil
+    return EnergyStorage.BATTERIES[fullType] ~= nil
 end
 EnergyStorage.isCarBattery = isCarBattery
 
 -- Ah for an item (0 if not a car battery). Exposed for UI or power logic.
 function EnergyStorage.getBatteryAh(item)
     if not item then return 0 end
-    return EnergyStorage.batteryAh[item:getFullType()] or 0
+    return EnergyStorage.BATTERIES[item:getFullType()] or 0
 end
 
 -- Count car batteries in a container
-local function countCarBatteries(container)
+function EnergyStorage.countCarBatteries(container)
     if not container then return 0 end
     local n = 0
     for i = 0, container:getItems():size() - 1 do
@@ -62,10 +52,20 @@ local function countCarBatteries(container)
     return n
 end
 
+function EnergyStorage.calcTotalCapacity(container)
+    if not container then return 0 end
+    local capacity = 0
+    for i = 0, container:getItems():size() - 1 do
+        local item = container:getItems():get(i)
+        capacity = capacity + EnergyStorage.getBatteryAh(item)
+    end
+    return capacity
+end
+
 -- Only car batteries; max 20 per rack.
 function EnergyStorage.AcceptItem(container, item)
     if not isCarBattery(item) then return false end
-    return countCarBatteries(container) < EnergyStorage.MAX_BATTERIES_PER_RACK
+    return EnergyStorage.countCarBatteries(container) < EnergyStorage.MAX_BATTERIES_PER_RACK
 end
 
 local function configureRack(isoObject)

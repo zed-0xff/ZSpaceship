@@ -1,7 +1,6 @@
 -- Vacuum fire suppression for ZSpaceship mod
 -- Prevents fires, stoves, and campfires from working in vacuum (no oxygen)
-
-ZSpaceship = ZSpaceship or {}
+require "ZS_Utils"
 
 -- Helper to check if location is in vacuum using cached ZSRoom state
 local function isInVacuum(x)
@@ -18,26 +17,6 @@ local function isInVacuum(x)
     
     return zsRoom:isBreached()
 end
-
-local function hook(obj, hooks)
-    if not obj or not hooks then return end
-
-    for methodName, wrapper in pairs(hooks) do
-        local orig = obj[methodName]
-        if type(orig) == "function" then
-            if  type(wrapper) == "function" then
-                obj[methodName] = function(...)
-                    return wrapper(orig, ...)
-                end
-            else
-                print("[!] hook: " .. tostring(methodName) .. " has no wrapper, but " .. tostring(type(wrapper)))
-            end
-        else
-            print("[?] hook: " .. tostring(methodName) .. " is not a function, but " .. tostring(type(orig)))
-        end
-    end
-end
-
 
 -- Extinguish fires when created in vacuum (no oxygen)
 Events.OnNewFire.Add(function(fire)
@@ -69,7 +48,7 @@ Events.EveryTenMinutes.Add(checkFiresInVacuum)
 
 
 -- Prevent stoves from being activated in vacuum
-hook(ISToggleStoveAction, {
+zsHook(ISToggleStoveAction, {
     isValid = function(orig, self)
         if not orig(self) then return false end
         -- original isValid() returned true
@@ -150,7 +129,7 @@ end
 
 local function onGameStart()
     -- Hook campfire lighting functions
-    hook(ISCampingMenu, {
+    zsHook(ISCampingMenu, {
         onLightFromLiterature = function(orig, playerObj, itemType, lighter, target, ...)
             if not canLightFire(target, playerObj) then return end
             return orig(playerObj, itemType, lighter, target, ...)
@@ -165,7 +144,7 @@ local function onGameStart()
         end
     })
     
-    hook(ISBBQMenu, {
+    zsHook(ISBBQMenu, {
         onToggle = function(orig, worldobjects, player, bbq, ...)
             if bbq and not bbq:isLit() then
                 local sq = bbq:getSquare()
@@ -181,7 +160,7 @@ local function onGameStart()
         end
     })
     
-    hook(ISOpenCloseDoor, {
+    zsHook(ISOpenCloseDoor, {
         complete = function(orig, self, ...)
             local result = orig(self, ...)
             
@@ -196,7 +175,7 @@ local function onGameStart()
     })
 
     -- Hook campfire lightFire to prevent lighting in vacuum
-    hook(SCampfireGlobalObject, {
+    zsHook(SCampfireGlobalObject, {
         lightFire = function(orig, self, ...)
             if not isInVacuum(self) then return orig(self, ...) end
         end 
