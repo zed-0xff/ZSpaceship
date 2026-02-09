@@ -4,7 +4,12 @@
 ZSpaceship = ZSpaceship or {}
 
 -- Helper to check if location is in vacuum using cached ZSRoom state
-local function isInVacuum(sq)
+local function isInVacuum(x)
+    if not x then return false end
+    local sq = x
+    if x.getSquare then
+        sq = x:getSquare()
+    end
     if not sq then return false end
     if not ZSpaceship.isInSpace(sq) then return false end
     
@@ -14,29 +19,39 @@ local function isInVacuum(sq)
     return zsRoom:isBreached()
 end
 
+local function hook(obj, hooks)
+    if not obj or not hooks then return end
+
+    for methodName, wrapper in pairs(hooks) do
+        local orig = obj[methodName]
+        if type(orig) == "function" then
+            if  type(wrapper) == "function" then
+                obj[methodName] = function(...)
+                    return wrapper(orig, ...)
+                end
+            else
+                print("[!] hook: " .. tostring(methodName) .. " has no wrapper, but " .. tostring(type(wrapper)))
+            end
+        else
+            print("[?] hook: " .. tostring(methodName) .. " is not a function, but " .. tostring(type(orig)))
+        end
+    end
+end
+
+
 -- Extinguish fires when created in vacuum (no oxygen)
-local function onNewFire(fire)
+Events.OnNewFire.Add(function(fire)
     if not fire then return end
     
     local sq = fire:getSquare()
     if isInVacuum(sq) then
         sq:stopFire()
     end
-end
+end)
 
-Events.OnNewFire.Add(onNewFire)
 
 -- Periodic check to extinguish any fires that end up in vacuum
-local fireCheckAccumulator = 0
-local FIRE_CHECK_INTERVAL = 1.0  -- seconds
-
 local function checkFiresInVacuum()
-    local mult = getGameTime():getThirtyFPSMultiplier()
-    
-    fireCheckAccumulator = fireCheckAccumulator + (mult / 30.0)
-    if fireCheckAccumulator < FIRE_CHECK_INTERVAL then return end
-    fireCheckAccumulator = 0
-    
     local fireStack = IsoFireManager.FireStack
     if not fireStack then return end
     
@@ -50,26 +65,27 @@ local function checkFiresInVacuum()
         end
     end
 end
+Events.EveryTenMinutes.Add(checkFiresInVacuum)
 
-Events.OnTick.Add(checkFiresInVacuum)
 
 -- Prevent stoves from being activated in vacuum
-local function canToggleStoveOn(stove)
-    if not stove then return true end
-    if stove:Activated() then return true end  -- Allow turning OFF
-    
-    local sq = stove:getSquare()
-    if isInVacuum(sq) then
-        return false  -- Can't turn on in vacuum
+hook(ISToggleStoveAction, {
+    isValid = function(orig, self)
+        if not orig(self) then return false end
+        -- original isValid() returned true
+        local stove = self.object
+        if not stove then return true end -- ISToggleStoveAction changed?
+        if stove.Activated and stove:Activated() then return true end -- Allow turning OFF
+        return not isInVacuum(stove)
     end
-    return true
-end
+})
 
 -- Check if a campfire/target can be lit
 local function canLightFire(target, playerObj)
     if not target then return true end
-    local sq = target:getSquare()
-    if isInVacuum(sq) then
+    if not target.getSquare then return true end
+
+    if isInVacuum(target) then
         if playerObj and playerObj.Say then
             playerObj:Say(getText("UI_ZS_NoOxygen"))
         end
@@ -132,32 +148,25 @@ local function checkBreachAtSquare(sq)
     end
 end
 
-Events.OnGameStart.Add(function()
+local function onGameStart()
     -- Hook campfire lighting functions
-    if ISCampingMenu then
-        local origLightFromLiterature = ISCampingMenu.onLightFromLiterature
-        ISCampingMenu.onLightFromLiterature = function(playerObj, itemType, lighter, target, timedAction)
+    hook(ISCampingMenu, {
+        onLightFromLiterature = function(orig, playerObj, itemType, lighter, target, ...)
             if not canLightFire(target, playerObj) then return end
-            return origLightFromLiterature(playerObj, itemType, lighter, target, timedAction)
-        end
-        
-        local origLightFromKindle = ISCampingMenu.onLightFromKindle
-        ISCampingMenu.onLightFromKindle = function(playerObj, percedWood, stickOrBranch, target, timedAction)
+            return orig(playerObj, itemType, lighter, target, ...)
+        end,
+        onLightFromKindle = function(orig, playerObj, percedWood, stickOrBranch, target, ...)
             if not canLightFire(target, playerObj) then return end
-            return origLightFromKindle(playerObj, percedWood, stickOrBranch, target, timedAction)
-        end
-        
-        local origLightFromPetrol = ISCampingMenu.onLightFromPetrol
-        ISCampingMenu.onLightFromPetrol = function(playerObj, lighter, petrol, target, timedAction)
+            return orig(playerObj, percedWood, stickOrBranch, target, ...)
+        end,
+        onLightFromPetrol = function(orig, playerObj, lighter, petrol, target, ...)
             if not canLightFire(target, playerObj) then return end
-            return origLightFromPetrol(playerObj, lighter, petrol, target, timedAction)
+            return orig(playerObj, lighter, petrol, target, ...)
         end
-    end
+    })
     
-    -- Hook BBQ toggle
-    if ISBBQMenu then
-        local origOnToggle = ISBBQMenu.onToggle
-        ISBBQMenu.onToggle = function(worldobjects, player, bbq, tank)
+    hook(ISBBQMenu, {
+        onToggle = function(orig, worldobjects, player, bbq, ...)
             if bbq and not bbq:isLit() then
                 local sq = bbq:getSquare()
                 if sq and isInVacuum(sq) then
@@ -168,15 +177,13 @@ Events.OnGameStart.Add(function()
                     return
                 end
             end
-            return origOnToggle(worldobjects, player, bbq, tank)
+            return orig(worldobjects, player, bbq, ...)
         end
-    end
+    })
     
-    -- Hook door open/close to check for breach
-    if ISOpenCloseDoor then
-        local originalDoorComplete = ISOpenCloseDoor.complete
-        ISOpenCloseDoor.complete = function(self)
-            local result = originalDoorComplete(self)
+    hook(ISOpenCloseDoor, {
+        complete = function(orig, self, ...)
+            local result = orig(self, ...)
             
             -- Check if this door is in space and now causes a breach
             local door = self.item
@@ -186,30 +193,20 @@ Events.OnGameStart.Add(function()
             
             return result
         end
-    end
-end)
+    })
+
+    -- Hook campfire lightFire to prevent lighting in vacuum
+    hook(SCampfireGlobalObject, {
+        lightFire = function(orig, self, ...)
+            if not isInVacuum(self) then return orig(self, ...) end
+        end 
+    })
+end
+
+Events.OnGameStart.Add(onGameStart)
 
 -- Check breach and suppress fires when a wall/door is destroyed
 Events.OnDestroyIsoThumpable.Add(function(thumpable, owner)
     if not thumpable then return end
     checkBreachAtSquare(thumpable:getSquare())
 end)
-
--- Hook campfire lightFire to prevent lighting in vacuum
-Events.OnGameStart.Add(function()
-    if not SCampfireGlobalObject then return end
-    
-    local originalLightFire = SCampfireGlobalObject.lightFire
-    SCampfireGlobalObject.lightFire = function(self)
-        local sq = self:getSquare()
-        if sq and ZSpaceship.isInSpace(sq) then
-            local room = sq:getRoom()
-            -- No room or room is breached = vacuum = no fire
-            if not room then
-                return  -- Don't light
-            end
-        end
-        return originalLightFire(self)
-    end
-end)
-
