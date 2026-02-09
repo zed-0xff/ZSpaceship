@@ -2,7 +2,7 @@ objects = {
     -- NoPowerOrWater zone for the entire spaceship cell
     -- This disables grid electricity and piped water in the space area
     {
-        name = "ZSpaceship_NoPowerOrWater",
+        name = "ZS_NoPowerOrWater",
         type = "NoPowerOrWater",
         x = 19968,  -- SpaceMinX (cell 78 * 256)
         y = 19968,  -- SpaceMinY (cell 78 * 256)

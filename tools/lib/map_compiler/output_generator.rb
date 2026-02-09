@@ -6,7 +6,7 @@ class MapCompiler
       base_dir = File.dirname(File.dirname(out_dir))  # Go up from maps/ZSpaceship to media
       lua_dir = File.join(base_dir, "lua", "shared")
       FileUtils.mkdir_p(lua_dir)
-      lua_path = File.join(lua_dir, "ZSpaceship_MapData.lua")
+      lua_path = File.join(lua_dir, "ZS_MapData.lua")
       
       
       lua_content = <<~LUA

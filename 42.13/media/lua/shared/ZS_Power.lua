@@ -11,7 +11,7 @@ local DEFAULT_POWER = 1000
 -- Get current power from ModData (synced between client/server)
 local function getCurrentAmountFromModData()
     if ModData and ModData.getOrCreate then
-        local modData = ModData.getOrCreate("ZSpaceship_Power")
+        local modData = ModData.getOrCreate("ZS_Power")
         if modData and modData.currentAmount then
             return modData.currentAmount
         end
@@ -22,7 +22,7 @@ end
 -- Set current power in ModData (synced between client/server)
 local function setCurrentAmountInModData(amount)
     if ModData and ModData.getOrCreate then
-        local modData = ModData.getOrCreate("ZSpaceship_Power")
+        local modData = ModData.getOrCreate("ZS_Power")
         if modData then
             modData.currentAmount = amount
         end
@@ -93,7 +93,7 @@ if Events and Events.OnInitGlobalModData then
         else
             -- Existing game: ensure ModData exists (will load from save)
             if ModData and ModData.getOrCreate then
-                local modData = ModData.getOrCreate("ZSpaceship_Power")
+                local modData = ModData.getOrCreate("ZS_Power")
                 if not modData.currentAmount then
                     modData.currentAmount = DEFAULT_POWER
                 end

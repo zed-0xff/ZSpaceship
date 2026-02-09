@@ -29,11 +29,11 @@ local function addTeleportOption(context, player, cost, textKey, cb, comm, requi
     if scienceLevel < requiredPerkLevel then
         notAvailable = true
         tooltip = ISToolTip:new()
-        tooltip:setName(getText("UI_ZSpaceship_ScienceRequired", requiredPerkLevel))
+        tooltip:setName(getText("UI_ZS_ScienceRequired", requiredPerkLevel))
     elseif currentPower < cost then
         notAvailable = true
         tooltip = ISToolTip:new()
-        tooltip:setName(getText("UI_ZSpaceship_InsufficientPower", cost, currentPower))
+        tooltip:setName(getText("UI_ZS_InsufficientPower", cost, currentPower))
     end
     
     opt.notAvailable = notAvailable
@@ -101,7 +101,7 @@ end
 function ZSpaceship.Teleport.toRandom(player)
     -- Check Science perk level
     if player:getPerkLevel(Perks.Science) < ZSpaceship.Teleport.SCIENCE_LEVEL_MIN then
-        player:Say(getText("UI_ZSpaceship_ScienceRequired", ZSpaceship.Teleport.SCIENCE_LEVEL_MIN))
+        player:Say(getText("UI_ZS_ScienceRequired", ZSpaceship.Teleport.SCIENCE_LEVEL_MIN))
         return
     end
     
@@ -110,7 +110,7 @@ function ZSpaceship.Teleport.toRandom(player)
     if ZSpaceship and ZSpaceship.Power then
         local currentPower = ZSpaceship.Power.getCurrentAmount()
         if currentPower < cost then
-            player:Say(getText("UI_ZSpaceship_InsufficientPower", cost, currentPower))
+            player:Say(getText("UI_ZS_InsufficientPower", cost, currentPower))
             return
         end
     end
@@ -188,7 +188,7 @@ end
 function ZSpaceship.Teleport.toRandomBuilding(player)
     -- Check Science perk level
     if player:getPerkLevel(Perks.Science) < ZSpaceship.Teleport.SCIENCE_LEVEL_BUILDING then
-        player:Say(getText("UI_ZSpaceship_ScienceRequired", ZSpaceship.Teleport.SCIENCE_LEVEL_BUILDING))
+        player:Say(getText("UI_ZS_ScienceRequired", ZSpaceship.Teleport.SCIENCE_LEVEL_BUILDING))
         return
     end
     
@@ -197,7 +197,7 @@ function ZSpaceship.Teleport.toRandomBuilding(player)
     if ZSpaceship and ZSpaceship.Power then
         local currentPower = ZSpaceship.Power.getCurrentAmount()
         if currentPower < cost then
-            player:Say(getText("UI_ZSpaceship_InsufficientPower", cost, currentPower))
+            player:Say(getText("UI_ZS_InsufficientPower", cost, currentPower))
             return
         end
     end
@@ -248,7 +248,7 @@ end
 function ZSpaceship.Teleport.toShip(player, fromSpace)
     -- Check Science perk level
     if player:getPerkLevel(Perks.Science) < ZSpaceship.Teleport.SCIENCE_LEVEL_MIN then
-        player:Say(getText("UI_ZSpaceship_ScienceRequired", ZSpaceship.Teleport.SCIENCE_LEVEL_MIN))
+        player:Say(getText("UI_ZS_ScienceRequired", ZSpaceship.Teleport.SCIENCE_LEVEL_MIN))
         return
     end
     
@@ -257,14 +257,14 @@ function ZSpaceship.Teleport.toShip(player, fromSpace)
     if ZSpaceship and ZSpaceship.Power then
         local currentPower = ZSpaceship.Power.getCurrentAmount()
         if currentPower < cost then
-            player:Say(getText("UI_ZSpaceship_InsufficientPower", cost, currentPower))
+            player:Say(getText("UI_ZS_InsufficientPower", cost, currentPower))
             return
         end
     end
     
     local tx, ty, tz = ZSpaceship.getTeleporterCoords()
     if not tx or not ty or not tz then
-        player:Say(getText("UI_ZSpaceship_TeleporterNotFound"))
+        player:Say(getText("UI_ZS_TeleporterNotFound"))
         return
     end
     
@@ -353,15 +353,15 @@ local function doWorldContextMenu(playerNum, context, worldobjects, test)
         local communicator = player:getInventory():getItemFromTag(ZSpaceship.Tags.Communicator, true, true)
         local costSurface = ZSpaceship.Teleport.getCost(player, true, false, false)  -- from space, to surface, not to building
         local costBuilding = ZSpaceship.Teleport.getCost(player, true, false, true)   -- from space, to surface, to building
-        addTeleportOption(context, player, costSurface, "UI_ZSpaceship_TeleportToCounty", ZSpaceship.Teleport.toRandom, communicator, ZSpaceship.Teleport.SCIENCE_LEVEL_MIN)
-        addTeleportOption(context, player, costBuilding, "UI_ZSpaceship_TeleportToBuilding", ZSpaceship.Teleport.toRandomBuilding, communicator, ZSpaceship.Teleport.SCIENCE_LEVEL_BUILDING)
+        addTeleportOption(context, player, costSurface, "UI_ZS_TeleportToCounty", ZSpaceship.Teleport.toRandom, communicator, ZSpaceship.Teleport.SCIENCE_LEVEL_MIN)
+        addTeleportOption(context, player, costBuilding, "UI_ZS_TeleportToBuilding", ZSpaceship.Teleport.toRandomBuilding, communicator, ZSpaceship.Teleport.SCIENCE_LEVEL_BUILDING)
     else
         -- Return to Spaceship option when has communicator
         local communicator = player:getInventory():getItemFromTag(ZSpaceship.Tags.Communicator, true, true)
         if communicator then
             local inSpace = ZSpaceship.isInSpace(player:getX(), player:getY())
             local costReturn = ZSpaceship.Teleport.getCost(player, inSpace, true, false)  -- from surface/space, to space
-            addTeleportOption(context, player, costReturn, "UI_ZSpaceship_ReturnToSpaceship", function(p) ZSpaceship.Teleport.toShip(p, inSpace) end, communicator, ZSpaceship.Teleport.SCIENCE_LEVEL_MIN)
+            addTeleportOption(context, player, costReturn, "UI_ZS_ReturnToSpaceship", function(p) ZSpaceship.Teleport.toShip(p, inSpace) end, communicator, ZSpaceship.Teleport.SCIENCE_LEVEL_MIN)
         end
     end
 end
@@ -387,7 +387,7 @@ local function doInventoryContextMenu(playerNum, context, items)
         local px, py = math.floor(player:getX()), math.floor(player:getY())
         local inSpace = ZSpaceship.isInSpace(px, py)
         local costReturn = ZSpaceship.Teleport.getCost(player, inSpace, true, false)  -- from surface/space, to space
-        addTeleportOption(context, player, costReturn, "UI_ZSpaceship_ReturnToSpaceship", function(p) ZSpaceship.Teleport.toShip(p, inSpace) end, clickedCommunicator, ZSpaceship.Teleport.SCIENCE_LEVEL_MIN)
+        addTeleportOption(context, player, costReturn, "UI_ZS_ReturnToSpaceship", function(p) ZSpaceship.Teleport.toShip(p, inSpace) end, clickedCommunicator, ZSpaceship.Teleport.SCIENCE_LEVEL_MIN)
     end
 end
 

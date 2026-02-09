@@ -70,7 +70,7 @@ local function loadRoomData(isNewGame)
     
     -- Existing game: try to load from save file
     if ModData and ModData.exists and ModData.get then
-        local savedData = ModData.get("ZSpaceship_RoomData")
+        local savedData = ModData.get("ZS_RoomData")
         if savedData and savedData.Rooms and #savedData.Rooms > 0 then
             -- Load saved room data into MapData.Rooms
             fillMapDataRooms(savedData.Rooms)
@@ -97,7 +97,7 @@ local function saveRoomData()
         return
     end
     
-    local modData = ModData.getOrCreate("ZSpaceship_RoomData")
+    local modData = ModData.getOrCreate("ZS_RoomData")
     if not modData then
         return
     end
@@ -137,8 +137,8 @@ if Events and Events.OnGameStart then
             
             -- Check if we have saved data
             local hasSavedData = false
-            if ModData and ModData.exists and ModData.get and ModData.exists("ZSpaceship_RoomData") then
-                local savedData = ModData.get("ZSpaceship_RoomData")
+            if ModData and ModData.exists and ModData.get and ModData.exists("ZS_RoomData") then
+                local savedData = ModData.get("ZS_RoomData")
                 if savedData and savedData.Rooms and #savedData.Rooms > 0 then
                     fillMapDataRooms(savedData.Rooms)
                     hasSavedData = true

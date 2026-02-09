@@ -71,7 +71,7 @@ local function canLightFire(target, playerObj)
     local sq = target:getSquare()
     if isInVacuum(sq) then
         if playerObj and playerObj.Say then
-            playerObj:Say(getText("UI_ZSpaceship_NoOxygen"))
+            playerObj:Say(getText("UI_ZS_NoOxygen"))
         end
         return false
     end
@@ -163,7 +163,7 @@ Events.OnGameStart.Add(function()
                 if sq and isInVacuum(sq) then
                     local playerObj = getSpecificPlayer(player)
                     if playerObj and playerObj.Say then
-                        playerObj:Say(getText("UI_ZSpaceship_NoOxygen"))
+                        playerObj:Say(getText("UI_ZS_NoOxygen"))
                     end
                     return
                 end

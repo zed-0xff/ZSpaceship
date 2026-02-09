@@ -25,7 +25,7 @@ function ZSpaceship.Cloning.getCloneData(player)
     if not username or username == "" then return nil end
     
     if not ModData or not ModData.getOrCreate then return nil end
-    local modData = ModData.getOrCreate("ZSpaceship_Cloning")
+    local modData = ModData.getOrCreate("ZS_Cloning")
     if not modData then return nil end
     
     return modData[username]
@@ -43,12 +43,12 @@ function ZSpaceship.Cloning.cloneSelf(player)
     local medicalLevel = player:getPerkLevel(Perks.Doctor)
     
     if scienceLevel < ZSpaceship.Cloning.OP_Clone.SCI_LEVEL then
-        player:Say(getText("UI_ZSpaceship_ScienceRequired", ZSpaceship.Cloning.OP_Clone.SCI_LEVEL))
+        player:Say(getText("UI_ZS_ScienceRequired", ZSpaceship.Cloning.OP_Clone.SCI_LEVEL))
         return
     end
     
     if medicalLevel < ZSpaceship.Cloning.OP_Clone.MED_LEVEL then
-        player:Say(getText("UI_ZSpaceship_MedicalRequired", ZSpaceship.Cloning.OP_Clone.MED_LEVEL))
+        player:Say(getText("UI_ZS_MedicalRequired", ZSpaceship.Cloning.OP_Clone.MED_LEVEL))
         return
     end
     
@@ -59,7 +59,7 @@ end
 -- Recycle/Dispose clone
 function ZSpaceship.Cloning.recycleClone(player)
     if not ZSpaceship.Cloning.hasClone(player) then
-        player:Say(getText("UI_ZSpaceship_NoClone"))
+        player:Say(getText("UI_ZS_NoClone"))
         return
     end
     
@@ -72,12 +72,12 @@ function ZSpaceship.Cloning.synchronizeClone(player)
     local scienceLevel = player:getPerkLevel(Perks.Science)
     
     if scienceLevel < ZSpaceship.Cloning.OP_Sync.SCI_LEVEL then
-        player:Say(getText("UI_ZSpaceship_ScienceRequired", ZSpaceship.Cloning.OP_Sync.SCI_LEVEL))
+        player:Say(getText("UI_ZS_ScienceRequired", ZSpaceship.Cloning.OP_Sync.SCI_LEVEL))
         return
     end
     
     if not ZSpaceship.Cloning.hasClone(player) then
-        player:Say(getText("UI_ZSpaceship_NoClone"))
+        player:Say(getText("UI_ZS_NoClone"))
         return
     end
     
@@ -101,11 +101,11 @@ local function addCloningOption(context, player, textKey, cb, requiredScienceLev
     if requiredScienceLevel > 0 and scienceLevel < requiredScienceLevel then
         notAvailable = true
         tooltip = ISToolTip:new()
-        tooltip:setName(getText("UI_ZSpaceship_ScienceRequired", requiredScienceLevel))
+        tooltip:setName(getText("UI_ZS_ScienceRequired", requiredScienceLevel))
     elseif requiredMedicalLevel > 0 and medicalLevel < requiredMedicalLevel then
         notAvailable = true
         tooltip = ISToolTip:new()
-        tooltip:setName(getText("UI_ZSpaceship_MedicalRequired", requiredMedicalLevel))
+        tooltip:setName(getText("UI_ZS_MedicalRequired", requiredMedicalLevel))
     end
     
     opt.notAvailable = notAvailable
@@ -126,7 +126,7 @@ local function doWorldContextMenu(playerNum, context, worldobjects, test)
     
     -- Clone yourself - needs Science 2 and Medical 2
     if not hasClone then
-        addCloningOption(context, player, "UI_ZSpaceship_CloneSelf", 
+        addCloningOption(context, player, "UI_ZS_CloneSelf", 
             ZSpaceship.Cloning.cloneSelf, 
             ZSpaceship.Cloning.OP_Clone.SCI_LEVEL, 
             ZSpaceship.Cloning.OP_Clone.MED_LEVEL)
@@ -134,12 +134,12 @@ local function doWorldContextMenu(playerNum, context, worldobjects, test)
     
     -- Recycle/Dispose clone - no requirements
     if hasClone then
-        context:addOption(getText("UI_ZSpaceship_RecycleClone"), player, ZSpaceship.Cloning.recycleClone)
+        context:addOption(getText("UI_ZS_RecycleClone"), player, ZSpaceship.Cloning.recycleClone)
     end
     
     -- Synchronize/Update clone - needs Science 3
     if hasClone then
-        addCloningOption(context, player, "UI_ZSpaceship_SynchronizeClone", 
+        addCloningOption(context, player, "UI_ZS_SynchronizeClone", 
             ZSpaceship.Cloning.synchronizeClone, 
             ZSpaceship.Cloning.OP_Sync.SCI_LEVEL, 
             ZSpaceship.Cloning.OP_Sync.MED_LEVEL)

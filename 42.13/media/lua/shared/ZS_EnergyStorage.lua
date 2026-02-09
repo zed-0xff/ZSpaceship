@@ -1,4 +1,4 @@
-require "ZSpaceship_MapData"
+require "ZS_MapData"
 
 -- Battery racks: accept only car batteries, max 20 per rack. Reuses vanilla Ah capacities.
 ZSpaceship = ZSpaceship or {}

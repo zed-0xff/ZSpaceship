@@ -1,7 +1,7 @@
 -- Vacuum damage handling for ZSpaceship mod
 -- Handles creature damage and weather control
--- Breach detection is handled in ZSpaceship_VacuumBreach.lua
--- Sound muting is handled in ZSpaceship_VacuumSound.lua
+-- Breach detection is handled in ZS_VacuumBreach.lua
+-- Sound muting is handled in ZS_VacuumSound.lua
 
 ZSpaceship = ZSpaceship or {}
 
@@ -204,7 +204,7 @@ local function checkVacuum(ticks)
                         -- Visual bark for player taking damage (every ~2 seconds)
                         if obj == player and tookDamage and player.Say then
                             if not ZSpaceship.lastBreathBark or (getTimestamp() - ZSpaceship.lastBreathBark) > 2000 then
-                                player:Say(getText("UI_ZSpaceship_CantBreathe"))
+                                player:Say(getText("UI_ZS_CantBreathe"))
                                 ZSpaceship.lastBreathBark = getTimestamp()
                             end
                         end
@@ -272,7 +272,7 @@ end
 
 Events.OnPlayerUpdate.Add(onPlayerUpdate)
 
--- Restore climate when exiting game (sound is handled in ZSpaceship_VacuumSound.lua)
+-- Restore climate when exiting game (sound is handled in ZS_VacuumSound.lua)
 local function restoreOnExit()
     local climate = getClimateManager()
     if climate then
