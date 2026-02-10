@@ -17,7 +17,7 @@ local function addTeleportOption(context, player, cost, textKey, cb, comm, requi
     requiredPerkLevel = requiredPerkLevel or ZSpaceship.Teleport.SCIENCE_LEVEL_MIN
     local currentPower = 0
     if ZSpaceship and ZSpaceship.Power then
-        currentPower = ZSpaceship.Power.getCurrentAmount()
+        currentPower = ZSpaceship.Power.getAmount()
     end
     local scienceLevel = player:getPerkLevel(Perks.Science)
     local text = getText(textKey, cost, currentPower)
@@ -108,7 +108,7 @@ function ZSpaceship.Teleport.toRandom(player)
     -- Check power before teleporting (from space, to surface, not to building)
     local cost = ZSpaceship.Teleport.getCost(player, true, false, false)
     if ZSpaceship and ZSpaceship.Power then
-        local currentPower = ZSpaceship.Power.getCurrentAmount()
+        local currentPower = ZSpaceship.Power.getAmount()
         if currentPower < cost then
             player:Say(getText("UI_ZS_InsufficientPower", cost, currentPower))
             return
@@ -195,7 +195,7 @@ function ZSpaceship.Teleport.toRandomBuilding(player)
     -- Check power before teleporting (from space, to surface, to building)
     local cost = ZSpaceship.Teleport.getCost(player, true, false, true)
     if ZSpaceship and ZSpaceship.Power then
-        local currentPower = ZSpaceship.Power.getCurrentAmount()
+        local currentPower = ZSpaceship.Power.getAmount()
         if currentPower < cost then
             player:Say(getText("UI_ZS_InsufficientPower", cost, currentPower))
             return
@@ -255,7 +255,7 @@ function ZSpaceship.Teleport.toShip(player, fromSpace)
     -- Check power before teleporting (from surface or space, to space)
     local cost = ZSpaceship.Teleport.getCost(player, fromSpace, true, false)
     if ZSpaceship and ZSpaceship.Power then
-        local currentPower = ZSpaceship.Power.getCurrentAmount()
+        local currentPower = ZSpaceship.Power.getAmount()
         if currentPower < cost then
             player:Say(getText("UI_ZS_InsufficientPower", cost, currentPower))
             return

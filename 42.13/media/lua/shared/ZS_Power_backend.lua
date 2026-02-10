@@ -61,11 +61,11 @@ local function initGenerator(x, y, z)
     end
 
     if not gen:isActivated() then
-        if ZSpaceship.Power.getCurrentAmount() >= 1.0 then
+        if ZSpaceship.Power.getAmount() >= 1.0 then
             gen:setActivated(true)
         end
     else
-        if ZSpaceship.Power.getCurrentAmount() <= 0 then
+        if ZSpaceship.Power.getAmount() <= 0.1 then
             gen:setActivated(false)
         end
     end

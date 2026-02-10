@@ -235,20 +235,14 @@ function ZSRooms.dbgPrintCache()
     end
 end
 
-Events.OnTileRemoved.Add(function(sq) -- IsoGridSquare
-    if sq and sq.getX and sq.getY and ZSpaceship.isInSpace(sq) then
+local function onObjAddRemove(obj)
+    if ZSpaceship.isInSpace(obj) then
         ZSRooms.updateAllSlow()
     end
-end)
+end
 
-Events.OnObjectAdded.Add(function(obj)
-    if obj and obj.getSquare then
-        local sq = obj:getSquare()
-        if sq and sq.getX and sq.getY and ZSpaceship.isInSpace(sq) then
-            ZSRooms.updateAllSlow()
-        end
-    end
-end)
+Events.OnTileRemoved.Add(onObjAddRemove)
+Events.OnObjectAdded.Add(onObjAddRemove)
 
 -- door is toggled, but we don't know which one
 Events.OnContainerUpdate.Add(function()

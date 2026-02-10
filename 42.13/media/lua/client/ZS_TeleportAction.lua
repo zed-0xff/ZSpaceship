@@ -18,7 +18,7 @@ function ISZSpaceshipTeleportAction:isValid()
     
     -- Check if there's enough power
     if ZSpaceship and ZSpaceship.Power then
-        local currentPower = ZSpaceship.Power.getCurrentAmount()
+        local currentPower = ZSpaceship.Power.getAmount()
         if currentPower < self.powerCost then
             return false
         end
@@ -76,9 +76,9 @@ function ISZSpaceshipTeleportAction:complete()
 
     -- Consume power before teleporting
     if ZSpaceship and ZSpaceship.Power and self.powerCost then
-        local powerBefore = ZSpaceship.Power.getCurrentAmount()
+        local powerBefore = ZSpaceship.Power.getAmount()
         ZSpaceship.Power.consume(self.powerCost)
-        local powerAfter = ZSpaceship.Power.getCurrentAmount()
+        local powerAfter = ZSpaceship.Power.getAmount()
     end
 
     local function finalizeTeleport()

@@ -18,10 +18,10 @@ function ProgressBarUI:render()
     local progress = 0
     local currentPower = 0
     if ZSpaceship and ZSpaceship.Power then
-        local maxAmount = ZSpaceship.Power.getMaxAmount()
-        currentPower = ZSpaceship.Power.getCurrentAmount()
-        if maxAmount and maxAmount > 0 then
-            progress = currentPower / maxAmount
+        local capacity = ZSpaceship.Power.getCapacity()
+        currentPower = ZSpaceship.Power.getAmount()
+        if capacity and capacity > 0 then
+            progress = currentPower / capacity
         end
     end
     
