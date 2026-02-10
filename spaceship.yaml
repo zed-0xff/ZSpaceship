@@ -328,7 +328,7 @@ elements:
   energy_storage:
     name: zs_energy_storage
     tiles:
-      solarmod_tileset_01_0: { flags: [EnergyStorage], alias: battery_rack }
+      zspaceship_3: { flags: [EnergyStorage], alias: battery_rack }
     palette:
       b: battery_rack
     map: |

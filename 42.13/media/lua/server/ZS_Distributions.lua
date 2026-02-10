@@ -1,6 +1,5 @@
 require "Items/Distributions"
 require "Items/ProceduralDistributions"
-require "ZS_EnergyStorage_constants"
 
 ProceduralDistributions.list["zsSpaceStuff"] = {
     ignoreZombieDensity = true,
@@ -133,16 +132,6 @@ local zsDistr = {
             },
         },
     },
-
-    zs_energy_storage = {
-        [ZSpaceship.EnergyStorage.CONTAINER_TYPE] = {
-            ignoreZombieDensity = true,
-            rolls = 20,
-            items = {
-                "Base.CarBattery2", 100,
-            },
-        }
-    }
 }
 
 table.insert(Distributions, zsDistr)
