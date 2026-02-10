@@ -28,6 +28,7 @@ local commands = {
                     obj:setOverlaySprite(chosenSprite or maxSprite)
                 end
                 -- TODO: update clients
+                obj:getModData()[EnergyStorage.TOTAL_CAPACITY_KEY] = EnergyStorage.calcTotalCapacity(container)
             end
         end
     end
