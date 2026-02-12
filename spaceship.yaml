@@ -333,7 +333,7 @@ elements:
       b: battery_rack
     map: |
       ┌─^─┓
-      │   ┃
+      │  ☐┃
       ║   ┃
       │b  ┃
       ║b  ┃

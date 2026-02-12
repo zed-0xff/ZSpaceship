@@ -10,12 +10,11 @@ module Base
         component SpriteConfig
         {
             isThumpable = true,
-            OnCreate = ZSpaceship.PSU_OnCreate,
             face SINGLE
             {
                 layer
                 {
-                    row = industry_02_175,
+                    row = zspaceship_3
                 }
             }
         }
@@ -49,7 +48,7 @@ module Base
         Base.ElectricWire = 4,
         Time:150,
         SkillRequired:Electricity=3,
-        Result:Moveables.solarmod_tileset_01_0,
+        Result:Moveables.zspaceship_3,
         Category:Electrical,
     }
 }

@@ -132,6 +132,19 @@ local zsDistr = {
             },
         },
     },
+
+    zs_energy_storage = {
+        crate = {
+            ignoreZombieDensity = true,
+            rolls = 10,
+            items = {
+                "Base.ElectricWire",     75,
+                "Base.ElectronicsScrap", 20,
+                "Base.SheetMetal",        5,
+                "Base.CarBattery2",       1,
+            },
+        },
+    },
 }
 
 table.insert(Distributions, zsDistr)
