@@ -1,0 +1,7 @@
+Sandbox_EN = {
+    Sandbox_ZSpaceship = "ZSpaceship",
+    Sandbox_ZSpaceship_ShipZombieCountMin = "Ship zombies (min)",
+    Sandbox_ZSpaceship_ShipZombieCountMin_tooltip = "Minimum number of zombies that spawn on the spaceship at game start. Final count is random between min and max.",
+    Sandbox_ZSpaceship_ShipZombieCountMax = "Ship zombies (max)",
+    Sandbox_ZSpaceship_ShipZombieCountMax_tooltip = "Maximum number of zombies that spawn on the spaceship at game start. Final count is random between min and max.",
+}
