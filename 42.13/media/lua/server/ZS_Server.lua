@@ -171,7 +171,11 @@ local function getShipRoomBounds()
     return { minX = minX, maxX = maxX, minY = minY, maxY = maxY, z = bestZ or 0 }
 end
 
--- One-time: spawn N zombies on random floor squares in ship rooms (N from SandboxOptions)
+--- One-time spawn of N zombies in space suits on the ship.
+-- Runs from EveryOneMinute until the space cell is available; then spawns a random
+-- count N (between SandboxVars.ZSpaceship.ShipZombieCountMin and ShipZombieCountMax)
+-- at random floor positions in ship rooms, using outfit "ZSpaceship_SpaceSuit" (from
+-- clothing.xml). Unregisters itself after running once (ZSpaceship.InitialZombiesSpawned).
 local function initialShipZombieSpawn()
     if ZSpaceship.InitialZombiesSpawned then
         Events.EveryOneMinute.Remove(initialShipZombieSpawn)
