@@ -58,7 +58,7 @@ module ZSpaceship
         BodyLocation = base:fullsuithead,
         ClothingItem = ZSpaceSuitA,
         Insulation = 1.0,
-        RunSpeedModifier = 0.5,
+        RunSpeedModifier = 0.1,
         CombatSpeedModifier = 0.5,
         ScratchDefense = 100,
         WindResistance = 1.0,

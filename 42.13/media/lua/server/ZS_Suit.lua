@@ -49,8 +49,29 @@ local function updateSuit()
         local suit = getWornSuit(player)
         if suit then
             convertWetnessToSuitWater(player, suit)
+            player:setAllowSprint(false)
+            player:setAllowRun(false)
+            player:setRunning(false)
+            player:setSprinting(false)
         end
     end)
 end
 
 Events.EveryOneMinute.Add(updateSuit)
+
+
+-- TODO: tests
+local function onClothingUpdated(chr)
+    if not instanceof(chr, 'IsoPlayer') or not chr:isLocalPlayer() then return end
+
+    local suit = getWornSuit(chr)
+    if suit then
+        chr:setAllowSprint(false)
+        chr:setAllowRun(false)
+    else
+        chr:setAllowSprint(true)
+        chr:setAllowRun(true)
+    end
+end
+
+Events.OnClothingUpdated.Add(onClothingUpdated)

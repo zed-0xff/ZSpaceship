@@ -149,9 +149,9 @@ end
 
 function ISZSpaceshipTeleportAction:getDuration()
     if self.character:isTimedActionInstant() then return 1 end
-    -- Base 400 ticks (~12s), halved when teleporting from the ship (better equipment)
-    local duration = self.fromSpace and 200 or 400
-    duration = duration - self.character:getPerkLevel(Perks.Science) * 30
+    -- Base 400 ticks (~12s), ~halved when teleporting from the ship (better equipment)
+    local duration = self.fromSpace and 250 or 400
+    duration = duration - self.character:getPerkLevel(Perks.Science) * 10
     if self.timeMult then
         duration = duration * self.timeMult
     end
