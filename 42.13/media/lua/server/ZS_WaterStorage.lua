@@ -36,6 +36,8 @@ local function initWaterStorage(obj)
 end
 
 Events.OnNewGame.Add(function()
+    if not ZSpaceship.isInitialNewGame("WaterStorage") then return end
+
     local water_storage_tiles = ZSpaceship.MapData and ZSpaceship.MapData.Tiles and ZSpaceship.MapData.Tiles["WaterStorage"] or {}
     for tile_name in pairs(water_storage_tiles) do
         MapObjects.OnNewWithSprite(tile_name, initWaterStorage, 10)

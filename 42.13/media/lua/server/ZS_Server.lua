@@ -169,10 +169,11 @@ local function initialShipZombieSpawn()
     print("[ZSpaceship] Initial spawn: added " .. spawned .. " zombies in space suits (sandbox count: " .. N .. ")")
 end
 
--- Register on new game start (when map is created)
 Events.OnNewGame.Add(function()
+    if not ZSpaceship.isInitialNewGame("Server") then return end
+
     registerDoorUnlocks()
-    
+
     -- Delayed animal cleanup (gives time for cell to fully load and animals to spawn)
     Events.EveryOneMinute.Add(initialAnimalCleanup)
     -- Delayed initial zombie spawn in space suits (when space cell is loaded)

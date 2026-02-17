@@ -43,3 +43,14 @@ function ZSpaceship.isInSpace(a, b)
     end
     return false
 end
+
+--- Returns true only on the very first new game for this world (not when a dead player respawns on the same save).
+-- @param moduleName string Optional. If given, each module gets one run per save; if omitted, first caller sets a single flag.
+function ZSpaceship.isInitialNewGame(moduleName)
+    if not ModData or not ModData.getOrCreate then return true end
+    local modData = ModData.getOrCreate("ZSpaceship")
+    local key = moduleName and ("InitialGameSetup_" .. moduleName) or "InitialGameSetupDone"
+    if modData[key] then return false end
+    modData[key] = true
+    return true
+end

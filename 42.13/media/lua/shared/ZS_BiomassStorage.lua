@@ -36,6 +36,8 @@ local function initBiomassStorage(obj)
 end
 
 Events.OnNewGame.Add(function()
+    if not ZSpaceship.isInitialNewGame("BiomassStorage") then return end
+
     local biomass_storage_tiles = ZSpaceship.MapData and ZSpaceship.MapData.Tiles and ZSpaceship.MapData.Tiles["BiomassStorage"] or {}
     for _, tile_name in ipairs(biomass_storage_tiles) do
         MapObjects.OnNewWithSprite(tile_name, initBiomassStorage, 10)
