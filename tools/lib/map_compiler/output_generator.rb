@@ -68,7 +68,7 @@ class MapCompiler
         
         # Generate Lua output grouped by flag (as arrays)
         flag_sections = tiles_by_flag.sort.map do |flag, tile_names|
-          tile_list = tile_names.sort.map { |t| "    \"#{t}\"" }.join(",\n")
+          tile_list = tile_names.sort.map { |t| "    [\"#{t}\"] = true," }.join("\n")
           "  [\"#{flag}\"] = {\n#{tile_list}\n  }"
         end.join(",\n")
         
@@ -86,26 +86,17 @@ class MapCompiler
         
         -- Generate door sprites from MapData.Tiles (tiles with DoorN or DoorW flags)
         ZSpaceship.MapData.DoorSprites = {}
-        local door_n_tiles = ZSpaceship.MapData.Tiles["DoorN"] or {}
-        local door_w_tiles = ZSpaceship.MapData.Tiles["DoorW"] or {}
-        for _, tile_name in ipairs(door_n_tiles) do
+        for tile_name in pairs(ZSpaceship.MapData.Tiles.DoorN) do
             ZSpaceship.MapData.DoorSprites[tile_name] = true
         end
-        for _, tile_name in ipairs(door_w_tiles) do
+        for tile_name in pairs(ZSpaceship.MapData.Tiles.DoorW) do
             ZSpaceship.MapData.DoorSprites[tile_name] = true
-        end
-        
-        -- Generate airtight wall and door tile lookup tables from MapData.Tiles
-        -- Only includes tiles that have both "Airtight" flag and the direction flag
-        local airtight_set = {}
-        for _, tile_name in ipairs(ZSpaceship.MapData.Tiles["Airtight"]) do
-            airtight_set[tile_name] = true
         end
         
         local function buildAirtightLookupTable(direction_flag_list)
             local lookup = {}
-            for _, tile_name in ipairs(direction_flag_list) do
-                if airtight_set[tile_name] then
+            for tile_name in pairs(direction_flag_list) do
+                if ZSpaceship.MapData.Tiles.Airtight[tile_name] then
                     lookup[tile_name] = true
                 end
             end

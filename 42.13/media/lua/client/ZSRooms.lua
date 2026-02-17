@@ -1,5 +1,6 @@
 -- Room cache and connection tracking for ZSpaceship mod
 -- Caches room data (airtight status, connections) and tracks paths to breached rooms/open space
+require 'ZSRoom'
 
 ZSRooms = ZSRooms or {}
 
@@ -115,6 +116,9 @@ function ZSRooms.find(arg1, arg2, arg3)
     return nil
 end
 
+--- XXX
+ZSRoom.find = ZSRooms.find
+
 -- Clear cache (call when map changes)
 -- function ZSRooms.clear()
 --     roomCache = {}
@@ -142,9 +146,15 @@ function ZSRooms.updateAllFast()
                     room.vacuumState = room.State.UNKNOWN
                     unknownRooms[#unknownRooms + 1] = room
                 end
-            else 
-                room.vacuumState = room.State.BREACHED
-                breachedRooms[#breachedRooms + 1] = room
+            else
+                -- Not airtight (missing wall or door to another room): only breached if opening to space
+                if room:hasOpeningToSpace() then
+                    room.vacuumState = room.State.BREACHED
+                    breachedRooms[#breachedRooms + 1] = room
+                else
+                    room.vacuumState = room.State.UNKNOWN
+                    unknownRooms[#unknownRooms + 1] = room
+                end
             end
         end
     end

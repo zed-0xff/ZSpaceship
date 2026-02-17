@@ -37,70 +37,12 @@ local function registerDoorUnlocks()
     if doorUnlockRegistered then return end
     if not ZSpaceship.MapData or not ZSpaceship.MapData.DoorSprites then return end
     
-    for sprite, _ in pairs(ZSpaceship.MapData.DoorSprites) do
+    for sprite in pairs(ZSpaceship.MapData.DoorSprites) do
         print("[ZSpaceship] Registering door unlock for: " .. sprite)
         MapObjects.OnNewWithSprite(sprite, unlockDoor, 10)
     end
     
     doorUnlockRegistered = true
-end
-
--- Add communicators to the teleport room container -- now filled via distributions
---local function fillTeleportContainer(obj)
---    if not obj.getSquare then return end
---    
---    local sq = obj:getSquare()
---    if not sq then return end
---    
---    -- Check if in a teleport room
---    local room = sq:getRoom()
---    if not room or not string.find(room:getName(), "teleport") then return end
---    
---    local container = obj:getContainer()
---    if not container then return end
---    
---    -- Only fill if empty (avoid duplicates on reload)
---    if container:getItems():size() >= 5 then return end
---    
---    -- Add 5 space communicators
---    for i = 1, 5 do
---        container:AddItem("ZSpaceship.Communicator_Left")
---    end
---end
-
--- Initialize water storage with FluidContainer
-local function initWaterStorage(obj)
-    print("Initializing water storage for: " .. tostring(obj))
-    if not obj or not obj.getSquare then return end
-    
-    local sq = obj:getSquare()
-    if not sq or not ZSpaceship.isInSpace(sq) then return end
-    
-    -- Skip if already has FluidContainer (avoid duplicates on reload)
-    if obj:getFluidContainer() then return end
-    
-    -- Get WaterAmount from sprite properties, fallback to 100
-    local waterAmount = 100.0
-    if obj:getSprite() and obj:getSprite():getProperties() then
-        local props = obj:getSprite():getProperties()
-        if props then
-            local amountStr = props:get(IsoPropertyType.WaterAmount)
-            if amountStr then
-                waterAmount = tonumber(amountStr) or 100.0
-            end
-        end
-    end
-    
-    -- Create and add FluidContainer component
-    local fluidContainer = ComponentType.FluidContainer:CreateComponent()
-    fluidContainer:setCapacity(waterAmount)
-    fluidContainer:addFluid(FluidType.Water, 30.0)
-    GameEntityFactory.AddComponent(obj, true, fluidContainer)
-    
-    -- Sync to clients
-    if isServer() then
-        obj:sync()
-    end
 end
 
 -- Remove all animals from the space cell
@@ -141,10 +83,8 @@ local function squareHasFloor(sq)
     if not tile then return false end
     local name = tile:getName()
     if not name then return false end
-    for _, n in ipairs(floorTiles) do
-        if n == name then return true end
-    end
-    return false
+
+    return floorTiles[name] ~= nil
 end
 
 -- Get ship room bounds from MapData (Default.Rooms or runtime Rooms); z = most frequent z in rooms
@@ -232,19 +172,7 @@ end
 -- Register on new game start (when map is created)
 Events.OnNewGame.Add(function()
     registerDoorUnlocks()
-
-    -- Register all tiles with Storage flag
---    local storage_tiles = ZSpaceship.MapData.Tiles and ZSpaceship.MapData.Tiles["Storage"] or {}
---    for _, tile_name in ipairs(storage_tiles) do
---        MapObjects.OnNewWithSprite(tile_name, fillTeleportContainer, 10)
---    end
     
-    -- Register all tiles with WaterStorage flag
-    local water_storage_tiles = ZSpaceship.MapData.Tiles and ZSpaceship.MapData.Tiles["WaterStorage"] or {}
-    for _, tile_name in ipairs(water_storage_tiles) do
-        MapObjects.OnNewWithSprite(tile_name, initWaterStorage, 10)
-    end
-
     -- Delayed animal cleanup (gives time for cell to fully load and animals to spawn)
     Events.EveryOneMinute.Add(initialAnimalCleanup)
     -- Delayed initial zombie spawn in space suits (when space cell is loaded)

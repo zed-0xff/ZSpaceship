@@ -2,20 +2,17 @@ require "ZS_MapData"
 
 ZSpaceship = ZSpaceship or {}
 ZSpaceship.Power = {
-    batteryTiles = {},
+    batteryTiles = ZSpaceship.MapData.Tiles.EnergyStorage,
     batteries = {},
 }
 
-local _capacity = 0
-local _consumptionPerMinute   = 25
-local _maxProductionPerMinute = 50 -- TODO: count number of solar panels
-
+local MIN_CAPACITY  = 1000 -- with 0 batteries
 local DEFAULT_POWER = 1000 -- Default power amount (used for new games)
 local BATTERY_SIZE  = 1000
 
-for _, tile in pairs(ZSpaceship.MapData.Tiles.EnergyStorage) do
-    ZSpaceship.Power.batteryTiles[tile] = true
-end
+local _capacity               = MIN_CAPACITY
+local _consumptionPerMinute   = 25
+local _maxProductionPerMinute = 50 -- TODO: count number of solar panels
 
 local function isBattery(obj)
     if not obj then return false end
@@ -48,6 +45,17 @@ local function setCurrentAmountInModData(amount)
         if modData then
             modData.currentAmount = amount
         end
+    end
+end
+
+local function getModData()
+    return ModData and ModData.getOrCreate and ModData.getOrCreate("ZS_Power") or nil
+end
+
+local function setCapacityInModData(capacity)
+    local modData = getModData()
+    if modData then
+        modData.capacity = capacity
     end
 end
 
@@ -104,14 +112,16 @@ Events.EveryOneMinute.Add(updatePower)
 if Events and Events.OnInitGlobalModData then
     Events.OnInitGlobalModData.Add(function(isNewGame)
         if isNewGame then
-            -- New game: set default power
             setCurrentAmountInModData(DEFAULT_POWER)
+            setCapacityInModData(MIN_CAPACITY)
         else
-            -- Existing game: ensure ModData exists (will load from save)
-            if ModData and ModData.getOrCreate then
-                local modData = ModData.getOrCreate("ZS_Power")
+            local modData = getModData()
+            if modData then
                 if not modData.currentAmount then
                     modData.currentAmount = DEFAULT_POWER
+                end
+                if modData.capacity then
+                    _capacity = modData.capacity
                 end
             end
         end
@@ -119,11 +129,12 @@ if Events and Events.OnInitGlobalModData then
 end
 
 local function updateCapacity()
-    _capacity = 0
+    _capacity = MIN_CAPACITY
     -- can't use # because batteries is a table, not an array T_T
     for _ in pairs(ZSpaceship.Power.batteries) do
         _capacity = _capacity + BATTERY_SIZE
     end
+    setCapacityInModData(_capacity)
 end
 
 local function square2str(sq)
@@ -131,8 +142,6 @@ local function square2str(sq)
 end
 
 local function maybeAddBattery(isoObject)
-    print("maybeAddBattery", isoObject)
-    print("sprite name", isoObject:getSprite():getName())
     if not ZSpaceship.isInSpace(isoObject) then return end
     if not isBattery(isoObject) then return end
     ZSpaceship.Power.batteries[square2str(isoObject:getSquare())] = isoObject

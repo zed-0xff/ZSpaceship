@@ -30,6 +30,7 @@ metamap: |
 
 flags:
   - Airtight
+  - BiomassStorage
   - EnergyStorage
   - Floor
   - WallW
@@ -175,7 +176,7 @@ elements:
     tiles:
       industry_02_Simon_MD_*:
       location_community_medical_01_*:
-      quarantine_Simon_MD_63:
+      quarantine_Simon_MD_63:             { flags: [BiomassStorage] }
       fixtures_counters_*:
       fixtures_sinks_01_19:
       industry_02_Simon_MD_124:           { alias: cloning_console }

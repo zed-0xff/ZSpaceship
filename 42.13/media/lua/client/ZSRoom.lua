@@ -777,24 +777,61 @@ local function findRoomNearSquare(sq, currentRoom)
 end
 
 function ZSRoom:buildConnections()
-    if not self:isValid() then return end
-    
+    if not self:isValid() or not getSquare then return end
+
     self.connections = {}
     local doors = self:getDoors()
-    if not doors then return end
-    
-    for _, doorData in ipairs(doors) do
-        local door = doorData.isoDoor
-        local sq = doorData.square
-        local adjSq = doorData.adjSquare
-        if door and sq and adjSq then
-            local adjRoom = ZSRooms.find(adjSq)
-            
-            if adjRoom and adjRoom ~= self then
-                if not self.connections[adjRoom] then
-                    self.connections[adjRoom] = {}
+    if doors then
+        for _, doorData in ipairs(doors) do
+            local door = doorData.isoDoor
+            local sq = doorData.square
+            local adjSq = doorData.adjSquare
+            if door and sq and adjSq then
+                local adjRoom = ZSRooms.find(adjSq)
+                if adjRoom and adjRoom ~= self then
+                    if not self.connections[adjRoom] then
+                        self.connections[adjRoom] = {}
+                    end
+                    table.insert(self.connections[adjRoom], {isoDoor = door, square = sq, adjSquare = adjSq, adjRoom = adjRoom})
                 end
-                table.insert(self.connections[adjRoom], {isoDoor = door, square = sq, adjSquare = adjSq, adjRoom = adjRoom})
+            end
+        end
+    end
+
+    -- Connections via missing wall (no door): adjacent room is always "open" for breach propagation
+    local sides = {
+        { squares = self:getSquaresN(), dx = 0,  dy = -1 },
+        { squares = self:getSquaresS(), dx = 0,  dy = 1 },
+        { squares = self:getSquaresE(), dx = 1,  dy = 0 },
+        { squares = self:getSquaresW(), dx = -1, dy = 0 },
+    }
+    for _, side in ipairs(sides) do
+        for _, sq in ipairs(side.squares) do
+            if sq then
+                local wall = nil
+                if side.dy == -1 then
+                    wall = sq:getDoor(true) or sq:getWall(true)
+                elseif side.dy == 1 then
+                    local s = getSquare(sq:getX(), sq:getY() + 1, sq:getZ())
+                    wall = s and (s:getDoor(true) or s:getWall(true))
+                elseif side.dx == 1 then
+                    local s = getSquare(sq:getX() + 1, sq:getY(), sq:getZ())
+                    wall = s and (s:getDoor(false) or s:getWall(false))
+                else
+                    wall = sq:getDoor(false) or sq:getWall(false)
+                end
+                if not wall then
+                    local adjSq = getSquare(sq:getX() + side.dx, sq:getY() + side.dy, sq:getZ())
+                    if adjSq then
+                        local adjRoom = ZSRooms.find(adjSq)
+                        if adjRoom and adjRoom ~= self then
+                            if not self.connections[adjRoom] then
+                                self.connections[adjRoom] = {}
+                            end
+                            table.insert(self.connections[adjRoom], { isoDoor = nil, square = sq, adjSquare = adjSq, adjRoom = adjRoom })
+                        end
+                    end
+                end
             end
         end
     end

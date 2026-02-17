@@ -1,5 +1,6 @@
 -- Vacuum fire suppression for ZSpaceship mod
 -- Prevents fires, stoves, and campfires from working in vacuum (no oxygen)
+require 'zsHook'
 require "ZS_Utils"
 
 -- Helper to check if location is in vacuum using cached ZSRoom state
