@@ -8,6 +8,7 @@ UI_EN = {
     UI_ZS_TeleportToCounty = "Teleport to Surface (%1 MJ / %2 MJ)",
     UI_ZS_TeleportToBuilding = "Teleport into Building (%1 MJ / %2 MJ)",
     UI_ZS_ReturnToSpaceship = "Return to Spaceship (%1 MJ / %2 MJ)",
+    UI_ZS_TeleportBlockedSubsurface = "Orbital relay unavailable (subsurface)",
     UI_ZS_InsufficientPower = "Insufficient power! Need %1 MJ, have %2 MJ",
     UI_ZS_ScienceRequired = "Requires Science Level %1",
     UI_ZS_MedicalRequired = "Requires Medical Level %1",

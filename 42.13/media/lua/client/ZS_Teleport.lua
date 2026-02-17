@@ -47,6 +47,20 @@ local function addTeleportOption(context, player, cost, textKey, cb, comm, requi
     end
 end
 
+local function addReturnToShipOrBlockedOption(context, player, communicator)
+    local inSpace = ZSpaceship.isInSpace(player:getX(), player:getY())
+    local z = player:getZ() or 0
+    if not inSpace and z < 0 then
+        local opt = context:addOption(getText("UI_ZS_TeleportBlockedSubsurface"), player, function() end)
+        opt.notAvailable = true
+        opt.toolTip = ISToolTip:new()
+        opt.toolTip:setName(getText("UI_ZS_TeleportBlockedSubsurface"))
+    else
+        local costReturn = ZSpaceship.Teleport.getCost(player, inSpace, true, false)
+        addTeleportOption(context, player, costReturn, "UI_ZS_ReturnToSpaceship", function(p) ZSpaceship.Teleport.toShip(p, inSpace) end, communicator, ZSpaceship.Teleport.SCIENCE_LEVEL_MIN)
+    end
+end
+
 function ZSpaceship.Teleport.getMass(player)
     local bodyWeight = player:getNutrition():getWeight()
     local inventoryWeight = player:getInventory():getCapacityWeight()
@@ -356,12 +370,9 @@ local function doWorldContextMenu(playerNum, context, worldobjects, test)
         addTeleportOption(context, player, costSurface, "UI_ZS_TeleportToCounty", ZSpaceship.Teleport.toRandom, communicator, ZSpaceship.Teleport.SCIENCE_LEVEL_MIN)
         addTeleportOption(context, player, costBuilding, "UI_ZS_TeleportToBuilding", ZSpaceship.Teleport.toRandomBuilding, communicator, ZSpaceship.Teleport.SCIENCE_LEVEL_BUILDING)
     else
-        -- Return to Spaceship option when has communicator
         local communicator = player:getInventory():getItemFromTag(ZSpaceship.Tags.Communicator, true, true)
         if communicator then
-            local inSpace = ZSpaceship.isInSpace(player:getX(), player:getY())
-            local costReturn = ZSpaceship.Teleport.getCost(player, inSpace, true, false)  -- from surface/space, to space
-            addTeleportOption(context, player, costReturn, "UI_ZS_ReturnToSpaceship", function(p) ZSpaceship.Teleport.toShip(p, inSpace) end, communicator, ZSpaceship.Teleport.SCIENCE_LEVEL_MIN)
+            addReturnToShipOrBlockedOption(context, player, communicator)
         end
     end
 end
@@ -384,10 +395,7 @@ local function doInventoryContextMenu(playerNum, context, items)
     end
     
     if clickedCommunicator then
-        local px, py = math.floor(player:getX()), math.floor(player:getY())
-        local inSpace = ZSpaceship.isInSpace(px, py)
-        local costReturn = ZSpaceship.Teleport.getCost(player, inSpace, true, false)  -- from surface/space, to space
-        addTeleportOption(context, player, costReturn, "UI_ZS_ReturnToSpaceship", function(p) ZSpaceship.Teleport.toShip(p, inSpace) end, clickedCommunicator, ZSpaceship.Teleport.SCIENCE_LEVEL_MIN)
+        addReturnToShipOrBlockedOption(context, player, clickedCommunicator)
     end
 end
 
