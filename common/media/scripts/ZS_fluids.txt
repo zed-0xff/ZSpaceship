@@ -1,0 +1,37 @@
+module ZSpaceship
+{
+    fluid Biomass
+    {
+        ColorReference = RosyBrown,
+        DisplayName = Fluid_Name_Biomass,
+        Categories
+        {
+            Hazardous,
+            Poisons,
+        }
+        Properties
+        {
+            ThirstChange = -20.0,
+            foodSicknessChange = 10,
+            UnhappyChange = 50,
+            StressChange = 30,
+            Calories = 615.0,
+            Carbohydrates = 46.0,
+            Lipids = 22.0,
+            Proteins = 33.0,
+        }
+        Poison
+        {
+            maxEffect = Medium,
+            minAmount = 0.1,
+            diluteRatio = 0.0,
+        }
+        BlendWhiteList
+        {
+            whitelist = false,
+            categories
+            {
+            }
+        }
+    }
+}
