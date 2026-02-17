@@ -50,11 +50,18 @@ local function isBiomassStorage(obj)
     return ZSpaceship.MapData.Tiles["BiomassStorage"][spriteName] ~= nil
 end
 
+local BIOHAZARD_ICON = getTexture("media/ui/biohazard_icon.png")
+
 local function onFillWorldObjectContextMenu(player, context, worldobjects, _test)
     for _, obj in ipairs(worldobjects) do
         if isBiomassStorage(obj) then
             -- patch icon and name
-            microscope = obj
+            for _, option in ipairs(context.options) do
+                if option.name == "Water Supply Container" then
+                    option.name = "Biomass Container"
+                    option.iconTexture = BIOHAZARD_ICON
+                end
+            end
             break
         end
     end
