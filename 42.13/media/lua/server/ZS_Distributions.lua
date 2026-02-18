@@ -7,7 +7,7 @@ ProceduralDistributions.list["zsSpaceStuff"] = {
     items = {
         "ZSpaceship.SpaceSuitA",         1,
         "ZSpaceship.Communicator_Left",  4,
-        "ZSpaceCrate",                   1,
+        "Base.zspaceship_0",             1, -- crate
         "ZScienceSkill.BookScience1",    1,
         "ZScienceSkill.BookScience2",    0.5,
         "Base.LargeMeteorite",           0.01,

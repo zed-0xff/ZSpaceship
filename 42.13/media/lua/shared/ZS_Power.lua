@@ -135,6 +135,7 @@ local function updateCapacity()
         _capacity = _capacity + BATTERY_SIZE
     end
     setCapacityInModData(_capacity)
+    print("ZS_Power.updateCapacity: " .. tostring(_capacity))
 end
 
 local function square2str(sq)
@@ -144,6 +145,7 @@ end
 local function maybeAddBattery(isoObject)
     if not zsIsInSpace(isoObject) then return end
     if not isBattery(isoObject) then return end
+
     ZSpaceship.Power.batteries[square2str(isoObject:getSquare())] = isoObject
     updateCapacity()
 end
@@ -151,6 +153,17 @@ end
 for tileName in pairs(ZSpaceship.Power.batteryTiles) do
     MapObjects.OnNewWithSprite(tileName, maybeAddBattery, 100)  -- map loading
     MapObjects.OnLoadWithSprite(tileName, maybeAddBattery, 100) -- map loading?
+end
+
+-- called from scripts/entities/ZS_PSU.txt
+-- tbl = {
+--     thumpable       = ZS_PSU:zspaceship_3:zspaceship_3:zombie.iso.objects.IsoThumpable@3a34bc20, 
+--     craftRecipeData = zombie.entity.components.crafting.recipe.CraftRecipeData@559ce917, 
+--     character       = IsoPlayer{  Name:null,  ID:45 }, 
+--     facing          = "single"
+-- }
+function ZSpaceship.Power.onCreate(tbl)
+    maybeAddBattery(tbl.thumpable)
 end
 
 local function maybeRemoveBattery(isoObject)

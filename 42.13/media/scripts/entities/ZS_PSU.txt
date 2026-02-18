@@ -1,54 +1,45 @@
 module Base
 {
-    entity PowerStorageUnit
+    entity ZS_PSU
     {
         component UiConfig
         {
             xuiSkin = default,
             uiEnabled = true,
         }
+
         component SpriteConfig
         {
             isThumpable = true,
+            health      = 200,
+            OnCreate = ZSpaceship.Power.onCreate,
             face SINGLE
             {
                 layer
                 {
-                    row = zspaceship_3
+                    row = zspaceship_3,
                 }
             }
         }
+
         component CraftRecipe
         {
             timedAction = BuildMetalStructureMedium,
             time = 300,
+            NeedToBeLearn = true,
+            SkillRequired = Science:2;Electricity:2,
+            xpAward = Electricity:50;Science:50,
             category = Electrical,
-            needToBeLearn = true,
-            SkillRequired = Electricity:3,
-            xpAward = Electricity:50,
             Tooltip = Tooltip_PowerStorage,
             inputs
             {
-                item 1 tags[base:screwdriver] mode:keep flags[Prop1;MayDegradeLight],
-                item 1 tags[base:wrench] mode:keep flags[MayDegradeLight],
+                item 1 tags[base:screwdriver] mode:keep flags[Prop1;MayDegradeVeryLight],
+                item 1 tags[base:wrench] mode:keep flags[MayDegradeVeryLight],
                 item 4 [Base.SheetMetal],
                 item 5 [Base.ElectronicsScrap],
                 item 10 [Base.ElectricWire],
                 item 10 [Base.CarBattery1;Base.CarBattery2;Base.CarBattery3] flags[ItemCount],
             }
         }
-    }
-
-    recipe Build Solar Panel
-    {
-        keep [Recipe.GetItemTypes.Screwdriver],
-        Base.SheetMetal = 2,
-        Base.ElectronicsScrap = 6,
-        Base.ElectricWire = 6,
-        Base.GlassPane = 2,
-        Time:200,
-        SkillRequired:Electricity=4,
-        Result:Moveables.zspaceship_2,
-        Category:Electrical,
     }
 }

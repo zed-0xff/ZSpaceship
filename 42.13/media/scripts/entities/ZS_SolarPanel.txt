@@ -1,0 +1,45 @@
+module Base
+{
+    entity ZS_SolarPanel
+    {
+        component UiConfig
+        {
+            xuiSkin = default,
+            uiEnabled = false,
+        }
+
+        component SpriteConfig
+        {
+            isThumpable = false,
+            health      = 25,
+            face SINGLE
+            {
+                layer
+                {
+                    row = solarmod_tileset_01_8,
+                }
+            }
+        }
+
+        component CraftRecipe
+        {
+            timedAction = BuildMetalStructureMedium,
+            time = 150,
+            NeedToBeLearn = true,
+            Tags = Outdoors,
+            SkillRequired = Science:3;Electricity:3,
+            xpAward = Electricity:50;Science:50,
+            category = Electrical,
+            Tooltip = Tooltip_SolarPanel,
+            inputs
+            {
+                item 1 tags[base:screwdriver] mode:keep flags[Prop1;MayDegradeVeryLight],
+                item 1 tags[base:hammer] mode:keep flags[MayDegradeVeryLight],
+                item 1 [Base.GlassPanel],
+                item 1 [Base.SheetMetal],
+                item 4 [Base.ElectronicsScrap],
+                item 4 [Base.ElectricWire],
+            }
+        }
+    }
+}

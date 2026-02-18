@@ -38,26 +38,30 @@ module ZSpaceship
 
     item PowerStorageUnit_Schematic
     {
-        ItemType = Literature,
-        DisplayName = Power Storage Manual,
-        Icon = Magazine_Gaming,
-        Weight = 0.3,
-        BoredomChange = -15,
-        StressChange = -10,
-        Tooltip = Tooltip_PowerStorageUnit_Schematic,
-        TeachRecipes = Craft Power Storage Unit,
+        DisplayCategory = SkillBook,
+        ItemType = base:literature,
+        Weight = 0.1,
+        Icon = PaperReport1,
+        BoredomChange = -20,
+        StressChange = -15,
+        LearnedRecipes = PowerStorageUnit,
+        StaticModel = ArmorMag7,
+        WorldStaticModel = ArmorMag7,
+        Tags = base:magazine
     }
 
     item SolarPanel_Schematic
     {
-        ItemType = Literature,
-        DisplayName = Solar Panel Manual,
-        Icon = Magazine_Gaming,
-        Weight = 0.3,
-        BoredomChange = -15,
-        StressChange = -10,
-        Tooltip = Tooltip_SolarPanel_Schematic,
-        TeachRecipes = Build Solar Panel,
+        DisplayCategory = SkillBook,
+        ItemType = base:literature,
+        Weight = 0.1,
+        Icon = PaperReport1,
+        BoredomChange = -20,
+        StressChange = -15,
+        LearnedRecipes = SolarPanel,
+        StaticModel = ArmorMag7,
+        WorldStaticModel = ArmorMag7,
+        Tags = base:magazine
     }
 
     item SpaceSuitA
