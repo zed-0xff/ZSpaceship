@@ -11,7 +11,9 @@ require 'zpng'
 
 ZHexdump.defaults[:width] = 32
 
-Dir[File.join(File.dirname(__FILE__), "lib", "*.rb")].each do |libf|
+bin_fname = __FILE__
+bin_fname = File.readlink(bin_fname) if File.symlink?(bin_fname)
+Dir[File.join(File.dirname(bin_fname), "lib", "*.rb")].each do |libf|
   require libf
 end
 
