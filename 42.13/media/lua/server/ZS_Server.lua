@@ -160,7 +160,10 @@ local function initialShipZombieSpawn()
         end
         local sq = cell:getGridSquare(x, y, bounds.z)
         if useRoomCenter or squareHasFloor(sq) then
-            addZombiesInOutfit(x, y, bounds.z, 1, ZOMBIE_OUTFIT_ID, 50)
+            local list = addZombiesInOutfit(x, y, bounds.z, 1, ZOMBIE_OUTFIT_ID, 50)
+            if list and list.size and list:size() > 0 then
+                spawned = spawned + 1
+            end
         end
     end
     ZSpaceship.InitialZombiesSpawned = true
