@@ -161,6 +161,13 @@ local function initialShipZombieSpawn()
             local list = addZombiesInOutfit(x, y, bounds.z, 1, "ZSpaceship_SpaceSuit", 50) -- defined in clothing.xml
             if list and list.size and list:size() > 0 then
                 spawned = spawned + 1
+                -- Put a communicator in each ship zombie's inventory (lootable when killed)
+                for i = 0, list:size() - 1 do
+                    local z = list:get(i)
+                    if z and z.getInventory then
+                        z:getInventory():AddItem("ZSpaceship.Communicator_Left")
+                    end
+                end
             end
         end
     end
