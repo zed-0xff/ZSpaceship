@@ -39,16 +39,16 @@ module Base
         }
     }
 
-    # Simple buildable battery rack (Moveable), using the same rack sprite.
-    recipe Build ZSpaceship Battery Rack
+    recipe Build Solar Panel
     {
         keep [Recipe.GetItemTypes.Screwdriver],
-        Base.SheetMetal = 4,
-        Base.ElectronicsScrap = 4,
-        Base.ElectricWire = 4,
-        Time:150,
-        SkillRequired:Electricity=3,
-        Result:Moveables.zspaceship_3,
+        Base.SheetMetal = 2,
+        Base.ElectronicsScrap = 6,
+        Base.ElectricWire = 6,
+        Base.GlassPane = 2,
+        Time:200,
+        SkillRequired:Electricity=4,
+        Result:Moveables.zspaceship_2,
         Category:Electrical,
     }
 }

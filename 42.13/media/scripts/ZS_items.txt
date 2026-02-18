@@ -48,6 +48,30 @@ module ZSpaceship
         TeachRecipes = Craft Power Storage Unit,
     }
 
+    item PowerStorageUnit_Schematic
+    {
+        ItemType = Literature,
+        DisplayName = Power Storage Manual,
+        Icon = Magazine_Gaming,
+        Weight = 0.3,
+        BoredomChange = -15,
+        StressChange = -10,
+        Tooltip = Tooltip_PowerStorageUnit_Schematic,
+        TeachRecipes = Craft Power Storage Unit,
+    }
+
+    item SolarPanel_Schematic
+    {
+        ItemType = Literature,
+        DisplayName = Solar Panel Manual,
+        Icon = Magazine_Gaming,
+        Weight = 0.3,
+        BoredomChange = -15,
+        StressChange = -10,
+        Tooltip = Tooltip_SolarPanel_Schematic,
+        TeachRecipes = Build Solar Panel,
+    }
+
     item SpaceSuitA
     {
         DisplayCategory = ProtectiveGear,
