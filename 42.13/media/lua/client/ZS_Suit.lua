@@ -19,7 +19,7 @@ end
 local function updateSuitClimate()
     local player = getPlayer()
     if not player then return end
-    if not ZSpaceship.isInSpace(player) then return end
+    if not zsIsInSpace(player) then return end
     if not getWornSuit(player) then return end
 
     local stats = player:getStats()

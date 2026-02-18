@@ -19,7 +19,7 @@ local function unlockDoor(obj)
     if not obj.getSquare then return end
 
     local sq = obj:getSquare()
-    if not sq or not ZSpaceship.isInSpace(sq) then return end
+    if not sq or not zsIsInSpace(sq) then return end
     
     if obj.setLockedByKey then
         obj:setLockedByKey(false)
@@ -57,7 +57,7 @@ local function removeAnimalsFromSpace()
     -- Iterate backwards since we're removing
     for i = objects:size() - 1, 0, -1 do
         local obj = objects:get(i)
-        if obj and instanceof(obj, "IsoAnimal") and ZSpaceship.isInSpace(obj) then
+        if obj and instanceof(obj, "IsoAnimal") and zsIsInSpace(obj) then
             obj:removeFromWorld()
             obj:removeFromSquare()
             removed = removed + 1

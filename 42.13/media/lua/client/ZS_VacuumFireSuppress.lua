@@ -11,7 +11,7 @@ local function isInVacuum(x)
         sq = x:getSquare()
     end
     if not sq then return false end
-    if not ZSpaceship.isInSpace(sq) then return false end
+    if not zsIsInSpace(sq) then return false end
     
     local zsRoom = ZSRooms.find(sq)
     if not zsRoom then return true end  -- No room = vacuum
@@ -108,7 +108,7 @@ end
 -- Check for breach at a square and suppress fires in affected rooms
 local function checkBreachAtSquare(sq)
     if not sq then return end
-    if not ZSpaceship.isInSpace(sq) then return end
+    if not zsIsInSpace(sq) then return end
     
     -- Check adjacent rooms for breach using cached ZSRoom state
     local checkedRooms = {}

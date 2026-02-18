@@ -39,7 +39,7 @@ function ZSpaceship.isAnyPlayerInSpace()
     local players = IsoPlayer.getPlayers()
     for i=0, players:size() -1 do
         local player = players:get(i)
-        if player ~= nil and ZSpaceship.isInSpace(player) then
+        if player ~= nil and zsIsInSpace(player) then
             return true
         end
     end

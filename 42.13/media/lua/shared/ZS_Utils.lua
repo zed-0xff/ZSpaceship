@@ -13,7 +13,7 @@ ZSpaceship.SpaceMaxX = (ZSpaceship.SpaceCellX + 1) * 256
 ZSpaceship.SpaceMinY = ZSpaceship.SpaceCellY * 256
 ZSpaceship.SpaceMaxY = (ZSpaceship.SpaceCellY + 1) * 256
 
-function ZSpaceship.isInSpaceXY(x, y)
+function zsIsInSpaceXY(x, y)
     if not x or not y then return false end
 
     return x >= ZSpaceship.SpaceMinX and x < ZSpaceship.SpaceMaxX and
@@ -21,28 +21,31 @@ function ZSpaceship.isInSpaceXY(x, y)
 end
 
 -- Check if coordinates are in space (full cell)
-function ZSpaceship.isInSpace(a, b)
+function zsIsInSpace(a, b)
     if a and b then
-        return ZSpaceship.isInSpaceXY(a, b)
+        return zsIsInSpaceXY(a, b)
     elseif a then
         if a.getSquare then
             local sq = a:getSquare()
             if sq then
-                return ZSpaceship.isInSpaceXY(sq:getX(), sq:getY())
+                return zsIsInSpaceXY(sq:getX(), sq:getY())
             end
         elseif a.getRandomSquare then -- IsoRoom
             local sq = a:getRandomSquare()
             if sq then
-                return ZSpaceship.isInSpaceXY(sq:getX(), sq:getY())
+                return zsIsInSpaceXY(sq:getX(), sq:getY())
             end
         elseif a.getX and a.getY then
             -- have to check getX/getY AFTER checking getSquare, because IsoObject has getX/getY,
             -- but may not have a square, so it throws an error if you call getX/getY on it without checking for getSquare first
-            return ZSpaceship.isInSpaceXY(a:getX(), a:getY())
+            return zsIsInSpaceXY(a:getX(), a:getY())
         end
     end
     return false
 end
+
+ZSpaceship.isInSpaceXY = zsIsInSpaceXY
+ZSpaceship.isInSpace   = zsIsInSpace
 
 --- Returns true only on the very first new game for this world (not when a dead player respawns on the same save).
 -- @param moduleName string Optional. If given, each module gets one run per save; if omitted, first caller sets a single flag.

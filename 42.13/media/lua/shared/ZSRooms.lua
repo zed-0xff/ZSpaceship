@@ -87,7 +87,7 @@ function ZSRooms.getOrCreate(room) -- IsoRoom
     if room.getRandomSquare then
         local sq = room:getRandomSquare()
         if not sq then return nil end
-        if not ZSpaceship.isInSpace(sq) then return nil end
+        if not zsIsInSpace(sq) then return nil end
     end
 
     if #roomCache == 0 then
@@ -268,7 +268,7 @@ function ZSRooms.dbgPrintCache()
 end
 
 local function onObjAddRemove(obj)
-    if ZSpaceship.isInSpace(obj) then
+    if zsIsInSpace(obj) then
         ZSRooms.updateAllSlow()
     end
 end

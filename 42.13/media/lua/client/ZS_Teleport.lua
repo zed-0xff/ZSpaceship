@@ -48,7 +48,7 @@ local function addTeleportOption(context, player, cost, textKey, cb, comm, requi
 end
 
 local function addReturnToShipOrBlockedOption(context, player, communicator)
-    local inSpace = ZSpaceship.isInSpace(player:getX(), player:getY())
+    local inSpace = zsIsInSpace(player)
     local z = player:getZ() or 0
     if not inSpace and z < 0 then
         local opt = context:addOption(getText("UI_ZS_TeleportBlockedSubsurface"), player, function() end)
@@ -73,11 +73,7 @@ function ZSpaceship.Teleport.isInBuilding(player)
         return false
     end
     -- Spaceship doesn't count as a building for teleport cost
-    local px, py = math.floor(player:getX()), math.floor(player:getY())
-    if ZSpaceship.isInSpace(px, py) then
-        return false
-    end
-    return true
+    return not zsIsInSpace(player)
 end
 
 -- Calculate teleport cost

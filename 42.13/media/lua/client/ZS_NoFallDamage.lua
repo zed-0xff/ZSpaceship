@@ -11,7 +11,7 @@ local function updateSpacePhysics()
     local player = getPlayer()
     if not player then return end
     
-    local inSpace = ZSpaceship.isInSpace(player)
+    local inSpace = zsIsInSpace(player)
     
     if not inSpace then
         -- Restore normal state when leaving space
