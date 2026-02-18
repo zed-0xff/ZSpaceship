@@ -136,7 +136,7 @@ local zsDistr = {
     zs_energy_storage = {
         crate = {
             ignoreZombieDensity = true,
-            rolls = 10,
+            rolls = 20,
             items = {
                 "Base.ElectricWire",     75,
                 "Base.ElectronicsScrap", 20,
