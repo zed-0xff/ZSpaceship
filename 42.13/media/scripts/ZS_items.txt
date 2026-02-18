@@ -36,18 +36,6 @@ module ZSpaceship
         Tags = base:digital; ZSpaceship:CommunicatorTag,
     }
 
-    item PowerCell_Schematic
-    {
-        ItemType = Literature,
-        DisplayName = Power Systems Manual,
-        Icon = Magazine_Gaming,
-        Weight = 0.3,
-        BoredomChange = -15,
-        StressChange = -10,
-        Tooltip = Tooltip_PowerCell_Schematic,
-        TeachRecipes = Craft Power Storage Unit,
-    }
-
     item PowerStorageUnit_Schematic
     {
         ItemType = Literature,

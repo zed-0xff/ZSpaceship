@@ -11,6 +11,8 @@ ZSpaceship.SpaceMaxX = (ZSpaceship.SpaceCellX + 1) * 256
 ZSpaceship.SpaceMinY = ZSpaceship.SpaceCellY * 256
 ZSpaceship.SpaceMaxY = (ZSpaceship.SpaceCellY + 1) * 256
 
+local ZOMBIE_OUTFIT_ID = "ZSpaceship_SpaceSuit" -- defined in clothing.xml
+
 -- Unlock a door/garage door object
 -- TODO: figure out if the door can be created initially unlocked
 local function unlockDoor(obj)
@@ -158,17 +160,7 @@ local function initialShipZombieSpawn()
         end
         local sq = cell:getGridSquare(x, y, bounds.z)
         if useRoomCenter or squareHasFloor(sq) then
-            local list = addZombiesInOutfit(x, y, bounds.z, 1, "ZSpaceship_SpaceSuit", 50) -- defined in clothing.xml
-            if list and list.size and list:size() > 0 then
-                spawned = spawned + 1
-                -- Put a communicator in each ship zombie's inventory (lootable when killed)
-                for i = 0, list:size() - 1 do
-                    local z = list:get(i)
-                    if z and z.getInventory then
-                        z:getInventory():AddItem("ZSpaceship.Communicator_Left")
-                    end
-                end
-            end
+            addZombiesInOutfit(x, y, bounds.z, 1, ZOMBIE_OUTFIT_ID, 50)
         end
     end
     ZSpaceship.InitialZombiesSpawned = true
@@ -187,3 +179,17 @@ Events.OnNewGame.Add(function()
     Events.EveryOneMinute.Add(initialShipZombieSpawn)
 end)
 
+Events.OnFillContainer.Add(function(a, b, container)
+    -- Zombie	            ZSpaceship_SpaceSuit	ItemContainer:[type:inventorymale, parent:IsoDeadBody{  Name:null,  ID:68,  wasZombie:true,  deathTime:2.087947 }]
+    if a == "Zombie" and b == ZOMBIE_OUTFIT_ID then
+        container:AddItem("ZSpaceship.Communicator_Left")
+        return
+    end
+
+    -- zs_energy_storage	crate	                ItemContainer:[type:crate, parent:null:zspaceship_0:zspaceship_0:zombie.iso.IsoObject@3696d8eb]
+    if a == "zs_energy_storage" and b == "crate" then
+        container:AddItem("ZSpaceship.PowerStorageUnit_Schematic")
+        container:AddItem("ZSpaceship.SolarPanel_Schematic")
+        return
+    end
+end)

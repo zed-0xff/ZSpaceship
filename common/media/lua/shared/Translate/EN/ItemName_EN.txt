@@ -9,7 +9,6 @@ ItemName_EN = {
     ItemName_ZSpaceship.PowerCell = "Power Cell",
     ItemName_ZSpaceship.PowerCell_Empty = "Empty Power Cell",
     ItemName_ZSpaceship.PowerStorage = "Power Storage Unit",
-    ItemName_ZSpaceship.PowerCell_Schematic = "Power Systems Manual",
     ItemName_ZSpaceship.PowerStorageUnit_Schematic = "Power Storage Manual",
     ItemName_ZSpaceship.SolarPanel_Schematic = "Solar Panel Manual",
     ItemName_ZSpaceship.SpaceSuitA = "Space Suit",
