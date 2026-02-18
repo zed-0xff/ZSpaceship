@@ -40,8 +40,10 @@ local function getOrCreateInternal(roomId, room) -- roomId not null, room IsoRoo
     return roomCache[roomId]
 end
 
-local function initRooms()
+function ZSRooms.init()
     if not ZSpaceship or not ZSpaceship.MapData or not ZSpaceship.MapData.Rooms then return end
+    if _inited then return end
+    _inited = true
 
     for _, r in pairs(ZSpaceship.MapData.Rooms) do
         local sq = getSquare(r.x, r.y, r.z)
@@ -71,7 +73,7 @@ function ZSRooms.getOrCreate(room) -- IsoRoom
     end
 
     if #roomCache == 0 then
-        initRooms()
+        ZSRooms.init()
     end
 
     return getOrCreateInternal(roomId, room)
@@ -262,4 +264,4 @@ Events.OnContainerUpdate.Add(function()
 end)
 
 -- may fail to create rooms if current map is not "Space"
-Events.OnGameStart.Add(initRooms)
+Events.OnGameStart.Add(ZSRooms.init)
