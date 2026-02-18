@@ -13,35 +13,36 @@ ZSpaceship.SpaceMaxX = (ZSpaceship.SpaceCellX + 1) * 256
 ZSpaceship.SpaceMinY = ZSpaceship.SpaceCellY * 256
 ZSpaceship.SpaceMaxY = (ZSpaceship.SpaceCellY + 1) * 256
 
+-- global function to check if coordinates are in space
 function zsIsInSpaceXY(x, y)
     if not x or not y then return false end
 
     return x >= ZSpaceship.SpaceMinX and x < ZSpaceship.SpaceMaxX and
-        y >= ZSpaceship.SpaceMinY and y < ZSpaceship.SpaceMaxY
+           y >= ZSpaceship.SpaceMinY and y < ZSpaceship.SpaceMaxY
 end
 
--- Check if coordinates are in space (full cell)
-function zsIsInSpace(a, b)
-    if a and b then
-        return zsIsInSpaceXY(a, b)
-    elseif a then
-        if a.getSquare then
-            local sq = a:getSquare()
-            if sq then
-                return zsIsInSpaceXY(sq:getX(), sq:getY())
-            end
-        elseif a.getRandomSquare then -- IsoRoom
-            local sq = a:getRandomSquare()
-            if sq then
-                return zsIsInSpaceXY(sq:getX(), sq:getY())
-            end
-        elseif a.getX and a.getY then
-            -- have to check getX/getY AFTER checking getSquare, because IsoObject has getX/getY,
-            -- but may not have a square, so it throws an error if you call getX/getY on it without checking for getSquare first
-            return zsIsInSpaceXY(a:getX(), a:getY())
+-- global function to check if object is in space
+function zsIsInSpace(obj)
+    if not obj then return false end
+
+    if obj.getSquare then
+        local sq = obj:getSquare()
+        if sq then
+            return sq and zsIsInSpaceXY(sq:getX(), sq:getY())
         end
     end
-    return false
+
+    -- IsoRoom
+    if obj.getRandomSquare then
+        local sq = obj:getRandomSquare()
+        if sq then
+            return zsIsInSpaceXY(sq:getX(), sq:getY())
+        end
+    end
+
+    -- have to check getX/getY AFTER checking getSquare, because IsoObject has getX/getY,
+    -- but may not have a square, so it throws an error if you call getX/getY on it without checking for getSquare first
+    return obj.getX and obj.getY and zsIsInSpaceXY(obj:getX(), obj:getY())
 end
 
 ZSpaceship.isInSpaceXY = zsIsInSpaceXY
