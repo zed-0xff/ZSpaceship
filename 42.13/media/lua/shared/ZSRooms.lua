@@ -40,16 +40,23 @@ local function getOrCreateInternal(roomId, room) -- roomId not null, room IsoRoo
     return roomCache[roomId]
 end
 
+local _inited = false
+local _init_tries = 0
+
 function ZSRooms.init()
-    if not ZSpaceship or not ZSpaceship.MapData or not ZSpaceship.MapData.Rooms then return end
     if _inited then return end
-    _inited = true
+    if not ZSpaceship or not ZSpaceship.MapData or not ZSpaceship.MapData.Rooms then return end
+
+    local nfound = 0
+    local ntotal = 0
 
     for _, r in pairs(ZSpaceship.MapData.Rooms) do
+        ntotal = ntotal + 1
         local sq = getSquare(r.x, r.y, r.z)
         if sq and sq.getRoom then
             local room = sq:getRoom()
             if room then
+                nfound = nfound + 1
                 local roomId = getRoomId(room)
                 if roomId then
                     getOrCreateInternal(roomId, room)
@@ -57,6 +64,17 @@ function ZSRooms.init()
             end
         end
     end
+
+    -- maybe called too early, when game is not created all the rooms
+    print("[ZSpaceship] ZSRooms.init: found " .. nfound .. " of " .. ntotal .. " rooms")
+    _inited = (nfound >= ntotal)
+    if not _inited then
+        _init_tries = _init_tries + 1
+        if _init_tries > 100 then
+            print("[ZSpaceship] ZSRooms.init: max retries reached, giving up")
+            _inited = true
+        end
+    else
 
     ZSRooms.updateAllSlow()
 end
@@ -83,6 +101,8 @@ end
 -- Returns cached ZSRoom object or nil
 -- never creates new rooms
 function ZSRooms.find(arg1, arg2, arg3)
+    ZSRooms.init()
+
     local square = nil
     local isoRoom = nil
     
