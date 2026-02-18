@@ -68,13 +68,14 @@ function ZSRooms.init()
     -- maybe called too early, when game is not created all the rooms
     print("[ZSpaceship] ZSRooms.init: found " .. nfound .. " of " .. ntotal .. " rooms")
     _inited = (nfound >= ntotal)
+
     if not _inited then
         _init_tries = _init_tries + 1
         if _init_tries > 100 then
             print("[ZSpaceship] ZSRooms.init: max retries reached, giving up")
             _inited = true
         end
-    else
+    end
 
     ZSRooms.updateAllSlow()
 end
