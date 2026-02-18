@@ -173,7 +173,7 @@ local function initialShipZombieSpawn()
     end
     ZSpaceship.InitialZombiesSpawned = true
     Events.EveryOneMinute.Remove(initialShipZombieSpawn)
-    print("[ZSpaceship] Initial spawn: added " .. spawned .. " zombies in space suits (sandbox count: " .. N .. ")")
+    print("[ZSpaceship] Initial spawn: added " .. spawned .. " space zombies (sandbox count: " .. N .. ")")
 end
 
 Events.OnNewGame.Add(function()
