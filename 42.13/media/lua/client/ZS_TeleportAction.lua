@@ -155,7 +155,16 @@ function ISZSpaceshipTeleportAction:getDuration()
     if self.timeMult then
         duration = duration * self.timeMult
     end
-    return math.max(duration, 50)
+    if ZItemTiers and ZItemTiers.GetItemTierIndex then
+        local comm = self.character:getInventory():getItemFromTag(ZSpaceship.Tags.Communicator, true, true)
+        if comm then
+            local tier = ZItemTiers.GetItemTierIndex(comm)
+            if tier and tier > 1 then
+                duration = duration * (1 - (tier-1) * 0.1)  -- Each tier after the first reduces time by 10%
+            end
+        end
+    end
+    return zsClamp(duration, 50, 1000)
 end
 
 function ISZSpaceshipTeleportAction:new(character, targetX, targetY, targetZ, startMessage, timeMult, findFreeTile, toBuilding)

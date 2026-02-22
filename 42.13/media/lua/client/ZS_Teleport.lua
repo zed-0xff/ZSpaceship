@@ -104,8 +104,18 @@ function ZSpaceship.Teleport.getCost(player, fromSpace, toSpace, toBuilding)
     local scienceLevel = player:getPerkLevel(Perks.Science)
     local discount = scienceLevel * 0.05  -- 5% per level
     cost = cost * (1 - discount)
+
+    if ZItemTiers and ZItemTiers.GetItemTierIndex then
+        local comm = player:getInventory():getItemFromTag(ZSpaceship.Tags.Communicator, true, true)
+        if comm then
+            local tier = ZItemTiers.GetItemTierIndex(comm)
+            if tier and tier > 1 then
+                cost = cost * (1 - (tier-1) * 0.1)  -- Each tier after the first reduces cost by 10%
+            end
+        end
+    end
     
-    return math.floor(cost)
+    return zsClamp(math.floor(cost), 100, 2000)
 end
 
 function ZSpaceship.Teleport.toRandom(player)
