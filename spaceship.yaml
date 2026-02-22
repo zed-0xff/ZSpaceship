@@ -1,6 +1,7 @@
 id: "Spaceship Z-001"
 origin: [78, 78]
 default_floor: invisible_floor
+lua_data: ../../lua/shared/ZS_MapData.lua
 
 metapalette:
   B: bathroom

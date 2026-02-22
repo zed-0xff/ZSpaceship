@@ -16,6 +16,7 @@ module ZSpaceship
         SoundRadius = 7,
         WorldStaticModel = WatchClassicGold,
         Tags = base:digital; ZSpaceship:CommunicatorTag,
+        Tooltip = Tooltip_ZS_Communicator,
     }
 
     item Communicator_Left
@@ -34,6 +35,7 @@ module ZSpaceship
         SoundRadius = 7,
         WorldStaticModel = WatchClassicGold,
         Tags = base:digital; ZSpaceship:CommunicatorTag,
+        Tooltip = Tooltip_ZS_Communicator,
     }
 
     item PowerStorageUnit_Schematic

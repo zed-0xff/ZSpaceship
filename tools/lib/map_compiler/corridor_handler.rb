@@ -94,8 +94,8 @@ class MapCompiler
         @header.rooms[room_id] = room
         
         # Add to the single spaceship building
-        @spaceship_building.rooms << room
-        room.building = @spaceship_building
+        @root_building.rooms << room
+        room.building = @root_building
       end
       
       puts "  Created #{tiles.uniq.length} corridor rooms '#{room_name}'"

@@ -13,6 +13,7 @@ ZHexdump.defaults[:width] = 32
 
 bin_fname = __FILE__
 bin_fname = File.readlink(bin_fname) if File.symlink?(bin_fname)
+
 Dir[File.join(File.dirname(bin_fname), "lib", "*.rb")].each do |libf|
   require libf
 end

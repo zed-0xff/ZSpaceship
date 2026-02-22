@@ -1,0 +1,3 @@
+Tooltip_EN = {
+    Tooltip_ZS_Communicator = "Communicates with the spaceship. <br>Required for teleportation. <br>Also works as a regular watch.",
+}

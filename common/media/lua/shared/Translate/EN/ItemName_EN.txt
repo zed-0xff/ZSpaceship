@@ -1,8 +1,8 @@
 ItemName_EN = {
     ItemName_ZSpaceship.Spaceship_SolarPanel = "Spaceship Solar Panel",
     ItemName_ZSpaceship.Spaceship_SolarPanel_Broken = "Broken Spaceship Solar Panel",
-    ItemName_ZSpaceship.Communicator_Left = "Spaceship Communicator",
-    ItemName_ZSpaceship.Communicator_Right = "Spaceship Communicator",
+    ItemName_ZSpaceship.Communicator_Left = "Communicator",
+    ItemName_ZSpaceship.Communicator_Right = "Communicator",
     ItemName_ZSpaceship.Teleporter = "Spaceship Teleporter",
     ItemName_ZSpaceship.PowerStorageUnit_Schematic = "Power Storage Manual",
     ItemName_ZSpaceship.SolarPanel_Schematic = "Solar Panel Manual",

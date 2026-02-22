@@ -41,7 +41,8 @@ class MapCompiler
       # Add to spawn points only if not a corridor (exclude corridors from spawnpoints)
       corridor_name = @auto_corridors['name'] || 'hall'
       if name != corridor_name
-        @room_spawn_points << room_data
+        @spawnpoints['unemployed'] ||= []
+        @spawnpoints['unemployed'] << [room_data[:x], room_data[:y], room_data[:z]]
       end
       
       # Add door objects
@@ -56,8 +57,8 @@ class MapCompiler
       @header.rooms[room_id] = room
       
       # Add room to the single spaceship building
-      @spaceship_building.rooms << room
-      room.building = @spaceship_building
+      @root_building.rooms << room
+      room.building = @root_building
       
       room
     end

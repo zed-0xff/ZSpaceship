@@ -5,7 +5,10 @@ require 'fileutils'
 require 'optparse'
 require 'set'
 
-Dir[File.join(File.dirname(__FILE__), "lib", "**", "*.rb")].each do |libf|
+bin_fname = __FILE__
+bin_fname = File.readlink(bin_fname) if File.symlink?(bin_fname)
+
+Dir[File.join(File.dirname(bin_fname), "lib", "**", "*.rb")].each do |libf|
   load libf
 end
 
@@ -142,7 +145,7 @@ class MapCompiler
     @building_index = 0
     
     # Track special locations (spawn points, etc.)
-    @room_spawn_points = []  # Track room centers for spawn points (excluding corridors)
+    @spawnpoints = @config['spawnpoints'] || {}
     @all_rooms = []  # Track all room centers including halls (for MapData.DefaultRooms)
     @locations_by_type = Hash.new { |h, k| h[k] = [] }  # Track location coordinates by type
     
@@ -164,7 +167,7 @@ class MapCompiler
     @wall_tiles_ew = Set.new  # East/West walls (getWall(false))
     
     # Single building for the entire spaceship
-    @spaceship_building = nil
+    @root_building = nil
   end
   
   # Validate flags against allowed flags list
@@ -181,10 +184,9 @@ class MapCompiler
     FileUtils.mkdir_p(out_dir)
     
     # Create a single building for all rooms
-    @spaceship_building = BuildingDef.new
-    @spaceship_building.id = BuildingID.makeID(@cell_x, @cell_y, @building_index)
+    @root_building = BuildingDef.new
+    @root_building.id = BuildingID.makeID(@cell_x, @cell_y, @building_index)
     @building_index += 1
-    @header.buildings << @spaceship_building
     
     placements = parse_metamap
     
@@ -193,7 +195,9 @@ class MapCompiler
     end
     
     # Generate auto corridors between adjacent doors
-    process_auto_corridors if @auto_corridors['floor']
+    process_auto_corridors if @auto_corridors.any?
+
+    @header.buildings << @root_building if @header.rooms.any?
     
     set_default_floors_for_cell
     
@@ -215,11 +219,8 @@ class MapCompiler
     @pack.save(File.join(out_dir, "world_#{@cell_x}_#{@cell_y}.lotpack"))
     @cdata.save(File.join(out_dir, "chunkdata_#{@cell_x}_#{@cell_y}.bin"))
     
-    # Output combined map data and wall tiles Lua file
-    save_combined_data_lua(out_dir)
-    
-    # Output spawn points Lua file
-    save_spawnpoints_lua(out_dir)
+    save_combined_data_lua(@config['lua_data']) if @config['lua_data']
+    save_spawnpoints_lua(out_dir) if @spawnpoints.any?
     
     puts "\nCompiled cell [#{@cell_x}, #{@cell_y}] to #{out_dir}"
   end
@@ -243,7 +244,7 @@ if __FILE__ == $0
 
   yaml_path = ARGV[0]
   if yaml_path.nil? || !File.exist?(yaml_path)
-    puts "Error: Map YAML file not found."
+    puts "Error: Map YAML file not found. (yaml_path=#{yaml_path.inspect}, Dir.pwd=#{Dir.pwd.inspect})"
     puts "Usage: #{$0} [options] <map.yaml>"
     exit 1
   end

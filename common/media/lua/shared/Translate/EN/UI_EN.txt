@@ -17,16 +17,4 @@ UI_EN = {
     UI_ZS_RecycleClone = "Recycle Clone",
     UI_ZS_SynchronizeClone = "Synchronize Clone",
     UI_ZS_NoClone = "No clone exists",
-    
-    Tooltip_PowerCell = "Stores 1000 MJ of energy. <br>Used to power spaceship teleporter.",
-    Tooltip_PowerCell_Empty = "A depleted power cell. <br>Can be recharged using a generator.",
-    Tooltip_PowerStorage = "Holds power cells for the spaceship. <br>Place near the teleporter.",
-    Tooltip_PowerCell_Schematic = "Technical manual for building <br>power storage systems. <br>Teaches: Power Cell, Power Storage Unit",
-    Tooltip_PowerStorageUnit_Schematic = "Manual for building the Power Storage Unit.",
-    Tooltip_SolarPanel_Schematic = "Manual for building solar panels.",
-    Tooltip_Communicator = "Communicates with the spaceship. <br>Required for teleportation.",
-    
-    Recipe_ZSpaceship.Craft Power Cell = "Craft Power Cell",
-    Recipe_ZSpaceship.Craft Power Storage = "Craft Power Storage",
-    Recipe_ZSpaceship.Charge Power Cell = "Charge Power Cell",
 }

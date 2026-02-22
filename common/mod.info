@@ -1,6 +1,10 @@
 name=Zed's Spaceship
 id=ZSpaceship
+
 description=A retrofuturistic spaceship mod with teleporters, space suits, and vacuum mechanics.
+description=<BR><BR><BR>
+description=(idk why space suit item dosent get created if the mod is loaded before Bandits)
+
 poster=poster.png
 
 pack=zspaceship
@@ -10,3 +14,5 @@ pack=solarmod_tileset
 tiledef=solarmodtiledefs 575
 
 require=\ZUnfussyTrait,\ZScienceSkill,\simonMDsTiles
+
+loadModAfter=\Bandits2
