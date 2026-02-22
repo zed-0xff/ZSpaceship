@@ -3,28 +3,12 @@
 require 'zsHook'
 require "ZS_Utils"
 
--- Helper to check if location is in vacuum using cached ZSRoom state
-local function isInVacuum(x)
-    if not x then return false end
-    local sq = x
-    if x.getSquare then
-        sq = x:getSquare()
-    end
-    if not sq then return false end
-    if not zsIsInSpace(sq) then return false end
-    
-    local zsRoom = ZSRooms.find(sq)
-    if not zsRoom then return true end  -- No room = vacuum
-    
-    return zsRoom:isBreached()
-end
-
 -- Extinguish fires when created in vacuum (no oxygen)
 Events.OnNewFire.Add(function(fire)
     if not fire then return end
     
     local sq = fire:getSquare()
-    if isInVacuum(sq) then
+    if zsInVacuum(sq) then
         sq:stopFire()
     end
 end)
@@ -39,7 +23,7 @@ local function checkFiresInVacuum()
         local fire = fireStack:get(i)
         if fire then
             local sq = fire:getSquare()
-            if isInVacuum(sq) then
+            if zsInVacuum(sq) then
                 sq:stopFire()
             end
         end
@@ -56,7 +40,7 @@ zsHook(ISToggleStoveAction, {
         local stove = self.object
         if not stove then return true end -- ISToggleStoveAction changed?
         if stove.Activated and stove:Activated() then return true end -- Allow turning OFF
-        return not isInVacuum(stove)
+        return not zsInVacuum(stove)
     end
 })
 
@@ -65,7 +49,7 @@ local function canLightFire(target, playerObj)
     if not target then return true end
     if not target.getSquare then return true end
 
-    if isInVacuum(target) then
+    if zsInVacuum(target) then
         if playerObj and playerObj.Say then
             playerObj:Say(getText("UI_ZS_NoOxygen"))
         end
@@ -108,7 +92,7 @@ end
 -- Check for breach at a square and suppress fires in affected rooms
 local function checkBreachAtSquare(sq)
     if not sq then return end
-    if not zsIsInSpace(sq) then return end
+    if not zsInSpace(sq) then return end
     
     -- Check adjacent rooms for breach using cached ZSRoom state
     local checkedRooms = {}
@@ -149,7 +133,7 @@ local function onGameStart()
         onToggle = function(orig, worldobjects, player, bbq, ...)
             if bbq and not bbq:isLit() then
                 local sq = bbq:getSquare()
-                if sq and isInVacuum(sq) then
+                if sq and zsInVacuum(sq) then
                     local playerObj = getSpecificPlayer(player)
                     if playerObj and playerObj.Say then
                         playerObj:Say(getText("UI_ZS_NoOxygen"))
@@ -178,7 +162,7 @@ local function onGameStart()
     -- Hook campfire lightFire to prevent lighting in vacuum
     zsHook(SCampfireGlobalObject, {
         lightFire = function(orig, self, ...)
-            if not isInVacuum(self) then return orig(self, ...) end
+            if not zsInVacuum(self) then return orig(self, ...) end
         end 
     })
 end

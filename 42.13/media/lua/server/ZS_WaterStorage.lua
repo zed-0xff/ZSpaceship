@@ -6,7 +6,7 @@ local function initWaterStorage(obj)
     if not obj or not obj.getSquare then return end
 
     local sq = obj:getSquare()
-    if not sq or not zsIsInSpace(sq) then return end
+    if not sq or not zsInSpace(sq) then return end
 
     -- Skip if already has FluidContainer (avoid duplicates on reload)
     if obj:getFluidContainer() then return end

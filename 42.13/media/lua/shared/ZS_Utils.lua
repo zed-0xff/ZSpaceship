@@ -14,7 +14,7 @@ ZSpaceship.SpaceMinY = ZSpaceship.SpaceCellY * 256
 ZSpaceship.SpaceMaxY = (ZSpaceship.SpaceCellY + 1) * 256
 
 -- global function to check if coordinates are in space
-function zsIsInSpaceXY(x, y)
+function zsInSpaceXY(x, y)
     if not x or not y then return false end
 
     return x >= ZSpaceship.SpaceMinX and x < ZSpaceship.SpaceMaxX and
@@ -22,31 +22,55 @@ function zsIsInSpaceXY(x, y)
 end
 
 -- global function to check if object is in space
-function zsIsInSpace(obj)
+function zsInSpace(obj)
     if not obj then return false end
 
-    if obj.getSquare then
-        local sq = obj:getSquare()
-        if sq then
-            return sq and zsIsInSpaceXY(sq:getX(), sq:getY())
-        end
-    end
 
-    -- IsoRoom
-    if obj.getRandomSquare then
-        local sq = obj:getRandomSquare()
-        if sq then
-            return zsIsInSpaceXY(sq:getX(), sq:getY())
-        end
+    local sq = (
+        (obj.getCurrentSquare and obj:getCurrentSquare()) or
+        (obj.getSquare and obj:getSquare()) or
+        (obj.getRandomSquare and obj:getRandomSquare()) -- IsoRoom
+    )
+
+    if sq then
+        return zsInSpaceXY(sq:getX(), sq:getY())
     end
 
     -- have to check getX/getY AFTER checking getSquare, because IsoObject has getX/getY,
     -- but may not have a square, so it throws an error if you call getX/getY on it without checking for getSquare first
-    return obj.getX and obj.getY and zsIsInSpaceXY(obj:getX(), obj:getY())
+    return obj.getX and obj.getY and zsInSpaceXY(obj:getX(), obj:getY())
 end
 
-ZSpaceship.isInSpaceXY = zsIsInSpaceXY
-ZSpaceship.isInSpace   = zsIsInSpace
+ZSpaceship.isInSpaceXY = zsInSpaceXY
+ZSpaceship.isInSpace   = zsInSpace
+
+-- Helper to check if location is in vacuum using cached ZSRoom state
+function zsInVacuum(obj)
+    if not obj then return false end
+    if not zsInSpace(obj) then return false end
+
+    local sq = (
+        (obj.getCurrentSquare and obj:getCurrentSquare()) or
+        (obj.getSquare and obj:getSquare())
+    )
+
+    if not sq and obj.getX and obj.getY and obj.getZ then
+        local x = obj:getX()
+        local y = obj:getY()
+        local z = obj:getZ()
+        if type(x) == "number" and type(y) == "number" and type(z) == "number" then
+            sq = getSquare(x, y, z)
+        end
+        if not sq then return true end  -- No square => vacuum?
+    end
+    
+    local room = ZSRooms and ZSRooms.find(sq)
+    if not room then return true end    -- No room => vacuum
+    
+    return room:isBreached()
+end
+
+ZSpaceship.isInVacuum = zsInVacuum
 
 --- Returns true only on the very first new game for this world (not when a dead player respawns on the same save).
 -- @param moduleName string Optional. If given, each module gets one run per save; if omitted, first caller sets a single flag.
@@ -57,4 +81,9 @@ function ZSpaceship.isInitialNewGame(moduleName)
     if modData[key] then return false end
     modData[key] = true
     return true
+end
+
+function zsClamp(_value, _min, _max)
+    if _min > _max then _min, _max = _max, _min; end;
+    return math.min(math.max(_value, _min), _max);
 end

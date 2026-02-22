@@ -33,7 +33,7 @@ end
 -- Static helper: Check if square is open space
 function ZSRoom.isOpenSpace(sq)
     if not sq then return false end
-    if not zsIsInSpace(sq) then return false end
+    if not zsInSpace(sq) then return false end
 
     if sq.isOutside and sq:isOutside() then
         return true

@@ -143,7 +143,7 @@ local function square2str(sq)
 end
 
 local function maybeAddBattery(isoObject)
-    if not zsIsInSpace(isoObject) then return end
+    if not zsInSpace(isoObject) then return end
     if not isBattery(isoObject) then return end
 
     ZSpaceship.Power.batteries[square2str(isoObject:getSquare())] = isoObject
@@ -167,7 +167,7 @@ function ZSpaceship.Power.onCreate(tbl)
 end
 
 local function maybeRemoveBattery(isoObject)
-    if not zsIsInSpace(isoObject) then return end
+    if not zsInSpace(isoObject) then return end
     if not isBattery(isoObject) then return end
     ZSpaceship.Power.batteries[square2str(isoObject:getSquare())] = nil
     updateCapacity()
