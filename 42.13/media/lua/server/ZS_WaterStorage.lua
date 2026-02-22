@@ -16,7 +16,7 @@ local function initWaterStorage(obj)
     if obj:getSprite() and obj:getSprite():getProperties() then
         local props = obj:getSprite():getProperties()
         if props then
-            local amountStr = props:get(IsoPropertyType.WaterAmount)
+            local amountStr = props:get(IsoPropertyType.WaterAmount or IsoPropertyType.WATER_AMOUNT) -- latter is 42.14
             if amountStr then
                 waterAmount = tonumber(amountStr) or 100.0
             end
