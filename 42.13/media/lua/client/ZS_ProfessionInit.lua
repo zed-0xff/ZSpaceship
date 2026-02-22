@@ -6,17 +6,17 @@ local function onNewGame(player, square)
         -- Remove default clothes
         inv:clear()
         
-        -- Add vanilla Hazmat Suit (required for protection in B42)
+        -- Add space suit
         local suit = inv:AddItem("ZSpaceship.SpaceSuitA")
         
         -- Wear it
         player:setWornItem(suit:getBodyLocation(), suit)
         
-        -- Activate the suit (required for SCBA/Hazmat protection in B42)
+        -- fill the oxygen tank
         if suit.setTankType then
             suit:setTankType("Base.Oxygen_Tank")
         end
-        suit:setUsedDelta(ZombRandFloat(0.5, 1.0))
+        suit:setUsedDelta(1.0) -- full tank
         suit:setActivated(true)
 
         local fluidContainer = suit:getComponent(ComponentType.FluidContainer)

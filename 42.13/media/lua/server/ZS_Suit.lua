@@ -43,16 +43,26 @@ local function forEachPlayer(fn)
     end
 end
 
+local function toggleRunning(player, bAllow)
+    if not player then return end
+
+    player:setAllowSprint(bAllow)
+    player:setAllowRun(bAllow)
+
+    if not bAllow then
+        player:setRunning(false)
+        player:setSprinting(false)
+    end
+end
+
 local function updateSuit()
     forEachPlayer(function(player)
         if not player then return end
+
         local suit = getWornSuit(player)
         if suit then
             convertWetnessToSuitWater(player, suit)
-            player:setAllowSprint(false)
-            player:setAllowRun(false)
-            player:setRunning(false)
-            player:setSprinting(false)
+            toggleRunning(player, false)
         end
     end)
 end
@@ -65,13 +75,7 @@ local function onClothingUpdated(chr)
     if not instanceof(chr, 'IsoPlayer') or not chr:isLocalPlayer() then return end
 
     local suit = getWornSuit(chr)
-    if suit then
-        chr:setAllowSprint(false)
-        chr:setAllowRun(false)
-    else
-        chr:setAllowSprint(true)
-        chr:setAllowRun(true)
-    end
+    toggleRunning(chr, suit ~= nil)
 end
 
 Events.OnClothingUpdated.Add(onClothingUpdated)
