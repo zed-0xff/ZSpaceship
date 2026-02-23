@@ -19,15 +19,8 @@ end
 -- Check if player is in vacuum and update sounds accordingly
 function ZSpaceship.checkAndUpdateVacuumState(player)
     if not player then return false end
-    local sq = player:getCurrentSquare()
-    if not sq then return false end
-    
-    local inVacuum = false
-    if zsInSpace(sq) then
-        local room = sq:getRoom()
-        inVacuum = not room or ZSpaceship.isRoomBreached(room, {})
-    end
-    
+
+    local inVacuum = zsInVacuum(player)
     ZSpaceship.VacuumSound.updateVacuumSounds(inVacuum)
     return inVacuum
 end
@@ -125,25 +118,6 @@ local function applyVacuumDamage(creature, mult)
     return true
 end
 
--- Check if a creature (zombie/animal) is in vacuum
-function ZSpaceship.isCreatureInVacuum(creature)
-    if not creature then return false end
-    local sq = creature:getSquare()
-    if not sq then return false end
-    
-    -- Must be in space zone
-    if not zsInSpace(sq) then
-        return false
-    end
-    
-    local room = sq:getRoom()
-    if not room then
-        return true -- Not in any room = vacuum
-    end
-    
-    return ZSpaceship.isRoomBreached(room, {})
-end
-
 -- Throttle for expensive vacuum checks
 local vacuumCheckAccumulator = 0
 local VACUUM_CHECK_INTERVAL = 2.0  -- seconds (increased from 1.0)
@@ -171,7 +145,7 @@ local function checkVacuum(ticks)
     -- Check if player is in vacuum (for sound muting - regardless of protection)
     -- Throttled to reduce expensive room breach checks
     if player and doSoundCheck then
-        inVacuum = ZSpaceship.isCreatureInVacuum(player)
+        inVacuum = zsInVacuum(player)
         -- Store last vacuum state for caching
         ZSpaceship.lastVacuumState = inVacuum
     elseif player then
@@ -198,7 +172,7 @@ local function checkVacuum(ticks)
             for i = 0, objects:size() - 1 do
                 local obj = objects:get(i)
                 if obj and instanceof(obj, "IsoGameCharacter") then
-                    if ZSpaceship.isCreatureInVacuum(obj) then
+                    if zsInVacuum(obj) then
                         local tookDamage = applyVacuumDamage(obj, damageMult)
                         
                         -- Visual bark for player taking damage (every ~2 seconds)
@@ -223,6 +197,7 @@ Events.OnTick.Add(checkVacuum)
 -- Disable weather effects in space
 local function onPlayerUpdate(player)
     if not player then return end
+
     local sq = player:getCurrentSquare()
     if not sq then return end
     

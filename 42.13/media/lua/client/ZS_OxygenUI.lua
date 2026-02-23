@@ -32,35 +32,17 @@ end
 -- Draw progress bar above character
 local function drawOxygenBar(player)
     if not player then return end
-    
-    local sq = player:getCurrentSquare()
-    if not sq then return end
-    
-    -- Check if in vacuum
-    local inVacuum = false
-    if zsInSpace(sq) then
-        local room = sq:getRoom()
-        if ZSpaceship.isRoomBreached and room then
-            local breached = ZSpaceship.isRoomBreached(room)
-            inVacuum = (breached == true)  -- Ensure boolean conversion
-        elseif not room then
-            -- No room = open space = vacuum
-            inVacuum = true
-        end
-    end
-    
-    -- Get oxygen level from SCBA suit (only if player has one)
-    local oxygenLevel = getOxygenLevel(player)
+    if not zsInVacuum(player) then return end
 
-    if oxygenLevel == nil then
+    local oxygenLevel = getOxygenLevel(player) or 0 -- Get oxygen level from SCBA suit (only if player has one)
+    if oxygenLevel < 0 then
         oxygenLevel = 0
     end
     
-    -- Only draw if in vacuum and player has SCBA suit
-    if not inVacuum then return end
-    -- Check for nil explicitly (not "not oxygenLevel" because 0 is falsy)
-    if oxygenLevel == nil or type(oxygenLevel) ~= "number" then return end
-    if oxygenLevel < 0 or oxygenLevel > 1 then return end
+    -- Only draw if in vacuum and player has the suit
+
+    if oxygenLevel > 1 then return end -- ?
+
     -- Note: oxygenLevel can be 0 (depleted), we'll draw a red empty bar in that case
     
     -- Convert world coordinates to screen coordinates
