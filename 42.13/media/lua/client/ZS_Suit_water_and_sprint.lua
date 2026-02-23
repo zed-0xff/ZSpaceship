@@ -4,16 +4,6 @@
 
 local WETNESS_TO_WATER_RATIO = 0.01  -- 1 wetness point = 0.01 fluid units
 
-local function getWornSuit(player)
-    local wornItems = player:getWornItems()
-    for i = 0, wornItems:size() - 1 do
-        local item = wornItems:getItemByIndex(i)
-        if item and item:hasTag(ZSpaceship.Tags.SpaceSuit) then
-            return item
-        end
-    end
-end
-
 local function convertWetnessToSuitWater(player, suit)
     local stats = player:getStats()
     local wetness = stats:get(CharacterStat.WETNESS)
@@ -75,7 +65,7 @@ local function updateSuit()
     forEachPlayer(function(player)
         if not player then return end
 
-        local suit = getWornSuit(player)
+        local suit = ZSpaceship.getWornSuit(player)
         if suit then
             if suit:hasTag(ZSpaceship.Tags.Wetness2Water) then
                 convertWetnessToSuitWater(player, suit)
@@ -92,7 +82,7 @@ Events.EveryOneMinute.Add(updateSuit)
 local function onClothingUpdated(chr)
     if not instanceof(chr, 'IsoPlayer') or not chr:isLocalPlayer() then return end
 
-    maybeToggleRunning(chr, getWornSuit(chr))
+    maybeToggleRunning(chr, ZSpaceship.getWornSuit(chr))
 end
 
 Events.OnClothingUpdated.Add(onClothingUpdated)

@@ -5,21 +5,11 @@
 local NORMAL_TEMP = 37.0
 local TEMP_LERP_RATE = 0.02  -- gentle per-tick lerp (OnPlayerUpdate fires ~60x/sec)
 
-local function getWornSuit(player)
-    local wornItems = player:getWornItems()
-    for i = 0, wornItems:size() - 1 do
-        local item = wornItems:getItemByIndex(i)
-        if item and item:getFullType() == ZSpaceship.SPACE_SUIT_ID then
-            return item
-        end
-    end
-end
-
 local function updateSuitClimate()
     local player = getPlayer()
     if not player then return end
     if not zsInSpace(player) then return end
-    if not getWornSuit(player) then return end
+    if not ZSpaceship.getWornSuit(player) then return end
 
     local stats = player:getStats()
     local temp = stats:get(CharacterStat.TEMPERATURE)
