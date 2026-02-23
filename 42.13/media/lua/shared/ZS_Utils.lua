@@ -13,6 +13,11 @@ ZSpaceship.SpaceMaxX = (ZSpaceship.SpaceCellX + 1) * 256
 ZSpaceship.SpaceMinY = ZSpaceship.SpaceCellY * 256
 ZSpaceship.SpaceMaxY = (ZSpaceship.SpaceCellY + 1) * 256
 
+function zsClamp(_value, _min, _max)
+    if _min > _max then _min, _max = _max, _min; end;
+    return math.min(math.max(_value, _min), _max);
+end
+
 -- global function to check if coordinates are in space
 function zsInSpaceXY(x, y)
     if not x or not y then return false end
@@ -21,23 +26,30 @@ function zsInSpaceXY(x, y)
            y >= ZSpaceship.SpaceMinY and y < ZSpaceship.SpaceMaxY
 end
 
+-- Resolve IsoGridSquare from player, square, room, or object with getX/getY/getZ (same order as zsInSpace).
+local function getSquareFromObj(obj)
+    if not obj then return nil end
+    local sq = (obj.getCurrentSquare and obj:getCurrentSquare()) or
+              (obj.getSquare and obj:getSquare()) or
+              (obj.getRandomSquare and obj:getRandomSquare())
+    if sq then return sq end
+    if obj.getX and obj.getY and obj.getZ then
+        local x, y, z = obj:getX(), obj:getY(), obj:getZ()
+        if type(x) == "number" and type(y) == "number" and type(z) == "number" then
+            return getSquare(x, y, z)
+        end
+    end
+    return nil
+end
+
 -- global function to check if object is in space
 function zsInSpace(obj)
     if not obj then return false end
-
-
-    local sq = (
-        (obj.getCurrentSquare and obj:getCurrentSquare()) or
-        (obj.getSquare and obj:getSquare()) or
-        (obj.getRandomSquare and obj:getRandomSquare()) -- IsoRoom
-    )
-
+    local sq = getSquareFromObj(obj)
     if sq then
         return zsInSpaceXY(sq:getX(), sq:getY())
     end
-
-    -- have to check getX/getY AFTER checking getSquare, because IsoObject has getX/getY,
-    -- but may not have a square, so it throws an error if you call getX/getY on it without checking for getSquare first
+    -- getX/getY after getSquare so IsoObject with square nil doesn't throw
     return obj.getX and obj.getY and zsInSpaceXY(obj:getX(), obj:getY())
 end
 
@@ -49,24 +61,24 @@ function zsInVacuum(obj)
     if not obj then return false end
     if not zsInSpace(obj) then return false end
 
-    local sq = (
-        (obj.getCurrentSquare and obj:getCurrentSquare()) or
-        (obj.getSquare and obj:getSquare())
-    )
+    local sq = getSquareFromObj(obj)
+    -- Chunk not loaded or invalid coords: assume vacuum for safety
+    if not sq then return true end
 
-    if not sq and obj.getX and obj.getY and obj.getZ then
-        local x = obj:getX()
-        local y = obj:getY()
-        local z = obj:getZ()
-        if type(x) == "number" and type(y) == "number" and type(z) == "number" then
-            sq = getSquare(x, y, z)
-        end
-        if not sq then return true end  -- No square => vacuum?
-    end
-    
     local room = ZSRooms and ZSRooms.find(sq)
-    if not room then return true end    -- No room => vacuum
-    
+    -- Fallback: square not in cache (e.g. room not in MapData); try IsoRoom from square
+    if not room and sq.getRoom and ZSRooms and ZSRooms.getOrCreate then
+        local isoRoom = sq:getRoom()
+        if isoRoom then
+            room = ZSRooms.getOrCreate(isoRoom)
+            if room and ZSRooms.updateAllFast then
+                ZSRooms.updateAllFast()
+            end
+        end
+    end
+    -- No room (or could not resolve): treat as vacuum
+    if not room then return true end
+
     return room:isBreached()
 end
 
@@ -83,7 +95,14 @@ function ZSpaceship.isInitialNewGame(moduleName)
     return true
 end
 
-function zsClamp(_value, _min, _max)
-    if _min > _max then _min, _max = _max, _min; end;
-    return math.min(math.max(_value, _min), _max);
+-- gets the space suit, not any suit
+function ZSpaceship.getWornSuit(player)
+    local wornItems = player:getWornItems()
+    for i = 0, wornItems:size() - 1 do
+        local item = wornItems:getItemByIndex(i)
+        if item and item:getFullType() == ZSpaceship.SPACE_SUIT_ID then
+            return item
+        end
+    end
+    return nil
 end
