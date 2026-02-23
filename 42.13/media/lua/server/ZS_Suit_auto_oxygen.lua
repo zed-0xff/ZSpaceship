@@ -9,11 +9,13 @@ local function onPlayerUpdate(player)
 
     if not suit:canBeActivated() then return end
 
+    local inVacuum = zsInVacuum(player)
+    local newAct = inVacuum or (player:getBuilding() and player:getBuilding():isToxic())
     local curAct = suit:isActivated()
-    local newAct = zsInVacuum(player) or (player:getBuilding() and player:getBuilding():isToxic())
 
     if newAct ~= curAct then
         suit:setActivated(newAct)
+        ZSpaceship.VacuumSound.updateVacuumSounds(inVacuum)
     end
 end
 

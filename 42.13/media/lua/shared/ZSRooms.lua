@@ -278,6 +278,7 @@ Events.OnTileRemoved.Add(onObjAddRemove)
 Events.OnObjectAdded.Add(onObjAddRemove)
 
 -- door is toggled, but we don't know which one
+-- also fires OnTimedActionPerform( ISOpenCloseDoor ), TODO: check if it's on client or server
 Events.OnContainerUpdate.Add(function()
     if not ZSpaceship.isAnyPlayerInSpace() then return end
 
