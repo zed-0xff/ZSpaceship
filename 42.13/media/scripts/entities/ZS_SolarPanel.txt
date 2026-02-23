@@ -1,42 +1,55 @@
 module Base
 {
+    xuiSkin default
+    {
+        entity ZS_SolarPanel
+        {
+            LuaWindowClass = ISEntityWindow,
+            DisplayName    = ZS_SolarPanel,
+            Icon           = zspaceship_5,
+        }
+    }
+
     entity ZS_SolarPanel
     {
         component UiConfig
         {
-            xuiSkin = default,
-            uiEnabled = false,
+            xuiSkin     = default,
+            entityStyle = ZS_SolarPanel,
+            uiEnabled   = false,
         }
 
         component SpriteConfig
         {
             isThumpable = false,
             health      = 25,
+            OnCreate    = ZSpaceship.Power.onCreate,
+            OnIsValid   = ZSpaceship.Power.onIsValid,
             face SINGLE
             {
                 layer
                 {
-                    row = solarmod_tileset_01_8,
+                    row = zspaceship_5,
                 }
             }
         }
 
         component CraftRecipe
         {
-            timedAction = BuildMetalStructureMedium,
-            time = 150,
+            timedAction = BuildLowHammer,
+            time = 250,
             NeedToBeLearn = true,
             Tags = Outdoors,
             SkillRequired = Science:3;Electricity:3,
             xpAward = Electricity:50;Science:50,
             category = Electrical,
-            Tooltip = Tooltip_SolarPanel,
+            Tooltip = Tooltip_ZS_SolarPanel,
             inputs
             {
-                item 1 tags[base:screwdriver] mode:keep flags[Prop1;MayDegradeVeryLight],
-                item 1 tags[base:hammer] mode:keep flags[MayDegradeVeryLight],
-                item 1 [Base.GlassPanel],
-                item 1 [Base.SheetMetal],
+                item 1 tags[base:hammer] mode:keep flags[Prop1;MayDegradeVeryLight],
+                item 1 tags[base:screwdriver] mode:keep flags[MayDegradeVeryLight],
+                item 1 [Base.GlassPanel] flags[Prop2],
+                item 2 [Base.IronBar;Base.MetalBar;Base.MetalPipe;Base.SteelBar],
                 item 4 [Base.ElectronicsScrap],
                 item 4 [Base.ElectricWire],
             }

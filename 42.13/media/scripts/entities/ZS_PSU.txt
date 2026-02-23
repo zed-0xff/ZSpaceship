@@ -1,18 +1,29 @@
 module Base
 {
+    xuiSkin default
+    {
+        entity ZS_PSU
+        {
+            LuaWindowClass = ISEntityWindow,
+            DisplayName    = ZS_PSU,
+            Icon           = zspaceship_3,
+        }
+    }
+
     entity ZS_PSU
     {
         component UiConfig
         {
-            xuiSkin = default,
-            uiEnabled = true,
+            xuiSkin     = default,
+            entityStyle = ZS_PSU,
+            uiEnabled   = true,
         }
 
         component SpriteConfig
         {
             isThumpable = true,
             health      = 200,
-            OnCreate = ZSpaceship.Power.onCreate,
+            OnCreate    = ZSpaceship.Power.onCreate,
             face SINGLE
             {
                 layer
@@ -30,7 +41,7 @@ module Base
             SkillRequired = Science:2;Electricity:2,
             xpAward = Electricity:50;Science:50,
             category = Electrical,
-            Tooltip = Tooltip_PowerStorage,
+            Tooltip = Tooltip_ZS_PSU,
             inputs
             {
                 item 1 tags[base:screwdriver] mode:keep flags[Prop1;MayDegradeVeryLight],

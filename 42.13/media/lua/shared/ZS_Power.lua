@@ -155,15 +155,28 @@ for tileName in pairs(ZSpaceship.Power.batteryTiles) do
     MapObjects.OnLoadWithSprite(tileName, maybeAddBattery, 100) -- map loading?
 end
 
--- called from scripts/entities/ZS_PSU.txt
--- tbl = {
+-- called from scripts/entities/ZS_SolarPanel.txt
+-- params = {
+--     square            = zombie.iso.IsoGridSquare@3ac64f9,
+--     tileInfo          = zombie.entity.components.spriteconfig.SpriteConfigManager$TileInfo@3e6312e3,
+--     north             = true,
+--     canBuildOverWater = false,
+--     testCollisions    = true,
+--     facing            = "single"
+--  }
+function ZSpaceship.Power.onIsValid(params)
+    return BuildRecipeCode.floor.OnIsValid(params) and zsInSpace(params.square) and params.square:has(IsoFlagType.exterior)
+end
+
+-- called from scripts/entities/ZS_PSU.txt and ZS_SolarPanel.txt
+-- params = {
 --     thumpable       = ZS_PSU:zspaceship_3:zspaceship_3:zombie.iso.objects.IsoThumpable@3a34bc20, 
 --     craftRecipeData = zombie.entity.components.crafting.recipe.CraftRecipeData@559ce917, 
 --     character       = IsoPlayer{  Name:null,  ID:45 }, 
 --     facing          = "single"
 -- }
-function ZSpaceship.Power.onCreate(tbl)
-    maybeAddBattery(tbl.thumpable)
+function ZSpaceship.Power.onCreate(params)
+    maybeAddBattery(params.thumpable)
 end
 
 local function maybeRemoveBattery(isoObject)

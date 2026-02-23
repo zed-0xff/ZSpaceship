@@ -1,3 +1,5 @@
 Tooltip_EN = {
     Tooltip_ZS_Communicator = "Communicates with the spaceship. <br>Required for teleportation. <br>Also works as a regular watch.",
+    Tooltip_ZS_SolarPanel   = "Generates electricity for the spaceship. <br>Can be used to power up the ship and charge its batteries.",
+    Tooltip_ZS_PSU          = "Stores up to 1000MJ of electricity. <br>Build multiple PSUs to increase the ship's power capacity.",
 }
