@@ -2,7 +2,17 @@
 -- Runs every minute for each player wearing the suit
 -- TODO: proper client/server
 
-local WETNESS_TO_WATER_RATIO = 0.01  -- 1 wetness point = 0.01 fluid units
+local WETNESS_TO_WATER_RATIO      = 0.01  -- 1 wetness point = 0.01 fluid units
+local REPLENISH_OXYGEN_PER_MINUTE = 0.1
+
+local function autoReplenishOxygen(player, suit)
+    if zsInVacuum(player) or (player:getBuilding() and player:getBuilding():isToxic()) then return end
+
+    local curAmt = suit:getUsedDelta()
+    if curAmt >= 1.0 then return end
+
+    suit:setUsedDelta(math.min(curAmt + REPLENISH_OXYGEN_PER_MINUTE, 1.0))
+end
 
 local function convertWetnessToSuitWater(player, suit)
     local stats = player:getStats()
@@ -67,10 +77,13 @@ local function updateSuit()
 
         local suit = ZSpaceship.getWornSuit(player)
         if suit then
+            maybeToggleRunning(player, suit)
             if suit:hasTag(ZSpaceship.Tags.Wetness2Water) then
                 convertWetnessToSuitWater(player, suit)
             end
-            maybeToggleRunning(player, suit)
+            if suit:hasTag(ZSpaceship.Tags.AutoReplenish) then
+                autoReplenishOxygen(player, suit)
+            end
         end
     end)
 end

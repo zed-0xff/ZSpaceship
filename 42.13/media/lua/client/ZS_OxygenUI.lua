@@ -16,7 +16,7 @@ local function getOxygenLevel(player)
         for i = 0, wornItems:size() - 1 do
             local item = wornItems:getItemByIndex(i)
             if item and instanceof(item, "Clothing") and item:hasTag(ZSpaceship.Tags.SpaceSuit) then
-                if item:isActivated() and item:hasTank() then
+                if item:hasTank() then
                     return item:getUsedDelta()
                 end
             end
@@ -30,16 +30,14 @@ end
 -- Draw progress bar above character
 local function drawOxygenBar(player)
     if not player then return end
-    if not zsInVacuum(player) then return end
 
-    local oxygenLevel = getOxygenLevel(player) or 0 -- Get oxygen level from space suit (only if player has one)
-    if oxygenLevel < 0 then
-        oxygenLevel = 0
-    end
+    local oxygenLevel = getOxygenLevel(player) -- Get oxygen level from space suit (only if player has one)
+    if not oxygenLevel then return end -- No suit or no oxygen tracking, don't draw anything
+
+    oxygenLevel = zsClamp(oxygenLevel, 0, 1) -- Ensure oxygen level is between 0 and 1
     
-    -- Only draw if in vacuum and player has the suit
-
-    if oxygenLevel > 1 then return end -- ?
+    -- don't draw if at full capacity
+    if oxygenLevel >= 1 then return end
 
     -- Note: oxygenLevel can be 0 (depleted), we'll draw a red empty bar in that case
     
@@ -104,8 +102,8 @@ local function drawOxygenBar(player)
     end
 end
 
--- Hook into OnPostUIDraw to render the oxygen bar
-Events.OnPostUIDraw.Add(function()
+-- OnPreUIDraw draws before all UI elements like inventory or menus
+Events.OnPreUIDraw.Add(function()
     -- Don't draw during game exit or if core functions aren't available
     local core = getCore()
     if not core then return end

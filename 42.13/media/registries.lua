@@ -15,6 +15,8 @@ ZSpaceship.Professions.Astronaut = CharacterProfession.register("ZSpaceship:Astr
 
 ZSpaceship.Tags = ZSpaceship.Tags or {}
 ZSpaceship.Tags.Communicator    = ItemTag.register("ZSpaceship:CommunicatorTag")
+
 ZSpaceship.Tags.SpaceSuit       = ItemTag.register("ZSpaceship:SpaceSuitTag")
 ZSpaceship.Tags.Wetness2Water   = ItemTag.register("ZSpaceship:Wetness2WaterTag")
 ZSpaceship.Tags.SuppressRunning = ItemTag.register("ZSpaceship:SuppressRunningTag")
+ZSpaceship.Tags.AutoReplenish   = ItemTag.register("ZSpaceship:AutoReplenishTag")
