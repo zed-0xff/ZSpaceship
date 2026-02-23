@@ -23,7 +23,7 @@ metapalette:
 metamap_gap: -1
 metamap: |
  __C
-  BGX
+  BGXs
   T^X
  MLHr
   k^b
@@ -40,10 +40,12 @@ flags:
   - DoorW
   - DoorN
   - OpenDoor
+  - SolarPanel
   - Storage
   - WaterStorage
 
 tiles:
+  zspaceship_5:                       { flags: [SolarPanel], alias: solar_panel }
   # crafted metal wall lvl2
   constructedobjects_01_48:           { flags: [Airtight, WallW] }
   constructedobjects_01_49:           { flags: [Airtight, WallN] }
@@ -397,12 +399,13 @@ elements:
   solar_panel:
     room: false
     palette:
-      X: floor_carpet_motif_7
+      X: solar_panel
+      _: grate_floor
     map: |
-      XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-      XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-      XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-      XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+      _XXXXX
+      _XXXX
+      _XXXXX
+      _XXXXXX
 
   earth:
     room: false

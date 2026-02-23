@@ -30,6 +30,7 @@ end
 -- Draw progress bar above character
 local function drawOxygenBar(player)
     if not player then return end
+    if not zsInVacuum(player) then return end
 
     local oxygenLevel = getOxygenLevel(player) -- Get oxygen level from space suit (only if player has one)
     if not oxygenLevel then return end -- No suit or no oxygen tracking, don't draw anything
