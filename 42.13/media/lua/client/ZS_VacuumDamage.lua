@@ -93,7 +93,7 @@ local function applyVacuumDamage(creature, mult)
         end
     end
     
-    local bodyDamage = creature:getBodyDamage()
+    local bodyDamage = creature:getBodyDamage() or creature:getBodyDamageRemote()
     if bodyDamage then
         -- Head damage (eyes/ears bursting from pressure)
         local head = bodyDamage:getBodyPart(BodyPartType.Head)
@@ -117,7 +117,7 @@ local function applyVacuumDamage(creature, mult)
 end
 
 -- Vacuum damage and sound muting
-local function checkVacuum(ticks)
+local function checkVacuum()
     local cell = getCell()
     if not cell then return end
     
@@ -129,6 +129,9 @@ local function checkVacuum(ticks)
         if not zsInSpace(player) then return end -- Only check for vacuum if player is in space, otherwise skip expensive checks
         inVacuum = zsInVacuum(player)
     end
+    
+    -- Handle vacuum sound muting (like Deaf trait)
+    ZSpaceship.VacuumSound.updateVacuumSounds(inVacuum)
     
     -- Process all creatures (zombies, animals, players) in vacuum
     local objects = cell:getObjectList()
@@ -150,9 +153,6 @@ local function checkVacuum(ticks)
             end
         end
     end
-    
-    -- Handle vacuum sound muting (like Deaf trait)
-    ZSpaceship.VacuumSound.updateVacuumSounds(inVacuum)
 end
 
 Events.EveryOneMinute.Add(checkVacuum)
