@@ -9,23 +9,21 @@ local BAR_WIDTH = 64
 local BAR_HEIGHT = 8
 local BAR_OFFSET_Y = -80  -- Offset above character head
 
--- Get oxygen level from SCBA suit (returns nil if no SCBA suit)
+-- Get oxygen level from space suit (returns nil if no suit)
 local function getOxygenLevel(player)
-    -- Check for SCBA suit with oxygen tank
     local wornItems = player:getWornItems()
     if wornItems then
         for i = 0, wornItems:size() - 1 do
             local item = wornItems:getItemByIndex(i)
-            if item and instanceof(item, "Clothing") and item:hasTag(ItemTag.SCBA) then
+            if item and instanceof(item, "Clothing") and item:hasTag(ZSpaceship.Tags.SpaceSuit) then
                 if item:isActivated() and item:hasTank() then
-                    -- Use SCBA suit's oxygen level
                     return item:getUsedDelta()
                 end
             end
         end
     end
     
-    -- No SCBA suit - no oxygen tracking
+    -- No suit => no oxygen tracking
     return nil
 end
 
@@ -34,7 +32,7 @@ local function drawOxygenBar(player)
     if not player then return end
     if not zsInVacuum(player) then return end
 
-    local oxygenLevel = getOxygenLevel(player) or 0 -- Get oxygen level from SCBA suit (only if player has one)
+    local oxygenLevel = getOxygenLevel(player) or 0 -- Get oxygen level from space suit (only if player has one)
     if oxygenLevel < 0 then
         oxygenLevel = 0
     end

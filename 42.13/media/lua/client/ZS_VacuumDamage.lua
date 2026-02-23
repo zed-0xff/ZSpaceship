@@ -1,7 +1,4 @@
--- Vacuum damage handling for ZSpaceship mod
--- Handles creature damage and weather control
--- Breach detection is handled in ZS_VacuumBreach.lua
--- Sound muting is handled in ZS_VacuumSound.lua
+-- TODO: proper client/server
 
 ZSpaceship = ZSpaceship or {}
 
@@ -26,8 +23,9 @@ function ZSpaceship.checkAndUpdateVacuumState(player)
 end
 
 -- Check if creature is protected from vacuum
--- Players: need Hazmat suit (SCBA) activated with oxygen in tank
--- Zombies: need Hazmat suit (SCBA) activated (no oxygen needed - they don't breathe)
+-- Players: need suit with ZSpaceship.Tags.SpaceSuit
+-- Zombies: should wear ZSpaceship.ZOMBIE_OUTFIT_ID bc they don't have same item system as players
+-- TODO: check reanimated player zombies
 function ZSpaceship.isProtectedFromVacuum(creature)
     if not creature then return false end
     
@@ -53,14 +51,13 @@ function ZSpaceship.isProtectedFromVacuum(creature)
     for i = 0, wornItems:size() - 1 do
         local item = wornItems:getItemByIndex(i)
         if item then
-            -- Space suit or SCBA (Hazmat) - zombies don't breathe, players need oxygen + intact suit
-            local isSuit = item:getFullType() == ZSpaceship.SPACE_SUIT_ID
-            local isSCBA = instanceof(item, "Clothing") and item:hasTag(ItemTag.SCBA)
-            if isSuit or isSCBA then
+            -- zombies don't breathe, players need oxygen + intact suit
+            local isSuit = item:hasTag(ZSpaceship.Tags.SpaceSuit)
+            if isSuit then
                 if isZombie then
                     return true
                 end
-                local hasOxygen = item:isActivated() and item:hasTank() and item:getUsedDelta() > 0.0
+                local hasOxygen = item:isActivated() and item:hasTank() and item:getUsedDelta() > 0
                 local isIntact = not item.getHolesNumber or item:getHolesNumber() == 0
                 if hasOxygen and isIntact then
                     return true
@@ -75,6 +72,7 @@ end
 -- Apply vacuum damage to any creature (zombie, animal, player)
 local function applyVacuumDamage(creature, mult)
     if not creature or creature:isDead() then return false end
+    mult = mult or 1.0
     
     -- Damage multiplier based on creature type (zombies are tougher)
     local damageMult = 1.0
@@ -118,69 +116,34 @@ local function applyVacuumDamage(creature, mult)
     return true
 end
 
--- Throttle for expensive vacuum checks
-local vacuumCheckAccumulator = 0
-local VACUUM_CHECK_INTERVAL = 2.0  -- seconds (increased from 1.0)
-local soundCheckAccumulator = 0
-local SOUND_CHECK_INTERVAL = 0.5  -- seconds (throttle sound checks to twice per second)
-
--- Cache last vacuum state to avoid expensive checks every tick
-ZSpaceship.lastVacuumState = false
-
 -- Vacuum damage and sound muting
 local function checkVacuum(ticks)
-    local mult = getGameTime():getThirtyFPSMultiplier()
     local cell = getCell()
+    if not cell then return end
     
     local player = getPlayer()
     local inVacuum = false
     
-    -- Accumulate time for sound checks (throttled to reduce expensive room breach checks)
-    soundCheckAccumulator = soundCheckAccumulator + (mult / 30.0)
-    local doSoundCheck = soundCheckAccumulator >= SOUND_CHECK_INTERVAL
-    if doSoundCheck then
-        soundCheckAccumulator = 0
-    end
-    
     -- Check if player is in vacuum (for sound muting - regardless of protection)
-    -- Throttled to reduce expensive room breach checks
-    if player and doSoundCheck then
+    if player then
+        if not zsInSpace(player) then return end -- Only check for vacuum if player is in space, otherwise skip expensive checks
         inVacuum = zsInVacuum(player)
-        -- Store last vacuum state for caching
-        ZSpaceship.lastVacuumState = inVacuum
-    elseif player then
-        -- Use cached value between checks
-        inVacuum = ZSpaceship.lastVacuumState or false
-    end
-    
-    -- Accumulate time for throttled checks
-    vacuumCheckAccumulator = vacuumCheckAccumulator + (mult / 30.0)
-    local doHeavyChecks = vacuumCheckAccumulator >= VACUUM_CHECK_INTERVAL
-    if doHeavyChecks then
-        vacuumCheckAccumulator = 0
     end
     
     -- Process all creatures (zombies, animals, players) in vacuum
-    -- Only run every VACUUM_CHECK_INTERVAL seconds (currently 2.0 seconds)
-    if cell and doHeavyChecks then
-        -- Scale damage to account for running at interval instead of every tick
-        -- (mult ~= 1.0 at 30fps, so 30 ticks/second * interval = damage per check)
-        local damageMult = VACUUM_CHECK_INTERVAL * 30
-        
-        local objects = cell:getObjectList()
-        if objects then
-            for i = 0, objects:size() - 1 do
-                local obj = objects:get(i)
-                if obj and instanceof(obj, "IsoGameCharacter") then
-                    if zsInVacuum(obj) then
-                        local tookDamage = applyVacuumDamage(obj, damageMult)
-                        
-                        -- Visual bark for player taking damage (every ~2 seconds)
-                        if obj == player and tookDamage and player.Say then
-                            if not ZSpaceship.lastBreathBark or (getTimestamp() - ZSpaceship.lastBreathBark) > 2000 then
-                                player:Say(getText("UI_ZS_CantBreathe"))
-                                ZSpaceship.lastBreathBark = getTimestamp()
-                            end
+    local objects = cell:getObjectList()
+    if objects then
+        for i = 0, objects:size() - 1 do
+            local obj = objects:get(i)
+            if obj and instanceof(obj, "IsoGameCharacter") then
+                if zsInVacuum(obj) then
+                    local tookDamage = applyVacuumDamage(obj)
+
+                    -- Visual bark for player taking damage (every ~2 seconds)
+                    if obj == player and tookDamage and player.Say then
+                        if not ZSpaceship.lastBreathBark or (getTimestamp() - ZSpaceship.lastBreathBark) > 2000 then
+                            player:Say(getText("UI_ZS_CantBreathe"))
+                            ZSpaceship.lastBreathBark = getTimestamp()
                         end
                     end
                 end
@@ -192,7 +155,7 @@ local function checkVacuum(ticks)
     ZSpaceship.VacuumSound.updateVacuumSounds(inVacuum)
 end
 
-Events.OnTick.Add(checkVacuum)
+Events.EveryOneMinute.Add(checkVacuum)
 
 -- Disable weather effects in space
 local function onPlayerUpdate(player)

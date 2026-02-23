@@ -8,7 +8,7 @@ local function getWornSuit(player)
     local wornItems = player:getWornItems()
     for i = 0, wornItems:size() - 1 do
         local item = wornItems:getItemByIndex(i)
-        if item and item:getFullType() == ZSpaceship.SPACE_SUIT_ID then
+        if item and item:hasTag(ZSpaceship.Tags.SpaceSuit) then
             return item
         end
     end
@@ -44,15 +44,30 @@ local function forEachPlayer(fn)
     end
 end
 
-local function toggleRunning(player, bAllow)
+local plrRunState = {}
+
+local function maybeToggleRunning(player, suit)
     if not player then return end
 
-    player:setAllowSprint(bAllow)
-    player:setAllowRun(bAllow)
+    local pid = (player.getId and player:getId()) or player
 
-    if not bAllow then
-        player:setRunning(false)
-        player:setSprinting(false)
+    if suit and suit:hasTag(ZSpaceship.Tags.SuppressRunning) then
+        if plrRunState[pid] ~= 'SUPPRESSED' or player:isRunning() or player:isSprinting() then
+            plrRunState[pid] = 'SUPPRESSED'
+            player:setAllowSprint(false)
+            player:setAllowRun(false)
+            player:setRunning(false)
+            player:setSprinting(false)
+        end
+        return
+    end
+
+    -- no suit or suit allows running, but was previously suppressed - restore
+    if plrRunState[pid] == 'SUPPRESSED' then
+        plrRunState[pid] = nil
+        -- can setAllowSprint/setAllowRun be disabled by any other means?
+        player:setAllowSprint(true)
+        player:setAllowRun(true)
     end
 end
 
@@ -62,8 +77,10 @@ local function updateSuit()
 
         local suit = getWornSuit(player)
         if suit then
-            convertWetnessToSuitWater(player, suit)
-            toggleRunning(player, false)
+            if suit:hasTag(ZSpaceship.Tags.Wetness2Water) then
+                convertWetnessToSuitWater(player, suit)
+            end
+            maybeToggleRunning(player, suit)
         end
     end)
 end
@@ -75,8 +92,7 @@ Events.EveryOneMinute.Add(updateSuit)
 local function onClothingUpdated(chr)
     if not instanceof(chr, 'IsoPlayer') or not chr:isLocalPlayer() then return end
 
-    local suit = getWornSuit(chr)
-    toggleRunning(chr, suit ~= nil)
+    maybeToggleRunning(chr, getWornSuit(chr))
 end
 
 Events.OnClothingUpdated.Add(onClothingUpdated)
