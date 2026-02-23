@@ -1,11 +1,6 @@
 [ ] lol: earth
 [ ] lol: moon - isa_moon.png from ISA
 
-[ ] extract jewels from jewelry
-    [ ] craft glass cutter from CompassGeometry + diamond
-        [ ] cut out glass panes with glass cutter
-            [ ] make solar panels from glass panes
-
 [ ] UX: invisible border
 [ ] UX: hide generator
 
@@ -16,8 +11,6 @@
 [ ] mechanics: water generator
 [ ] mechanics: pipes
 [ ] mechanics: cloning
-
-[ ] assets:solar panels - https://stockcake.com/i/floating-solar-innovation_1784775_1252444
 
 [ ] UI: ship external walls
 [ ] UI: ship doors
@@ -30,6 +23,8 @@
 
 [ ] misc: radar item to reveal map around chr
 
+[+] assets:solar panels - https://stockcake.com/i/floating-solar-innovation_1784775_1252444
+[+] make solar panels from glass panes
 [+] item: space suit(s)
     [+] has oxygen
     [+] has water

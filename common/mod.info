@@ -10,9 +10,6 @@ poster=poster.png
 pack=zspaceship
 tiledef=zspaceship 255
 
-pack=solarmod_tileset
-tiledef=solarmodtiledefs 575
-
 require=\ZUnfussyTrait,\ZScienceSkill,\simonMDsTiles
 
 loadModAfter=\Bandits2

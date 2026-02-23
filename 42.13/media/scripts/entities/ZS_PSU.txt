@@ -6,7 +6,7 @@ module Base
         {
             LuaWindowClass = ISEntityWindow,
             DisplayName    = ZS_PSU,
-            Icon           = zspaceship_3,
+            Icon           = Item_ZS_PSU,
         }
     }
 

@@ -6,7 +6,7 @@ module Base
         {
             LuaWindowClass = ISEntityWindow,
             DisplayName    = ZS_SolarPanel,
-            Icon           = zspaceship_5,
+            Icon           = Item_ZS_SolarPanel,
         }
     }
 

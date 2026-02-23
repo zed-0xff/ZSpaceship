@@ -68,7 +68,7 @@ end
 
 def create_tiles(jsons)
   ofname = @tiles_output || File.join(@outdir, "#{@name}.tiles")
-  puts "[=] #{ofname}"
+  puts "[=] #{ofname} (#{jsons.size} tiles)"
   File.open(ofname, "wb") do |f|
     magic = 'tdef'
     version = 1

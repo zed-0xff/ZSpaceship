@@ -1,0 +1,14 @@
+{
+  "CanBreak": "",
+  "CanScrap": "",
+  "CustomName": "Solar Panel",
+  "IsMoveAble": "",
+  "Material": "Electric",
+  "Material2": "Glass",
+  "MoveType": "FloorTile",
+  "PickUpLevel": "3",
+  "PickUpTool": "Electrician",
+  "PickUpWeight": "50",
+  "PlaceTool": "Electrician",
+  "solidfloor": ""
+}
