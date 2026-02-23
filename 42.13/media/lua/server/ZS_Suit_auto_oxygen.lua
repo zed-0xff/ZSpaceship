@@ -10,7 +10,9 @@ local function onPlayerUpdate(player)
     if not suit:canBeActivated() then return end
 
     local inVacuum = zsInVacuum(player)
-    local newAct = inVacuum or (player:getBuilding() and player:getBuilding():isToxic())
+
+    -- 'or false' to ensure boolean, getBuilding() may return nil and setActivated(nil) would throw error
+    local newAct = inVacuum or (player:getBuilding() and player:getBuilding():isToxic()) or false
     local curAct = suit:isActivated()
 
     if newAct ~= curAct then
