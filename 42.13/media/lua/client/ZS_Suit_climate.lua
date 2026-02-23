@@ -1,5 +1,6 @@
 -- Space suit client-side effects (temperature regulation)
 -- Runs every tick via OnPlayerUpdate to prevent moodle flicker
+-- TODO: proper client/server
 
 local NORMAL_TEMP = 37.0
 local TEMP_LERP_RATE = 0.02  -- gentle per-tick lerp (OnPlayerUpdate fires ~60x/sec)

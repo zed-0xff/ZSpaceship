@@ -1,5 +1,6 @@
 -- Space suit server-side effects (wetness-to-water conversion)
 -- Runs every minute for each player wearing the suit
+-- TODO: proper client/server
 
 local WETNESS_TO_WATER_RATIO = 0.01  -- 1 wetness point = 0.01 fluid units
 
