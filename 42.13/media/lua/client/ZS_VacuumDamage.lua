@@ -41,7 +41,7 @@ function ZSpaceship.isProtectedFromVacuum(creature)
     -- For zombies, check outfit name first (randomly spawned zombies)
     if isZombie then
         local outfitName = creature:getOutfitName()
-        if outfitName and string.find(string.lower(outfitName), "hazard") then
+        if outfitName == ZSpaceship.ZOMBIE_OUTFIT_ID then
             return true
         end
     end
@@ -54,7 +54,7 @@ function ZSpaceship.isProtectedFromVacuum(creature)
         local item = wornItems:getItemByIndex(i)
         if item then
             -- Space suit or SCBA (Hazmat) - zombies don't breathe, players need oxygen + intact suit
-            local isSuit = item:getFullType() == "ZSpaceship.SpaceSuitA"
+            local isSuit = item:getFullType() == ZSpaceship.SPACE_SUIT_ID
             local isSCBA = instanceof(item, "Clothing") and item:hasTag(ItemTag.SCBA)
             if isSuit or isSCBA then
                 if isZombie then

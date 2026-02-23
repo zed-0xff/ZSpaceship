@@ -5,7 +5,7 @@ ProceduralDistributions.list["zsSpaceStuff"] = {
     ignoreZombieDensity = true,
     rolls = 2,
     items = {
-        "ZSpaceship.SpaceSuitA",         1,
+        ZSpaceship.SPACE_SUIT_ID,        1,
         "ZSpaceship.Communicator_Left",  4,
         "Base.zspaceship_0",             1, -- crate
         "ZScienceSkill.BookScience1",    1,
@@ -126,7 +126,7 @@ local zsDistr = {
             ignoreZombieDensity = true,
             rolls = 6,
             items = {
-                "ZSpaceship.SpaceSuitA",        10,
+                ZSpaceship.SPACE_SUIT_ID,       10,
                 "ZSpaceship.Communicator_Left", 50,
                 "Base.LargeMeteorite",           0.01,
             },

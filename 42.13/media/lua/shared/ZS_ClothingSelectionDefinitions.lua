@@ -3,7 +3,7 @@
 --
 --local outfit = {
 --	FullSuitHead = {
---		items = {"ZSpaceship.SpaceSuitA"},
+--		items = { ZSpaceship.SPACE_SUIT_ID },
 --	},
 --}
 --

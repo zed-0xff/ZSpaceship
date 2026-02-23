@@ -9,7 +9,7 @@ local function getWornSuit(player)
     local wornItems = player:getWornItems()
     for i = 0, wornItems:size() - 1 do
         local item = wornItems:getItemByIndex(i)
-        if item and item:getFullType() == "ZSpaceship.SpaceSuitA" then
+        if item and item:getFullType() == ZSpaceship.SPACE_SUIT_ID then
             return item
         end
     end

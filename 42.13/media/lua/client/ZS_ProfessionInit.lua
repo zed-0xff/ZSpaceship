@@ -7,7 +7,7 @@ local function onNewGame(player, square)
         inv:clear()
         
         -- Add space suit
-        local suit = inv:AddItem("ZSpaceship.SpaceSuitA")
+        local suit = inv:AddItem(ZSpaceship.SPACE_SUIT_ID)
         
         -- Wear it
         player:setWornItem(suit:getBodyLocation(), suit)

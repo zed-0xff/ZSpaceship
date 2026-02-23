@@ -11,8 +11,6 @@ ZSpaceship.SpaceMaxX = (ZSpaceship.SpaceCellX + 1) * 256
 ZSpaceship.SpaceMinY = ZSpaceship.SpaceCellY * 256
 ZSpaceship.SpaceMaxY = (ZSpaceship.SpaceCellY + 1) * 256
 
-local ZOMBIE_OUTFIT_ID = "ZSpaceship_SpaceSuit" -- defined in clothing.xml
-
 -- Unlock a door/garage door object
 -- TODO: figure out if the door can be created initially unlocked
 local function unlockDoor(obj)
@@ -160,7 +158,7 @@ local function initialShipZombieSpawn()
         end
         local sq = cell:getGridSquare(x, y, bounds.z)
         if useRoomCenter or squareHasFloor(sq) then
-            local list = addZombiesInOutfit(x, y, bounds.z, 1, ZOMBIE_OUTFIT_ID, 50)
+            local list = addZombiesInOutfit(x, y, bounds.z, 1, ZSpaceship.ZOMBIE_OUTFIT_ID, 50)
             if list and list.size and list:size() > 0 then
                 spawned = spawned + 1
             end
@@ -184,7 +182,7 @@ end)
 
 Events.OnFillContainer.Add(function(a, b, container)
     -- Zombie	            ZSpaceship_SpaceSuit	ItemContainer:[type:inventorymale, parent:IsoDeadBody{  Name:null,  ID:68,  wasZombie:true,  deathTime:2.087947 }]
-    if a == "Zombie" and b == ZOMBIE_OUTFIT_ID then
+    if a == "Zombie" and b == ZSpaceship.ZOMBIE_OUTFIT_ID then
         container:AddItem("ZSpaceship.Communicator_Left")
         return
     end
