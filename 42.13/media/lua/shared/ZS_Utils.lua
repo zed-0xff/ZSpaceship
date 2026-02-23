@@ -62,8 +62,8 @@ function zsInVacuum(obj)
     if not zsInSpace(obj) then return false end
 
     local sq = getSquareFromObj(obj)
-    -- Chunk not loaded or invalid coords: assume vacuum for safety
-    if not sq then return true end
+    -- Chunk not loaded or invalid coords: assume NOT vacuum for safety
+    if not sq then return false end
 
     local room = ZSRooms and ZSRooms.find(sq)
     -- Fallback: square not in cache (e.g. room not in MapData); try IsoRoom from square
