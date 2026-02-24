@@ -9,30 +9,15 @@ local BAR_WIDTH = 64
 local BAR_HEIGHT = 8
 local BAR_OFFSET_Y = -80  -- Offset above character head
 
--- Get oxygen level from space suit (returns nil if no suit)
-local function getOxygenLevel(player)
-    local wornItems = player:getWornItems()
-    if wornItems then
-        for i = 0, wornItems:size() - 1 do
-            local item = wornItems:getItemByIndex(i)
-            if item and instanceof(item, "Clothing") and item:hasTag(ZSpaceship.Tags.SpaceSuit) then
-                if item:hasTank() then
-                    return item:getUsedDelta()
-                end
-            end
-        end
-    end
-    
-    -- No suit => no oxygen tracking
-    return nil
-end
-
 -- Draw progress bar above character
 local function drawOxygenBar(player)
     if not player then return end
-    if not zsInVacuum(player) then return end
 
-    local oxygenLevel = getOxygenLevel(player) -- Get oxygen level from space suit (only if player has one)
+    local suit = ZSpaceship.getWornSuit(player)
+    if not suit then return end -- No suit, no oxygen bar
+    if not suit.isActivated or not suit:isActivated() then return end -- Suit not active, don't draw bar
+
+    local oxygenLevel = suit:getUsedDelta()
     if not oxygenLevel then return end -- No suit or no oxygen tracking, don't draw anything
 
     oxygenLevel = zsClamp(oxygenLevel, 0, 1) -- Ensure oxygen level is between 0 and 1

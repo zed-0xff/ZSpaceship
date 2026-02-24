@@ -12,7 +12,12 @@ local function onPlayerUpdate(player)
     local inVacuum = zsInVacuum(player)
 
     -- 'or false' to ensure boolean, getBuilding() may return nil and setActivated(nil) would throw error
-    local newAct = inVacuum or (player:getBuilding() and player:getBuilding():isToxic()) or false
+    local newAct = (
+        inVacuum
+        or (player:getBuilding() and player:getBuilding():isToxic())
+        or (player:getBodyDamage():GetBaseCorpseSickness() > 0)
+        or false
+    )
     local curAct = suit:isActivated()
 
     if newAct ~= curAct then
