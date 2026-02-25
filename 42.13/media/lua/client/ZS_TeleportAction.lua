@@ -2,6 +2,8 @@ require "TimedActions/ISBaseTimedAction"
 
 ISZSpaceshipTeleportAction = ISBaseTimedAction:derive("ISZSpaceshipTeleportAction")
 
+local BASE_DURATION = 1000
+
 function ISZSpaceshipTeleportAction:isValid()
     if self.character:getHealth() <= 0 then
         return false
@@ -149,9 +151,11 @@ end
 
 function ISZSpaceshipTeleportAction:getDuration()
     if self.character:isTimedActionInstant() then return 1 end
-    -- Base 400 ticks (~12s), ~halved when teleporting from the ship (better equipment)
-    local duration = self.fromSpace and 250 or 400
-    duration = duration - self.character:getPerkLevel(Perks.Science) * 10
+    local duration = BASE_DURATION
+    if self.fromSpace then
+        duration = duration / 2
+    end
+    duration = duration - self.character:getPerkLevel(Perks.Science) * 60
     if self.timeMult then
         duration = duration * self.timeMult
     end

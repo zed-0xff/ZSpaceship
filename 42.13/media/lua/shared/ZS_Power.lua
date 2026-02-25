@@ -11,8 +11,8 @@ local DEFAULT_POWER = 1000 -- Default power amount (used for new games)
 local BATTERY_SIZE  = 1000
 
 local _capacity               = MIN_CAPACITY
-local _consumptionPerMinute   = 25
-local _maxProductionPerMinute = 50 -- TODO: count number of solar panels
+local _consumptionPerMinute   =  5 -- default batteries should last for a night if on full charge
+local _maxProductionPerMinute = 20 -- TODO: count number of solar panels
 
 local function isBattery(obj)
     if not obj then return false end

@@ -35,7 +35,9 @@ local function getSquareFromObj(obj)
               (obj.getSquare and obj:getSquare()) or
               (obj.getRandomSquare and obj:getRandomSquare())
     if sq then return sq end
-    if obj.getX and obj.getY and obj.getZ then
+
+    -- IsoObject should already be covered by previous checks AND IsoObject:getX() may throw NPE if object.square is nil
+    if not instanceof(obj, 'IsoObject') and obj.getX and obj.getY and obj.getZ then
         local x, y, z = obj:getX(), obj:getY(), obj:getZ()
         if type(x) == "number" and type(y) == "number" and type(z) == "number" then
             return getSquare(x, y, z)
@@ -51,8 +53,8 @@ function zsInSpace(obj)
     if sq then
         return zsInSpaceXY(sq:getX(), sq:getY())
     end
-    -- getX/getY after getSquare so IsoObject with square nil doesn't throw
-    return obj.getX and obj.getY and zsInSpaceXY(obj:getX(), obj:getY())
+    -- XXX are there objects with getX/getY, but not getZ ?
+    return nil
 end
 
 ZSpaceship.isInSpaceXY = zsInSpaceXY
