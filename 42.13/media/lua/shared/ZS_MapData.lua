@@ -77,7 +77,7 @@ ZSpaceship.MapData.Tiles = {
   ["BiomassStorage"] = {
     ["quarantine_Simon_MD_63"] = true,
   },
-  ["ClonePod"] = {
+  ["CloningPod"] = {
     ["zspaceship_9"] = true,
   },
   ["DoorN"] = {

@@ -32,7 +32,7 @@ metamap: |
 flags:
   - Airtight
   - BiomassStorage
-  - ClonePod
+  - CloningPod
   - EnergyStorage
   - Floor
   - WallW
@@ -184,10 +184,10 @@ elements:
       fixtures_counters_*:
       fixtures_sinks_01_19:
       zspaceship_8:                       { flags: [Shredder], alias: shredder }
-      zspaceship_9:                       { flags: [ClonePod], alias: clone_pod }
+      zspaceship_9:                       { flags: [CloningPod], alias: cloning_pod }
       quarantine_Simon_MD_63:             { flags: [BiomassStorage], alias: biomass_container }
     palette:
-      C: [industry_02_Simon_MD_96,  industry_02_Simon_MD_97, clone_pod]
+      C: [industry_02_Simon_MD_96,  industry_02_Simon_MD_97, cloning_pod]
       S: [industry_02_Simon_MD_101, shredder]
       M: [industry_02_Simon_MD_103, biomass_container]
 
