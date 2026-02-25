@@ -24,8 +24,10 @@ local function initBiomassStorage(obj)
 
     -- Create and add FluidContainer component
     local fluidContainer = ComponentType.FluidContainer:CreateComponent()
+    fluidContainer:setContainerName("BiomassContainer") -- translated in Fluids_EN.txt
     fluidContainer:setCapacity(waterAmount)
     fluidContainer:addFluid(Fluid.Get("Biomass"), 10.0)
+
     GameEntityFactory.AddComponent(obj, true, fluidContainer)
 
     -- Sync to clients
@@ -55,8 +57,9 @@ local function onFillWorldObjectContextMenu(player, context, worldobjects, _test
         if isBiomassStorage(obj) then
             -- patch icon and name
             for _, option in ipairs(context.options) do
+                -- "Water Supply Container" is hardcoded in the tile
                 if option.name == "Water Supply Container" then
-                    option.name = "Biomass Container"
+                    option.name = getText("Fluid_Container_BiomassContainer")
                     option.iconTexture = BIOHAZARD_ICON
                 end
             end

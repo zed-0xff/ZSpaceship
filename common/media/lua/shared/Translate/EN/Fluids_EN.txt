@@ -1,4 +1,6 @@
 Fluids_EN = {
-    Fluid_Container_SpaceSuit = "Space Suit",
     Fluid_Name_Biomass = "Biomass",
+
+    Fluid_Container_SpaceSuit = "Space Suit",
+    Fluid_Container_BiomassContainer = "Biomass Container",
 }
