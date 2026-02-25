@@ -7,5 +7,5 @@ end
 
 desc "build tiles"
 task :tiles do
-  sh "./tools/tilepacker.rb tiles/zspaceship_* --name zspaceship --pack-out ./common/media/texturepacks/zspaceship.pack --tiles-out ./common/media/zspaceship.tiles"
+  sh "./tools/tilepacker.rb tiles/zspaceship_*.{json,png} --name zspaceship --pack-out ./common/media/texturepacks/zspaceship.pack --tiles-out ./common/media/zspaceship.tiles"
 end

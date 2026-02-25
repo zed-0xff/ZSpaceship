@@ -1,3 +1,6 @@
+*autosave.kra
+*.kra~
+
 ext
 out
 tmp
