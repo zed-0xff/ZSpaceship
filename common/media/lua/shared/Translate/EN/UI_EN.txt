@@ -10,13 +10,16 @@ UI_EN = {
     UI_ZS_ReturnToSpaceship = "Return to Spaceship (%1 MJ / %2 MJ)",
     UI_ZS_TeleportBlockedSubsurface = "Orbital relay unavailable (subsurface)",
     UI_ZS_InsufficientPower = "Insufficient power! Need %1 MJ, have %2 MJ",
+    UI_ZS_TeleporterNotFound = "Teleporter location not found!",
+
     UI_ZS_ScienceRequired = "Requires Science Level %1",
     UI_ZS_MedicalRequired = "Requires Medical Level %1",
-    UI_ZS_TeleporterNotFound = "Teleporter location not found!",
     UI_ZS_CloneSelf = "Clone Yourself",
     UI_ZS_RecycleClone = "Recycle Clone",
     UI_ZS_SynchronizeClone = "Synchronize Clone",
     UI_ZS_NoClone = "No clone exists",
+
+    UI_ZS_Shredder = "Shredder",
 
     UI_quick_tip_ZS_1 = "Spaceship Tip: Use the teleporter to quickly move between the surface and your spaceship.",
     UI_quick_tip_ZS_2 = "Spaceship Tip: Keep an eye on your oxygen levels to avoid suffocating in space.",
