@@ -1,5 +1,7 @@
 -- ZSpaceship Utilities - Shared functions for client and server
 
+ZS_Utils = ZS_Utils or {}
+
 ZSpaceship = ZSpaceship or {}
 ZSpaceship.MapData = ZSpaceship.MapData or {}
 
@@ -105,4 +107,20 @@ function ZSpaceship.getWornSuit(player)
         end
     end
     return nil
+end
+
+-- obj can be a tile or a container
+function ZS_Utils.isShredder(obj)
+    if not obj.getSprite then
+      obj = obj.getParent and obj:getParent()
+      if not obj then return false end
+    end
+
+    local sprite = obj.getSprite and obj:getSprite()
+    if not sprite then return false end
+
+    local name = sprite.getName and sprite:getName()
+    if not name then return false end
+
+    return ZSpaceship.MapData.Tiles.Shredder[name]
 end

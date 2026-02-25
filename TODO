@@ -7,7 +7,13 @@
 [ ] room: storage / workshop
 
 [ ] mechanics: recycler
-[ ] mechanics: oxygen synthesizer
+    [+] drop bodies on long-E
+    [+] spawns empty
+    [ ] recycles bodies into biomass
+    [ ] breaks stuff
+    [ ] makes sounds
+    [ ] dosent work without electricity
+
 [ ] mechanics: water generator
 [ ] mechanics: pipes
 [ ] mechanics: cloning
@@ -23,6 +29,7 @@
 
 [ ] misc: radar item to reveal map around chr
 
+[-] mechanics: oxygen synthesizer
 [+] assets:solar panels - https://stockcake.com/i/floating-solar-innovation_1784775_1252444
 [+] make solar panels from glass panes
 [+] item: space suit(s)

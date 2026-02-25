@@ -187,10 +187,17 @@ Events.OnFillContainer.Add(function(a, b, container)
         return
     end
 
+    local room_name, container_type = a, b
+
     -- zs_energy_storage	crate	                ItemContainer:[type:crate, parent:null:zspaceship_0:zspaceship_0:zombie.iso.IsoObject@3696d8eb]
-    if a == "zs_energy_storage" and b == "crate" then
+    if room_name == "zs_energy_storage" and container_type == "crate" then
         container:AddItem("ZSpaceship.PowerStorageUnit_Schematic")
         container:AddItem("ZSpaceship.SolarPanel_Schematic")
+        return
+    end
+
+    if room_name == "medical" and ZS_Utils.isShredder(container) then
+        container:removeAllItems()
         return
     end
 end)
