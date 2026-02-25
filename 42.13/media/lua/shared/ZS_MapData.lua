@@ -43,9 +43,6 @@ ZSpaceship.MapData.Default.Rooms = {
 
 -- Location coordinates (grouped by type)
 ZSpaceship.MapData.Default.Locations = {
-  ["CloningConsole"] = {
-    { x = 20088, y = 20097, z = 10 }
-  },
   ["Generator"] = {
     { x = 20101, y = 20089, z = 10 }
   }
@@ -80,6 +77,9 @@ ZSpaceship.MapData.Tiles = {
   ["BiomassStorage"] = {
     ["quarantine_Simon_MD_63"] = true,
   },
+  ["ClonePod"] = {
+    ["zspaceship_9"] = true,
+  },
   ["DoorN"] = {
     ["walls_garage_02_52"] = true,
     ["walls_garage_02_60"] = true,
@@ -101,6 +101,9 @@ ZSpaceship.MapData.Tiles = {
   ["OpenDoor"] = {
     ["walls_garage_02_57"] = true,
     ["walls_garage_02_60"] = true,
+  },
+  ["Shredder"] = {
+    ["zspaceship_8"] = true,
   },
   ["SolarPanel"] = {
     ["zspaceship_5"] = true,

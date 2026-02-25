@@ -32,6 +32,7 @@ metamap: |
 flags:
   - Airtight
   - BiomassStorage
+  - ClonePod
   - EnergyStorage
   - Floor
   - WallW
@@ -40,6 +41,7 @@ flags:
   - DoorW
   - DoorN
   - OpenDoor
+  - Shredder
   - SolarPanel
   - Storage
   - WaterStorage
@@ -179,28 +181,23 @@ elements:
     tiles:
       industry_02_Simon_MD_*:
       location_community_medical_01_*:
-      quarantine_Simon_MD_63:             { flags: [BiomassStorage] }
       fixtures_counters_*:
       fixtures_sinks_01_19:
-      industry_02_Simon_MD_124:           { alias: cloning_console }
-    locations:
-      "*": CloningConsole
+      zspaceship_8:                       { flags: [Shredder], alias: shredder }
+      zspaceship_9:                       { flags: [ClonePod], alias: clone_pod }
+      quarantine_Simon_MD_63:             { flags: [BiomassStorage], alias: biomass_container }
     palette:
-      1: [industry_02_Simon_MD_96, location_community_medical_01_219]
-      2: [industry_02_Simon_MD_96, location_community_medical_01_230]
+      C: [industry_02_Simon_MD_96,  industry_02_Simon_MD_97, clone_pod]
+      S: [industry_02_Simon_MD_101, shredder]
+      M: [industry_02_Simon_MD_103, biomass_container]
+
+      2: [industry_02_Simon_MD_96]
       7: [industry_02_Simon_MD_96, location_community_medical_01_116]
-      3: [location_community_medical_01_218]
-      4: [location_community_medical_01_229]
-      5: [location_community_medical_01_226]
-      6: [location_community_medical_01_228]
 
       B: [industry_02_Simon_MD_100, location_community_medical_01_22, location_community_medical_01_117]
       b: [industry_02_Simon_MD_98,  location_community_medical_01_23]
       -: [industry_02_Simon_MD_102]
 
-      "*": [cloning_console]
-
-      T: [quarantine_Simon_MD_63]
       X: [location_community_medical_01_76]
       x: [location_community_medical_01_77]
 
@@ -213,9 +210,9 @@ elements:
       c: [fixtures_counters_01_33]
     map: |
       ┌─═──═──═─┓
-      │127Bb-def┃
-      ║34*      >
-      │56TXx msc┃
+      │C27Bb-def┃
+      ║S        >
+      │M  Xx msc┃
       ┗━┷━━┷━━┷━┛
 
   library:
