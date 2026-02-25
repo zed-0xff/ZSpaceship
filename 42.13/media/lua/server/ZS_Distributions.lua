@@ -20,14 +20,11 @@ local zsDistr = {
         crate = {
             procedural = true,
             procList = {
-                {name="zsSpaceStuff",           min=0, max= 1, weightChance=10},
-                {name="ArmyStorageElectronics", min=0, max=99, weightChance=50},
-                {name="Chemistry",              min=0, max=99, weightChance=100},
-                {name="CrateVHSTapes",          min=0, max= 4, weightChance=10},
-                {name="EngineerTools",          min=0, max= 4, weightChance=60},
-                {name="GarageMetalwork",        min=0, max=99, weightChance=100},
-                {name="ScienceMisc",            min=0, max=99, weightChance=100},
-                {name="TestingLab",             min=0, max=99, weightChance=100},
+                {name="zsSpaceStuff",           min=0, max= 3, weightChance=10},
+                {name="EngineerTools",          min=0, max= 5, weightChance=60},
+                {name="GarageMetalwork",        min=0, max= 5, weightChance=100},
+                {name="ScienceMisc",            min=0, max= 5, weightChance=100},
+                {name="TestingLab",             min=0, max= 5, weightChance=100},
             },
             dontSpawnAmmo = true,
         },
@@ -62,7 +59,7 @@ local zsDistr = {
         },
         crate = {
             ignoreZombieDensity = true,
-            rolls = 5,
+            rolls = 3,
             items = {
                 "CannedBolognese",      40,
                 "CannedChili",          40,
@@ -113,10 +110,10 @@ local zsDistr = {
             procedural = true,
             procList = {
               {name="zsSpaceStuff",     min=0, max= 1, weightChance=10},
-              {name="LibraryScience",   min=1, max= 5, weightChance=80},
-              {name="LibraryBooks",     min=1, max= 5, weightChance=80},
-              {name="LibraryMagazines", min=1, max= 5, weightChance=80},
-              {name="CrateVHSTapes",    min=0, max=99, weightChance=30},
+              {name="LibraryScience",   min=0, max= 5, weightChance=80},
+              {name="LibraryBooks",     min=0, max= 5, weightChance=80},
+              {name="LibraryMagazines", min=0, max= 5, weightChance=80},
+              {name="CrateVHSTapes",    min=0, max= 5, weightChance=30},
             },
         },
     },
