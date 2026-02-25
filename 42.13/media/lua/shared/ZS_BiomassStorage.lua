@@ -1,12 +1,11 @@
--- Initialize biomass storage objects with FluidContainer (server-only)
+require 'ZS_MapData'
+
 ZSpaceship = ZSpaceship or {}
 
+-- Initialize biomass storage objects with FluidContainer (server-only)
 local function initBiomassStorage(obj)
     print("Initializing biomass storage for: " .. tostring(obj))
-    if not obj or not obj.getSquare then return end
-
-    local sq = obj:getSquare()
-    if not sq or not zsInSpace(sq) then return end
+    if not obj or not zsInSpace(obj) then return end
 
     -- Skip if already has FluidContainer (avoid duplicates on reload)
     if obj:getFluidContainer() then return end
@@ -35,21 +34,18 @@ local function initBiomassStorage(obj)
     end
 end
 
-Events.OnNewGame.Add(function()
-    if not ZSpaceship.isInitialNewGame("BiomassStorage") then return end
-
-    local biomass_storage_tiles = ZSpaceship.MapData and ZSpaceship.MapData.Tiles and ZSpaceship.MapData.Tiles["BiomassStorage"] or {}
-    for _, tile_name in ipairs(biomass_storage_tiles) do
-        MapObjects.OnNewWithSprite(tile_name, initBiomassStorage, 10)
-    end
-end)
+local biomass_storage_tiles = ZSpaceship.MapData and ZSpaceship.MapData.Tiles and ZSpaceship.MapData.Tiles.BiomassStorage or {}
+for tile_name in pairs(biomass_storage_tiles) do
+    MapObjects.OnNewWithSprite(tile_name, initBiomassStorage, 10)
+end
 
 --- client
+
 local function isBiomassStorage(obj)
     local spriteName = obj:getSprite():getName()
     if not spriteName then return false end
 
-    return ZSpaceship.MapData.Tiles["BiomassStorage"][spriteName] ~= nil
+    return ZSpaceship.MapData.Tiles.BiomassStorage[spriteName] ~= nil
 end
 
 local BIOHAZARD_ICON = getTexture("media/ui/biohazard_icon.png")
