@@ -1,7 +1,5 @@
 -- ZSpaceship Shredder: client GlobalObject (synced state; sound handled in CShredderSystem).
 
-if not isClient() then return end
-
 require "Map/CGlobalObject"
 
 ZS_CShredderGlobalObject = CGlobalObject:derive("ZS_CShredderGlobalObject")

@@ -38,18 +38,6 @@ local function hasPowerAndConsume()
 	return true
 end
 
--- Add fluid (biomass) to the biomass storage object. Uses getWaterAmount/setWaterAmount.
-local function addBiomassFluid(obj, amount)
-	if not obj or not obj.getWaterAmount or not obj.setWaterAmount or amount <= 0 then return end
-	local max = obj.getWaterMax and obj:getWaterMax() or 0
-	local current = obj:getWaterAmount() or 0
-	local add = math.min(math.floor(amount), math.max(0, max - current))
-	if add > 0 then
-		obj:setWaterAmount(current + add)
-		if obj.transmitModData then obj:transmitModData() end
-	end
-end
-
 -- Get shredder's input container (first container on the thumpable).
 local function getShredderContainer(isoObject)
 	if not isoObject then return nil end
@@ -181,19 +169,10 @@ function ZS_SShredderGlobalObject:tick(deltaSeconds)
 
 	local organic = isOrganic(firstItem)
 	local biomassCont = ZS_Utils.findAdjacentBiomassContainer(square)
-	-- Fluid API is on the fluid container (findAdjacent returns getFluidContainer) or its parent
-	local biomassObj = (biomassCont and biomassCont.getParent and biomassCont:getParent()) or biomassCont
 
 	-- Organic items need biomass storage object with room for fluid
 	if organic then
-		local noRoom = not biomassCont
-		if biomassCont then
-			if biomassCont.getFreeCapacity and biomassCont:getFreeCapacity() == 0 then noRoom = true
-			elseif biomassCont.getWaterAmount and biomassCont.getWaterMax then
-				local cur, max = biomassCont:getWaterAmount() or 0, biomassCont:getWaterMax() or 0
-				if cur >= max then noRoom = true end
-			end
-		end
+		local noRoom = not biomassCont or biomassCont:getFreeCapacity() == 0
 		if noRoom then
 			if ZS_Shredder and ZS_Shredder.Debug then
 				local name = firstItem.getDisplayName and firstItem:getDisplayName() or firstItem:getType() or "?"
@@ -254,13 +233,12 @@ function ZS_SShredderGlobalObject:tick(deltaSeconds)
 	end
 
 	local w = (consumed.getActualWeight and consumed:getActualWeight()) or (consumed.getWeight and consumed:getWeight()) or 0
-	local cName = consumed.getDisplayName and consumed:getDisplayName() or consumed:getType() or "?"
 	-- Use organic from start of processing (same item we timed); isOrganic(consumed) can differ after transfer.
-	if organic and biomassObj then
-		local coef = (ZS_Shredder and ZS_Shredder.BIOMASS_COEFF) or 0.5
-		local amount = math.max(1, w * coef)
-		addBiomassFluid(biomassObj, amount)
+	if organic and biomassCont then
+		local amount = math.max(1, w * ZS_Shredder.BIOMASS_COEFF)
+        biomassCont:addFluid(Fluid.Get("Biomass"), amount)
 		if ZS_Shredder and ZS_Shredder.Debug then
+            local cName = consumed.getDisplayName and consumed:getDisplayName() or consumed:getType() or "?"
 			print("[ZS_Shredder] Consumed organic '" .. tostring(cName) .. "' -> biomass +" .. tostring(amount))
 		end
 	else
@@ -275,6 +253,7 @@ function ZS_SShredderGlobalObject:tick(deltaSeconds)
 			end
 		end
 		if ZS_Shredder and ZS_Shredder.Debug then
+            local cName = consumed.getDisplayName and consumed:getDisplayName() or consumed:getType() or "?"
 			print("[ZS_Shredder] Consumed non-organic '" .. tostring(cName) .. "' -> dropped east")
 		end
 	end

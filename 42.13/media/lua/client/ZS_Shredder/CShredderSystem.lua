@@ -1,7 +1,5 @@
 -- ZSpaceship Shredder: client GlobalObject system (play processing sound when processing).
 
-if not isClient() then return end
-
 require "Map/CGlobalObjectSystem"
 require "ZS_Shredder/Config"
 require "ZS_Shredder/CShredderGlobalObject"
@@ -18,6 +16,9 @@ function ZS_CShredderSystem:isValidIsoObject(isoObject)
 end
 
 function ZS_CShredderSystem:newLuaObject(globalObject)
+    if ZS_Shredder.Debug then
+        print("[ZS_Shredder] Creating new LuaObject for GlobalObject " .. tostring(globalObject))
+    end
 	return ZS_CShredderGlobalObject:new(self, globalObject)
 end
 
@@ -34,12 +35,20 @@ local function updateShredderSounds()
 	for i = 1, instance:getLuaObjectCount() do
 		local luaObject = instance:getLuaObjectByIndex(i)
 		if luaObject then
+            if ZS_Shredder.Debug then
+                print("[ZS_Shredder] updateShredderSounds: processing=" .. tostring(luaObject.processing) .. " at (" .. luaObject.x .. "," .. luaObject.y .. "," .. luaObject.z .. ")")
+            end
 			local key = luaObject.x .. "," .. luaObject.y .. "," .. luaObject.z
 			if luaObject.processing then
 				if not sounds[key] then
 					local square = luaObject:getSquare()
 					if square then
-						local audio = getSoundManager():PlayWorldSound(ZS_Shredder.SOUND_NAME, true, square, 0.0, 15, 1.0, false)
+                        local loop = true
+                        local pitch = 0.8
+                        local radius = 15
+                        local maxGain = 1.0
+                        local ignoreOutside = true
+						local audio = getSoundManager():PlayWorldSound(ZS_Shredder.SOUND_NAME, loop, square, pitch, radius, maxGain, ignoreOutside)
 						if audio then sounds[key] = audio end
 					end
 				end

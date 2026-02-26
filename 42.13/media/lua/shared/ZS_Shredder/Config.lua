@@ -1,6 +1,6 @@
 ZS_Shredder = ZS_Shredder or {}
 
-ZS_Shredder.BIOMASS_COEFF    = 0.5
+ZS_Shredder.BIOMASS_COEFF    = 0.75
 ZS_Shredder.KG_PER_MINUTE    = 2
 ZS_Shredder.POWER_PER_MINUTE = 1
 ZS_Shredder.SOUND_NAME       = "zs_shredder"

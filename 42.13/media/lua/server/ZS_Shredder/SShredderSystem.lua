@@ -17,8 +17,14 @@ end
 
 function ZS_SShredderSystem:initSystem()
 	SGlobalObjectSystem.initSystem(self)
-	self.system:setModDataKeys({})
+
+    -- Specify GlobalObjectSystem fields that should be saved.
+	self.system:setModDataKeys(nil)
+
+    -- Specify GlobalObject fields that should be saved.
 	self.system:setObjectModDataKeys({'processing', 'progress', 'processDurationSeconds'})
+
+    -- Specify GlobalObject fields that should be synced on clients.
 	self.system:setObjectSyncKeys({'processing', 'progress', 'processDurationSeconds'})
 end
 
@@ -37,18 +43,12 @@ local function tryLoadShredder(isoObject)
 	if not instance or not instance.loadIsoObject then return end
 	instance:loadIsoObject(isoObject)
 end
+Events.OnObjectAdded.Add(tryLoadShredder)
 
--- Runtime-added object (e.g. built, placed). Event param is "object" (IsoObject).
-local function onObjectAdded(object)
-	tryLoadShredder(object)
+for tile in pairs(ZSpaceship.MapData.Tiles.Shredder) do
+    MapObjects.OnNewWithSprite(tile, tryLoadShredder, 10)
 end
-Events.OnObjectAdded.Add(onObjectAdded)
 
--- Map tile with sprite created (e.g. when cell loads). Event param is "object" (IsoObject).
-local function onNewWithSprite(object)
-	tryLoadShredder(object)
-end
-Events.OnNewWithSprite.Add(onNewWithSprite)
 
 -- When a grid square loads, register any shredder on it (map-placed shredders).
 local function onLoadGridsquare(square)
