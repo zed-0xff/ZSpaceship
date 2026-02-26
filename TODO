@@ -6,6 +6,10 @@
 
 [ ] room: storage / workshop
 
+[ ] ambient sound - RhythmicAmbient.ogg / long_ambient.ogg
+    - fridgehum.wav
+    - PZ_HeadSmash_01.wav PZ_HeadSmash_02.wav PZ_HeadStab_02.wav
+
 [ ] mechanics: recycler
     [+] drop bodies on long-E
     [+] spawns empty

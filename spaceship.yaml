@@ -187,9 +187,9 @@ elements:
       zspaceship_9:                       { flags: [CloningPod], alias: cloning_pod }
       quarantine_Simon_MD_63:             { flags: [BiomassStorage], alias: biomass_container }
     palette:
-      C: [industry_02_Simon_MD_96,  industry_02_Simon_MD_97, cloning_pod]
-      S: [industry_02_Simon_MD_101, shredder]
-      M: [industry_02_Simon_MD_103, biomass_container]
+      S: [industry_02_Simon_MD_96,  industry_02_Simon_MD_97, shredder]
+      C: [industry_02_Simon_MD_101, biomass_container]
+      P: [industry_02_Simon_MD_103, cloning_pod]
 
       2: [industry_02_Simon_MD_96]
       7: [industry_02_Simon_MD_96, location_community_medical_01_116]
@@ -210,9 +210,9 @@ elements:
       c: [fixtures_counters_01_33]
     map: |
       ┌─═──═──═─┓
-      │C27Bb-def┃
-      ║S        >
-      │M  Xx msc┃
+      │S27Bb-def┃
+      ║C        >
+      │P  Xx msc┃
       ┗━┷━━┷━━┷━┛
 
   library:

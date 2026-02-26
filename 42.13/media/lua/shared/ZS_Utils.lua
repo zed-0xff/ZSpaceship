@@ -126,3 +126,38 @@ function ZS_Utils.isShredder(obj)
 
     return ZSpaceship.MapData.Tiles.Shredder[name]
 end
+
+-- obj can be a tile or the parent object of a container
+function ZS_Utils.isBiomassStorage(obj)
+    if not obj then return false end
+    if not obj.getSprite then
+        obj = obj.getParent and obj:getParent()
+        if not obj then return false end
+    end
+    local sprite = obj.getSprite and obj:getSprite()
+    if not sprite then return false end
+    local name = sprite.getName and sprite:getName()
+    if not name then return false end
+    return ZSpaceship.MapData and ZSpaceship.MapData.Tiles and ZSpaceship.MapData.Tiles.BiomassStorage and ZSpaceship.MapData.Tiles.BiomassStorage[name]
+end
+
+-- Returns the first adjacent ItemContainer that is a biomass storage, or nil.
+-- Uses IsoDirections for getAdjacentSquare (Java expects enum, not number).
+function ZS_Utils.findAdjacentBiomassContainer(shredderSquare)
+    if not shredderSquare then return nil end
+    local adjSquares = {}
+    for _, dir in ipairs({ IsoDirections.N, IsoDirections.E, IsoDirections.S, IsoDirections.W }) do
+        local adj = shredderSquare:getAdjacentSquare(dir)
+        if adj then adjSquares[#adjSquares + 1] = adj end
+    end
+    for _, adj in ipairs(adjSquares) do
+        for i = 0, adj:getObjects():size() - 1 do
+            local obj = adj:getObjects():get(i)
+            if obj and ZS_Utils.isBiomassStorage(obj) then
+                local cont = obj.getFluidContainer and obj:getFluidContainer()
+                if cont then return cont end
+            end
+        end
+    end
+    return nil
+end
