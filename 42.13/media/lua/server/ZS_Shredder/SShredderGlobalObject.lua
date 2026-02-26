@@ -269,5 +269,9 @@ function ZS_SShredderGlobalObject:tick(deltaSeconds)
 		self.processing = false
 	end
 
+	-- Sync shredder inventory to clients after container changes
+	if isoObject and isoObject.sync then
+		isoObject:sync()
+	end
 	self:updateOnClient()
 end
