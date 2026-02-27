@@ -1,5 +1,16 @@
 module ZSpaceship
 {
+    item TeleportBufferItem
+    {
+        DisplayCategory = Hidden,
+        WorldRender = false,
+        hidden = true,
+        Weight = 0,
+        WeightReduction = 100,
+        ItemType = base:container,
+        Capacity = 9999,
+    }
+
    item Communicator_Right
     {
         DisplayCategory = Accessory,

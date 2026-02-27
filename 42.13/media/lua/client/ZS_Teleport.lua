@@ -12,6 +12,7 @@ ZSpaceship.Teleport.SPACE2SPACE_MULT = 0.2  -- cheaper cost when teleporting fro
 -- Science perk level requirements
 ZSpaceship.Teleport.SCIENCE_LEVEL_MIN = 1  -- Minimum Science level for basic teleports
 ZSpaceship.Teleport.SCIENCE_LEVEL_BUILDING = 2  -- Science level required for building teleports
+ZSpaceship.Teleport.SCIENCE_LEVEL_ITEM = 3  -- Science level required for teleporting items
 
 local function addTeleportOption(context, player, cost, textKey, cb, comm, requiredPerkLevel)
     requiredPerkLevel = requiredPerkLevel or ZSpaceship.Teleport.SCIENCE_LEVEL_MIN
@@ -47,7 +48,7 @@ local function addTeleportOption(context, player, cost, textKey, cb, comm, requi
     end
 end
 
-local function addReturnToShipOrBlockedOption(context, player, communicator)
+local function addReturnToShipOption(context, player, communicator)
     local inSpace = zsInSpace(player)
     local z = player:getZ() or 0
     if not inSpace and z < 0 then
@@ -61,19 +62,58 @@ local function addReturnToShipOrBlockedOption(context, player, communicator)
     end
 end
 
-function ZSpaceship.Teleport.getMass(player)
-    local bodyWeight = player:getNutrition():getWeight()
-    local inventoryWeight = player:getInventory():getCapacityWeight()
-    return bodyWeight + inventoryWeight
+function ZSpaceship.Teleport.getMass(obj)
+    if not obj then return 0 end
+
+    -- Player or any character with nutrition + inventory
+    if obj.getNutrition and obj.getInventory then
+        local bodyWeight = 0
+        local invWeight = 0
+        local nutrition = obj:getNutrition()
+        if nutrition and nutrition.getWeight then
+            bodyWeight = nutrition:getWeight()
+        end
+        local inv = obj:getInventory()
+        if inv and inv.getCapacityWeight then
+            invWeight = inv:getCapacityWeight()
+        end
+        return bodyWeight + invWeight
+    end
+
+    -- Inventory item
+    if instanceof(obj, "InventoryItem") then
+        local w = (obj.getActualWeight and obj:getActualWeight()) or (obj.getWeight and obj:getWeight()) or 0
+        return w
+    end
+
+    -- World inventory object (wrapper around InventoryItem)
+    if obj.getItem then
+        local item = obj:getItem()
+        if item then
+            return ZSpaceship.Teleport.getMass(item)
+        end
+    end
+
+    -- Any IsoObject with a container (e.g. movable with internal inventory)
+    if obj.getContainer then
+        local cont = obj:getContainer()
+        if cont and cont.getCapacityWeight then
+            return cont:getCapacityWeight()
+        end
+    end
+
+    -- Fallback: treat unknown objects as negligible mass
+    return 0
 end
 
-function ZSpaceship.Teleport.isInBuilding(player)
-    local sq = player:getCurrentSquare()
-    if not sq or not sq:getBuilding() then
-        return false
-    end
+function ZSpaceship.Teleport.isInBuilding(obj)
+    local sq = ZS_Utils.getSquare(obj)
+    if not sq then return nil end
+
+    if not sq:getBuilding() then return false end
+
     -- Spaceship doesn't count as a building for teleport cost
-    return not zsInSpace(player)
+    return not zsInSpace(obj)
 end
 
 -- Calculate teleport cost
@@ -81,9 +121,10 @@ end
 -- @param fromSpace: Whether teleporting FROM space (spaceship)
 -- @param toSpace: Whether teleporting TO space (spaceship)
 -- @param toBuilding: Whether teleporting TO a building (only valid when toSpace is false)
-function ZSpaceship.Teleport.getCost(player, fromSpace, toSpace, toBuilding)
+function ZSpaceship.Teleport.getCost(player, fromSpace, toSpace, toBuilding, object)
+    object = object or player
     toBuilding = toBuilding or false
-    local mass = ZSpaceship.Teleport.getMass(player)
+    local mass = ZSpaceship.Teleport.getMass(object)
     local cost = mass * ZSpaceship.Teleport.COST_PER_KG
     
     -- Much cheaper if teleporting within space (both from and to space)
@@ -93,7 +134,7 @@ function ZSpaceship.Teleport.getCost(player, fromSpace, toSpace, toBuilding)
         -- +50% if from or to building (spaceship excluded)
         local fromBuilding = false
         if not fromSpace then
-            fromBuilding = ZSpaceship.Teleport.isInBuilding(player)
+            fromBuilding = ZSpaceship.Teleport.isInBuilding(object)
         end
         if fromBuilding or toBuilding then
             cost = cost * ZSpaceship.Teleport.BUILDING_MULT
@@ -378,7 +419,7 @@ local function doWorldContextMenu(playerNum, context, worldobjects, test)
     else
         local communicator = player:getInventory():getItemFromTag(ZSpaceship.Tags.Communicator, true, true)
         if communicator then
-            addReturnToShipOrBlockedOption(context, player, communicator)
+            addReturnToShipOption(context, player, communicator)
         end
     end
 end
@@ -401,9 +442,64 @@ local function doInventoryContextMenu(playerNum, context, items)
     end
     
     if clickedCommunicator then
-        addReturnToShipOrBlockedOption(context, player, clickedCommunicator)
+        addReturnToShipOption(context, player, clickedCommunicator)
     end
+end
+
+local function resolveInventoryItem(entry)
+    if instanceof(entry, "InventoryItem") then
+        return entry
+    end
+    if entry and entry.items and #entry.items > 0 then
+        return entry.items[1]
+    end
+    return nil
+end
+
+-- Context Menu for beaming heavy items to the spaceship (Inventory items)
+local function doBeamUpInventoryContextMenu(playerNum, context, items)
+    local player = getSpecificPlayer(playerNum)
+    if not player then return end
+
+    local communicator = player:getInventory():getItemFromTag(ZSpaceship.Tags.Communicator, true, true)
+    if not communicator then return end
+
+    local targetItem = nil
+    for i = 1, #items do
+        local item = resolveInventoryItem(items[i])
+        if item then
+            local w = (item.getActualWeight and item:getActualWeight()) or item:getWeight()
+            if w >= 5 then
+                targetItem = item
+                break
+            end
+        end
+    end
+
+    if not targetItem then return end
+
+    local inSpace = zsInSpace(player)
+    local cost = ZSpaceship.Teleport.getCost(player, inSpace, true, false, targetItem)
+
+    addTeleportOption(
+        context,
+        player,
+        cost,
+        "UI_ZS_BeamItemToShip",
+        function(p)
+            local sq = p:getCurrentSquare()
+            local x = sq and (sq:getX() + 0.5) or p:getX()
+            local y = sq and (sq:getY() + 0.5) or p:getY()
+            local z = sq and sq:getZ() or p:getZ()
+            ISTimedActionQueue.add(
+                ISZSpaceshipTeleportAction:new(p, x, y, z, "Energizing...", nil, false, false, targetItem)
+            )
+        end,
+        communicator,
+        ZSpaceship.Teleport.SCIENCE_LEVEL_ITEM
+    )
 end
 
 Events.OnFillWorldObjectContextMenu.Add(doWorldContextMenu)
 Events.OnFillInventoryObjectContextMenu.Add(doInventoryContextMenu)
+Events.OnFillInventoryObjectContextMenu.Add(doBeamUpInventoryContextMenu)

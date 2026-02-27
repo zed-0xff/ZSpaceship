@@ -70,12 +70,6 @@ function ISZSpaceshipTeleportAction:perform()
 end
 
 function ISZSpaceshipTeleportAction:complete()
-    local targetX = self.targetX
-    local targetY = self.targetY
-    local targetZ = self.targetZ
-    local character = self.character
-    local findFreeTile = self.findFreeTile
-
     -- Consume power before teleporting
     if ZSpaceship and ZSpaceship.Power and self.powerCost then
         local powerBefore = ZSpaceship.Power.getAmount()
@@ -83,18 +77,61 @@ function ISZSpaceshipTeleportAction:complete()
         local powerAfter = ZSpaceship.Power.getAmount()
     end
 
+    -- If this action was started for an object (e.g., item/movable) instead of a player teleport,
+    -- just beam that object via server command and skip character repositioning.
+    if self.object ~= self.character and self.object and self.object.getID then
+        local sq = nil
+        -- Try container parent square first
+        local cont = self.object.getContainer and self.object:getContainer() or nil
+        if cont and cont.getParent then
+            local parent = cont:getParent()
+            if parent and parent.getSquare then
+                sq = parent:getSquare()
+            end
+        end
+        -- Fallback: world inventory object square
+        if not sq and self.object.getWorldItem then
+            local wi = self.object:getWorldItem()
+            if wi and wi.getSquare then
+                sq = wi:getSquare()
+            end
+        end
+        -- Final fallback: player's current square
+        if not sq and self.character.getCurrentSquare then
+            sq = self.character:getCurrentSquare()
+        end
+
+        local args = {
+            itemID = self.object:getID(),
+            square = ZS_Utils.squareToTable(sq),
+        }
+        sendClientCommand(self.character, "ZSpaceship", "BeamItemToShip", args)
+        return true
+    end
+
+    local targetX = self.targetX
+    local targetY = self.targetY
+    local targetZ = self.targetZ
+    local character = self.character
+    local findFreeTile = self.findFreeTile
+
     local function finalizeTeleport()
         Events.OnTick.Remove(finalizeTeleport)
 
         ZSpaceship.checkAndUpdateVacuumState(character)
         character:DoFootstepSound(2.0)
+
+        -- After teleporting to the spaceship, ask the server to flush any buffered beamed items.
+        if zsInSpaceXY(targetX, targetY) then
+            sendClientCommand(character, "ZSpaceship", "FlushBeamBuffer", {})
+        end
     end
 
     -- Delay teleport to next tick, or it doesn't work
     local function doTeleport()
         Events.OnTick.Remove(doTeleport)
         character:teleportTo(targetX, targetY, targetZ)
-        
+
         if findFreeTile then
             -- Wait for cell to load at target location, then find a free tile in the room
             local tickCount = 0
@@ -171,7 +208,7 @@ function ISZSpaceshipTeleportAction:getDuration()
     return zsClamp(duration, 50, 1000)
 end
 
-function ISZSpaceshipTeleportAction:new(character, targetX, targetY, targetZ, startMessage, timeMult, findFreeTile, toBuilding)
+function ISZSpaceshipTeleportAction:new(character, targetX, targetY, targetZ, startMessage, timeMult, findFreeTile, toBuilding, object)
     local o = ISBaseTimedAction.new(self, character)
     o.targetX = targetX
     o.targetY = targetY
@@ -179,18 +216,25 @@ function ISZSpaceshipTeleportAction:new(character, targetX, targetY, targetZ, st
     o.timeMult = timeMult
     o.startMessage = startMessage
     o.findFreeTile = findFreeTile or false
+    o.object = object or character  -- generic source object (player, item, movable, etc.)
     o.stopOnWalk = true
     o.stopOnRun = true
     o.stopOnAim = false
     
     -- Set required Science perk level: level 2 for building teleports, level 1 for others
-    o.requiredPerkLevel = (toBuilding == true) and ZSpaceship.Teleport.SCIENCE_LEVEL_BUILDING or ZSpaceship.Teleport.SCIENCE_LEVEL_MIN
+    o.requiredPerkLevel = ZSpaceship.Teleport.SCIENCE_LEVEL_MIN
+    if toBuilding then
+        o.requiredPerkLevel = math.max(o.requiredPerkLevel, ZSpaceship.Teleport.SCIENCE_LEVEL_BUILDING)
+    end
+    if object ~= character then
+        o.requiredPerkLevel = math.max(o.requiredPerkLevel, ZSpaceship.Teleport.SCIENCE_LEVEL_ITEM)
+    end
     
     -- Calculate and store power cost
     -- Check if teleporting from/to space
     o.fromSpace = zsInSpace(character)
     local toSpace = zsInSpaceXY(targetX, targetY)
-    o.powerCost = ZSpaceship.Teleport.getCost(character, o.fromSpace, toSpace, toBuilding or false)
+    o.powerCost = ZSpaceship.Teleport.getCost(character, o.fromSpace, toSpace, toBuilding or false, object)
     
     o.maxTime = o:getDuration()
     

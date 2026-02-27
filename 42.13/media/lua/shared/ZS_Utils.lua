@@ -31,10 +31,14 @@ end
 -- Resolve IsoGridSquare from player, square, room, or object with getX/getY/getZ (same order as zsInSpace).
 local function getSquareFromObj(obj)
     if not obj then return nil end
+
     local sq = (obj.getCurrentSquare and obj:getCurrentSquare()) or
               (obj.getSquare and obj:getSquare()) or
               (obj.getRandomSquare and obj:getRandomSquare())
     if sq then return sq end
+
+    local cont = obj.getContainer and obj:getContainer()
+    if cont then return getSquareFromObj(cont) end
 
     -- IsoObject should already be covered by previous checks AND IsoObject:getX() may throw NPE if object.square is nil
     if not instanceof(obj, 'IsoObject') and obj.getX and obj.getY and obj.getZ then
@@ -45,6 +49,8 @@ local function getSquareFromObj(obj)
     end
     return nil
 end
+
+ZS_Utils.getSquare = getSquareFromObj
 
 -- global function to check if object is in space
 function zsInSpace(obj)
@@ -160,4 +166,14 @@ function ZS_Utils.findAdjacentBiomassContainer(shredderSquare)
         end
     end
     return nil
+end
+
+function ZS_Utils.squareToTable(sq)
+    if not sq then return nil end
+    return { x = sq:getX(), y = sq:getY(), z = sq:getZ() }
+end
+
+function ZS_Utils.tableToSquare(table)
+    if not table then return nil end
+    return getSquare(table.x, table.y, table.z)
 end
