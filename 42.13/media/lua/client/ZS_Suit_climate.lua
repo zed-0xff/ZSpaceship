@@ -8,7 +8,6 @@ local TEMP_LERP_RATE = 0.02  -- gentle per-tick lerp (OnPlayerUpdate fires ~60x/
 local function updateSuitClimate()
     local player = getPlayer()
     if not player then return end
-    if not zsInSpace(player) then return end
     if not ZSpaceship.getWornSuit(player) then return end
 
     local stats = player:getStats()
