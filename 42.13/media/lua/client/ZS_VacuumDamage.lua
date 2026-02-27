@@ -72,12 +72,14 @@ end
 -- Apply vacuum damage to any creature (zombie, animal, player)
 local function applyVacuumDamage(creature, mult)
     if not creature or creature:isDead() then return false end
-    mult = mult or 250 -- should scale with the frequency on applyVacuumDamage() calls
+    mult = mult or 100 -- should scale with the frequency on applyVacuumDamage() calls
+
+    print("Applying vacuum damage to " .. creature:getDisplayName() .. " (mult=" .. mult .. ")")
     
     -- Damage multiplier based on creature type (zombies are tougher)
     local damageMult = 1.0
     if instanceof(creature, "IsoZombie") then
-        damageMult = 0.5  -- Zombies take 2x longer to die
+        damageMult = 0.5  -- Zombies take 2x longer to die; TODO: check with bandits
     end
 
     if ZSpaceship.isProtectedFromVacuum(creature) then

@@ -63,14 +63,17 @@ end
 Events.LoadGridsquare.Add(onLoadGridsquare)
 
 local function updateShredders()
-	-- Unconditional so we see output even if ZS_Shredder.Debug is nil/false
 	local instance = ZS_SShredderSystem.instance
 	if not instance then
-		print("[ZS_Shredder] updateShredders: no instance")
+        if ZS_Shredder.Debug then
+            print("[ZS_Shredder] updateShredders: no instance")
+        end
 		return
 	end
 	local n = instance:getLuaObjectCount()
-	print("[ZS_Shredder] updateShredders: " .. tostring(n) .. " shredder(s)")
+    if ZS_Shredder.Debug then
+        print("[ZS_Shredder] updateShredders: " .. tostring(n) .. " shredder(s)")
+    end
 	for i = 1, n do
 		local luaObject = instance:getLuaObjectByIndex(i)
 		if luaObject and luaObject.tick then
