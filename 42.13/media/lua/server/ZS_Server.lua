@@ -183,6 +183,7 @@ end)
 Events.OnFillContainer.Add(function(a, b, container)
     -- Zombie	            ZSpaceship_SpaceSuit	ItemContainer:[type:inventorymale, parent:IsoDeadBody{  Name:null,  ID:68,  wasZombie:true,  deathTime:2.087947 }]
     if a == "Zombie" and b == ZSpaceship.ZOMBIE_OUTFIT_ID then
+        print("[ZSpaceship] Filling container for space zombie: " .. tostring(container))
         container:AddItem("ZSpaceship.Communicator_Left")
         local suit = container:getItemFromTag(ZSpaceship.Tags.SpaceSuit, false, true)
         if suit and suit.setTankType and suit.setUsedDelta then
