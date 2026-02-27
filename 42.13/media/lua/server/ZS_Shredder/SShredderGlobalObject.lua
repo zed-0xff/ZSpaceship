@@ -41,7 +41,7 @@ end
 -- Get shredder's input container (first container on the thumpable).
 local function getShredderContainer(isoObject)
 	if not isoObject then return nil end
-	local cont = isoObject.getContainer and isoObject:getContainer()
+	local cont = isoObject.getItemContainer and isoObject:getItemContainer()
 	return cont
 end
 

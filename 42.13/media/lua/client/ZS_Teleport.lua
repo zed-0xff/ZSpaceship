@@ -9,11 +9,6 @@ ZSpaceship.Teleport.COST_PER_KG = 10  -- MJ/kg
 ZSpaceship.Teleport.BUILDING_MULT = 1.5
 ZSpaceship.Teleport.SPACE2SPACE_MULT = 0.2  -- cheaper cost when teleporting from space
 
--- Science perk level requirements
-ZSpaceship.Teleport.SCIENCE_LEVEL_MIN = 1  -- Minimum Science level for basic teleports
-ZSpaceship.Teleport.SCIENCE_LEVEL_BUILDING = 2  -- Science level required for building teleports
-ZSpaceship.Teleport.SCIENCE_LEVEL_ITEM = 3  -- Science level required for teleporting items
-
 local function addTeleportOption(context, player, cost, textKey, cb, comm, requiredPerkLevel)
     requiredPerkLevel = requiredPerkLevel or ZSpaceship.Teleport.SCIENCE_LEVEL_MIN
     local currentPower = 0
@@ -95,8 +90,8 @@ function ZSpaceship.Teleport.getMass(obj)
     end
 
     -- Any IsoObject with a container (e.g. movable with internal inventory)
-    if obj.getContainer then
-        local cont = obj:getContainer()
+    if obj.getItemContainer then
+        local cont = obj:getItemContainer()
         if cont and cont.getCapacityWeight then
             return cont:getCapacityWeight()
         end

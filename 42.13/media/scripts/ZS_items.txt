@@ -1,6 +1,6 @@
 module ZSpaceship
 {
-    item TeleportBufferItem
+    item TeleportBufferContainer
     {
         DisplayCategory = Hidden,
         WorldRender = false,
