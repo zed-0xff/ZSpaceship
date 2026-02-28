@@ -288,5 +288,9 @@ end)
 -- may fail to create rooms if current map is not "Space"
 Events.OnGameStart.Add(ZSRooms.init)
 
+Events.OnCreatePlayer.Add(function(playerNum, playerObj)
+    onObjAddRemove(playerObj)
+end)
+
 Events.OnObjectAdded.Add(onObjAddRemove)
 Events.EveryOneMinute.Add(updateAllSlow)

@@ -181,6 +181,9 @@ Events.OnNewGame.Add(function()
 end)
 
 Events.OnFillContainer.Add(function(a, b, container)
+    if not container then return end
+    if not instanceof(container, "ItemContainer") then return end -- it may be a java class: zombie.inventory.ItemPickerJava$ItemPickerContainer
+
     -- Zombie	            ZSpaceship_SpaceSuit	ItemContainer:[type:inventorymale, parent:IsoDeadBody{  Name:null,  ID:68,  wasZombie:true,  deathTime:2.087947 }]
     if a == "Zombie" and b == ZSpaceship.ZOMBIE_OUTFIT_ID then
         print("[ZSpaceship] Filling container for space zombie: " .. tostring(container))
