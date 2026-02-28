@@ -1,4 +1,4 @@
-require 'zsHook'
+require 'zHook'
 
 local function resolveItem(entry)
     if instanceof(entry, "InventoryItem") or instanceof(entry, "IsoDeadBody") then
@@ -60,7 +60,7 @@ local function maybeAddTeleportOption(context, playerNum, animalbody)
 end
 
 -- right-clicking an animal body in the world
-zsHook( AnimalContextMenu, {
+zHook( AnimalContextMenu, {
     -- playerObj here
     doAnimalBodyMenuFromInv = function(orig, context, playerObj, animalbody, ...)
         local result = orig(context, playerObj, animalbody, ...)

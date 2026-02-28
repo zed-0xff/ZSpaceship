@@ -1,6 +1,6 @@
 -- Vacuum fire suppression for ZSpaceship mod
 -- Prevents fires, stoves, and campfires from working in vacuum (no oxygen)
-require 'zsHook'
+require 'zHook'
 require "ZS_Utils"
 
 -- Extinguish fires when created in vacuum (no oxygen)
@@ -33,7 +33,7 @@ Events.EveryTenMinutes.Add(checkFiresInVacuum)
 
 
 -- Prevent stoves from being activated in vacuum
-zsHook(ISToggleStoveAction, {
+zHook(ISToggleStoveAction, {
     isValid = function(orig, self)
         if not orig(self) then return false end
         -- original isValid() returned true
@@ -114,7 +114,7 @@ end
 
 local function onGameStart()
     -- Hook campfire lighting functions
-    zsHook(ISCampingMenu, {
+    zHook(ISCampingMenu, {
         onLightFromLiterature = function(orig, playerObj, itemType, lighter, target, ...)
             if not canLightFire(target, playerObj) then return end
             return orig(playerObj, itemType, lighter, target, ...)
@@ -129,7 +129,7 @@ local function onGameStart()
         end
     })
     
-    zsHook(ISBBQMenu, {
+    zHook(ISBBQMenu, {
         onToggle = function(orig, worldobjects, player, bbq, ...)
             if bbq and not bbq:isLit() then
                 local sq = bbq:getSquare()
@@ -145,7 +145,7 @@ local function onGameStart()
         end
     })
     
-    zsHook(ISOpenCloseDoor, {
+    zHook(ISOpenCloseDoor, {
         complete = function(orig, self, ...)
             local result = orig(self, ...)
             
@@ -160,7 +160,7 @@ local function onGameStart()
     })
 
     -- Hook campfire lightFire to prevent lighting in vacuum
-    zsHook(SCampfireGlobalObject, {
+    zHook(SCampfireGlobalObject, {
         lightFire = function(orig, self, ...)
             if not zsInVacuum(self) then return orig(self, ...) end
         end 
