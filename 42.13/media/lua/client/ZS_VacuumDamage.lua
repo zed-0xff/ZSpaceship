@@ -74,7 +74,7 @@ local function applyVacuumDamage(creature, mult)
     if not creature or creature:isDead() then return false end
     mult = mult or 100 -- should scale with the frequency on applyVacuumDamage() calls
 
-    print("Applying vacuum damage to " .. creature:getDisplayName() .. " (mult=" .. mult .. ")")
+    print("Applying vacuum damage", creature, mult)
     
     -- Damage multiplier based on creature type (zombies are tougher)
     local damageMult = 1.0

@@ -50,6 +50,7 @@ module Base
                 item 5 [Base.ElectronicsScrap],
                 item 10 [Base.ElectricWire],
                 item 10 [Base.CarBattery1;Base.CarBattery2;Base.CarBattery3] flags[ItemCount],
+                item 4 [Base.NutsBolts;Base.Screws],
             }
         }
     }

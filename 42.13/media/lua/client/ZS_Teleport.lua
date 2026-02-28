@@ -4,11 +4,6 @@ require "TimedActions/ISTimedActionQueue"
 ZSpaceship = ZSpaceship or {}
 ZSpaceship.Teleport = ZSpaceship.Teleport or {}
 
--- Energy cost: 10 MJ/kg base, +50% if from/to building
-ZSpaceship.Teleport.COST_PER_KG = 10  -- MJ/kg
-ZSpaceship.Teleport.BUILDING_MULT = 1.5
-ZSpaceship.Teleport.SPACE2SPACE_MULT = 0.2  -- cheaper cost when teleporting from space
-
 local function addTeleportOption(context, player, cost, textKey, cb, comm, requiredPerkLevel)
     requiredPerkLevel = requiredPerkLevel or ZSpaceship.Teleport.SCIENCE_LEVEL_MIN
     local currentPower = 0
@@ -42,6 +37,8 @@ local function addTeleportOption(context, player, cost, textKey, cb, comm, requi
         end
     end
 end
+
+ZSpaceship.Teleport.addTeleportOption = addTeleportOption
 
 local function addReturnToShipOption(context, player, communicator)
     local inSpace = zsInSpace(player)
@@ -441,60 +438,5 @@ local function doInventoryContextMenu(playerNum, context, items)
     end
 end
 
-local function resolveInventoryItem(entry)
-    if instanceof(entry, "InventoryItem") then
-        return entry
-    end
-    if entry and entry.items and #entry.items > 0 then
-        return entry.items[1]
-    end
-    return nil
-end
-
--- Context Menu for beaming heavy items to the spaceship (Inventory items)
-local function doBeamUpInventoryContextMenu(playerNum, context, items)
-    local player = getSpecificPlayer(playerNum)
-    if not player then return end
-
-    local communicator = player:getInventory():getItemFromTag(ZSpaceship.Tags.Communicator, true, true)
-    if not communicator then return end
-
-    local targetItem = nil
-    for i = 1, #items do
-        local item = resolveInventoryItem(items[i])
-        if item then
-            local w = (item.getActualWeight and item:getActualWeight()) or item:getWeight()
-            if w >= 5 then
-                targetItem = item
-                break
-            end
-        end
-    end
-
-    if not targetItem then return end
-
-    local inSpace = zsInSpace(player)
-    local cost = ZSpaceship.Teleport.getCost(player, inSpace, true, false, targetItem)
-
-    addTeleportOption(
-        context,
-        player,
-        cost,
-        "UI_ZS_BeamItemToShip",
-        function(p)
-            local sq = p:getCurrentSquare()
-            local x = sq and (sq:getX() + 0.5) or p:getX()
-            local y = sq and (sq:getY() + 0.5) or p:getY()
-            local z = sq and sq:getZ() or p:getZ()
-            ISTimedActionQueue.add(
-                ISZSpaceshipTeleportAction:new(p, x, y, z, "Energizing...", nil, false, false, targetItem)
-            )
-        end,
-        communicator,
-        ZSpaceship.Teleport.SCIENCE_LEVEL_ITEM
-    )
-end
-
 Events.OnFillWorldObjectContextMenu.Add(doWorldContextMenu)
 Events.OnFillInventoryObjectContextMenu.Add(doInventoryContextMenu)
-Events.OnFillInventoryObjectContextMenu.Add(doBeamUpInventoryContextMenu)

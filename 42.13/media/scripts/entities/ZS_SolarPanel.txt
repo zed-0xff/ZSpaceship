@@ -52,6 +52,7 @@ module Base
                 item 2 [Base.IronBar;Base.MetalBar;Base.MetalPipe;Base.SteelBar],
                 item 4 [Base.ElectronicsScrap],
                 item 4 [Base.ElectricWire],
+                item 2 [Base.NutsBolts;Base.Screws],
             }
         }
     }

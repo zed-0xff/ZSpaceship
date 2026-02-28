@@ -12,7 +12,7 @@ local BATTERY_SIZE  = 1000
 
 local _capacity               = MIN_CAPACITY
 local _consumptionPerMinute   =  6 -- default batteries should last for a night if on full charge
-local _maxProductionPerMinute = 20 -- TODO: count number of solar panels
+local _maxProductionPerMinute = 18 -- TODO: count number of solar panels
 
 local function isBattery(obj)
     if not obj then return false end

@@ -20,22 +20,20 @@ function ISZSpaceshipTeleportAction:isValid()
     
     -- Check if there's enough power
     if ZSpaceship and ZSpaceship.Power then
-        local currentPower = ZSpaceship.Power.getAmount()
-        if currentPower < self.powerCost then
+        local curPower = ZSpaceship.Power.getAmount()
+        if curPower < self.powerCost then
             return false
         end
     end
     
     -- Abort if player coordinates changed (e.g., falling in open space)
     if self.startX and self.startY and self.startZ then
-        local currentX = math.floor(self.character:getX())
-        local currentY = math.floor(self.character:getY())
-        local currentZ = math.floor(self.character:getZ())
+        local curX = math.floor(self.character:getX())
+        local curY = math.floor(self.character:getY())
+        local curZ = math.floor(self.character:getZ())
         
         -- Allow small movement (1 tile) but abort on larger changes
-        if math.abs(currentX - self.startX) > 1 or 
-           math.abs(currentY - self.startY) > 1 or 
-           currentZ ~= self.startZ then
+        if math.abs(curX - self.startX) > 1 or math.abs(curY - self.startY) > 1 or curZ ~= self.startZ then
             return false
         end
     end
@@ -120,11 +118,6 @@ function ISZSpaceshipTeleportAction:complete()
 
         ZSpaceship.checkAndUpdateVacuumState(character)
         character:DoFootstepSound(2.0)
-
-        -- After teleporting to the spaceship, ask the server to flush any buffered beamed items.
-        if zsInSpaceXY(targetX, targetY) then
-            sendClientCommand(character, "ZSpaceship", "FlushBeamBuffer", {})
-        end
     end
 
     -- Delay teleport to next tick, or it doesn't work
@@ -226,7 +219,7 @@ function ISZSpaceshipTeleportAction:new(character, targetX, targetY, targetZ, st
     if toBuilding then
         o.requiredPerkLevel = math.max(o.requiredPerkLevel, ZSpaceship.Teleport.SCIENCE_LEVEL_BUILDING)
     end
-    if object ~= character then
+    if o.object ~= character then
         o.requiredPerkLevel = math.max(o.requiredPerkLevel, ZSpaceship.Teleport.SCIENCE_LEVEL_ITEM)
     end
     

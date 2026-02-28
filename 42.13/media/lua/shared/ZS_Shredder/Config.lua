@@ -14,5 +14,9 @@ ZS_Shredder.Items = {
         AnimalPart = true,
         Corpse     = true,
         Food       = true,
+    },
+
+    FullType = {
+        ["LabItems.MatTaintedBlood"] = true,
     }
 }

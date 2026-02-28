@@ -3,15 +3,16 @@
 ZSpaceship = ZSpaceship or {}
 
 -- Hidden buffer container item used to hold beamed items while the ship cell isn't loaded.
-local TELEPORT_BUFFER_FULL_TYPE = "ZSpaceship.TeleportBufferContainer"
+local TPB_ITEM_ID = "ZSpaceship.TPBufferContainer"
 
 -- Only valid when the space cell is loaded, i.e. when player is in the space cell.
 local function findTeleportRoomCrateContainer(player)
     if not player or not zsInSpace(player) then return nil end
-    local zsRoom = ZSRooms.find("zs_teleport_room")
-    if not zsRoom or not zsRoom.squares then return nil end
 
-    for _, sq in ipairs(zsRoom:getSquares()) do
+    local room = ZSRooms.find("zs_teleport_room")
+    if not room then return nil end
+
+    for _, sq in pairs(room:getSquares()) do
         if sq and sq.getObjects then
             local objects = sq:getObjects()
             if objects then
@@ -31,45 +32,22 @@ local function findTeleportRoomCrateContainer(player)
     return nil
 end
 
--- Get or create the hidden TeleportBufferContainer in the player's inventory.
+-- Get or create the hidden TPBufferContainer in the player's inventory.
 local function getOrCreateBufferContainer(player)
-    if not player or not player.getInventory then return nil end
-    local inv = player:getInventory()
-    if not inv or not inv.getItems then return nil end
-
-    local items = inv:getItems()
-    if items then
-        for i = 0, items:size() - 1 do
-            local it = items:get(i)
-            if it and it.getFullType and it:getFullType() == TELEPORT_BUFFER_FULL_TYPE and it.getItemContainer then
-                return it:getItemContainer()
-            end
+    if not ZSpaceship.tpb then
+        ZSpaceship.tpb = instanceItem(TPB_ITEM_ID)
+        if not ZSpaceship.tpb then
+            print("[ZSpaceship] ERROR: Failed to create buffer item of type " .. TPB_ITEM_ID)
+            return nil
         end
     end
 
-    local bufferItem = instanceItem(TELEPORT_BUFFER_FULL_TYPE)
-    if not bufferItem then return nil end
-
-    inv:AddItem(bufferItem)
-    return bufferItem:getItemContainer()
+    return ZSpaceship.tpb:getItemContainer()
 end
 
--- Find the buffer container in player inventory (nil if not present).
+-- Find the buffer container for player (nil if not present).
 local function getBufferContainer(player)
-    if not player or not player.getInventory then return nil end
-    local inv = player:getInventory()
-    if not inv or not inv.getItems then return nil end
-    local items = inv:getItems()
-    if not items then return nil end
-
-    for i = 0, items:size() - 1 do
-        local it = items:get(i)
-        if it and it.getFullType and it:getFullType() == TELEPORT_BUFFER_FULL_TYPE and it.getItemContainer then
-            return it:getItemContainer()
-        end
-    end
-
-    return nil
+    return ZSpaceship.tpb and ZSpaceship.tpb:getItemContainer() or nil
 end
 
 local function bufferItem(player, item)
@@ -106,16 +84,15 @@ local function flushBeamBuffer(targetCont, player)
 
     -- If the buffer container is now empty, remove the hidden item from the player's inventory.
     if bufCont.isEmpty and bufCont:isEmpty() then
-        local inv = player.getInventory and player:getInventory() or nil
-        if inv and inv.RemoveAll then
-            inv:RemoveAll(TELEPORT_BUFFER_FULL_TYPE)
-        end
+        ZSpaceship.tpb = nil
     end
 end
 
-function ZSpaceship.flushBeamBufferToShip(player)
-    local targetCont = findTeleportRoomCrateContainer(player)
-    if not targetCont then return end
+function ZSpaceship.flushBeamBufferToShip(targetCont, player)
+    if not targetCont then
+        targetCont = findTeleportRoomCrateContainer(player)
+        if not targetCont then return end
+    end
     flushBeamBuffer(targetCont, player)
 end
 
@@ -137,15 +114,22 @@ function ZSpaceship.beamItemToShip(player, item)
     local targetCont = findTeleportRoomCrateContainer(player)
     if not targetCont then
         -- Teleporter room not loaded yet: remove the item from the world and stash it in the hidden buffer.
-        local srcCont = item.getItemContainer and item:getItemContainer() or nil
-        if srcCont and srcCont.DoRemoveItem then
-            srcCont:DoRemoveItem(item)
+        if item.becomeCorpseItem then
+            item = item:becomeCorpseItem() -- convert IsoDeadBody to InventoryItem
         else
-            local worldItem = item.getWorldItem and item:getWorldItem() or nil
-            if worldItem and worldItem.getSquare then
-                local sq = worldItem:getSquare()
-                if sq and sq.transmitRemoveItemFromSquare then
-                    sq:transmitRemoveItemFromSquare(worldItem)
+            local srcCont = item.getItemContainer and item:getItemContainer() or nil
+            if srcCont and srcCont.DoRemoveItem then
+                srcCont:DoRemoveItem(item)
+                local parent = srcCont.getParent and srcCont:getParent()
+                if parent and parent.sync then parent:sync() end
+            else
+                local worldItem = item.getWorldItem and item:getWorldItem() or nil
+                if worldItem and worldItem.getSquare then
+                    local sq = worldItem:getSquare()
+                    if sq and sq.transmitRemoveItemFromSquare then
+                        sq:transmitRemoveItemFromSquare(worldItem)
+                        if sq.flagForHotSave then sq:flagForHotSave() end
+                    end
                 end
             end
         end
@@ -161,17 +145,27 @@ function ZSpaceship.beamItemToShip(player, item)
     local srcCont = item.getItemContainer and item:getItemContainer() or nil
     if srcCont and srcCont.DoRemoveItem then
         srcCont:DoRemoveItem(item)
+        local parent = srcCont.getParent and srcCont:getParent()
+        if parent and parent.sync then parent:sync() end
     else
         local worldItem = item.getWorldItem and item:getWorldItem() or nil
         if worldItem and worldItem.getSquare then
             local sq = worldItem:getSquare()
             if sq and sq.transmitRemoveItemFromSquare then
                 sq:transmitRemoveItemFromSquare(worldItem)
+                if sq.flagForHotSave then sq:flagForHotSave() end
             end
         end
     end
 
     targetCont:AddItem(item)
+    if targetCont.setDrawDirty then
+        targetCont:setDrawDirty(true)
+    end
+
+    if targetCont.sync then
+        targetCont:sync()
+    end
 
     return true
 end
@@ -219,6 +213,26 @@ local function findItemById(player, itemID, square)
             end
         end
 
+        local objects = sq.getStaticMovingObjects and sq:getStaticMovingObjects()
+        if objects then
+            for i = 0, objects:size() - 1 do
+                local obj = objects:get(i)
+                if obj and obj.getID and obj:getID() == itemID then
+                    return obj
+                end
+            end
+        end
+
+        local objects = sq.getMovingObjects and sq:getMovingObjects()
+        if objects then
+            for i = 0, objects:size() - 1 do
+                local obj = objects:get(i)
+                if obj and obj.getID and obj:getID() == itemID then
+                    return obj
+                end
+            end
+        end
+
         return nil
     end
 
@@ -249,6 +263,88 @@ Events.OnClientCommand.Add(function(module, command, player, args)
             print("[ZSpaceship] Failed to find item by ID: " .. serialize(args))
         end
     elseif command == "FlushBeamBuffer" then
-        ZSpaceship.flushBeamBufferToShip(player)
+        ZSpaceship.flushBeamBufferToShip(nil, player)
     end
 end)
+
+local function onLoadStorage(object)
+    if not object or not object.getSquare then return end
+
+    local sq = object:getSquare()
+    print("[d] onLoadStorage", object, sq, sq:getRoom())
+
+    local room = sq:getRoom()
+    if room then
+        print("[d] Room name: " .. tostring(room:getName()))
+    end
+    if room and room:getName() == "zs_teleport_room" then
+        print("[d] Found teleport room storage on load, flushing buffer...")
+        ZSpaceship.flushBeamBufferToShip(object:getItemContainer(), nil)
+    end
+end
+
+-- when Space cell loads after player teleported to it, flush any buffered items into the teleporter room crate
+for tileName in pairs(ZSpaceship.MapData.Tiles.Storage) do
+    MapObjects.OnLoadWithSprite(tileName, onLoadStorage, 100)
+end
+
+-- TODO: MP
+if not isMultiplayer() then
+    local function add_tpb_to_player_inventory()
+        if not getPlayer() or not ZSpaceship.tpb then return end
+
+        local inv = getPlayer():getInventory()
+        if not inv then return end
+
+        inv:AddItem(ZSpaceship.tpb)
+    end
+
+    local function remove_tpb_from_player_inventory()
+        if not getPlayer() then return end
+        local inv = getPlayer():getInventory()
+        local itemList = inv:RemoveAll(TPB_ITEM_ID)
+        if itemList and itemList:size() > 0 then
+            ZSpaceship.tpb = itemList:get(0) -- Assume only one instance since we remove all and re-add on save.
+        end
+    end
+
+    Events.OnSave.Add( add_tpb_to_player_inventory )
+    Events.OnPostSave.Add( remove_tpb_from_player_inventory )
+    Events.OnLoad.Add( remove_tpb_from_player_inventory )
+
+    local function fallbackCheck()
+        local player = getPlayer()
+        if not player then return end
+
+        local inv = player:getInventory()
+        if not inv then return end
+
+        local itemList = inv:RemoveAll(TPB_ITEM_ID)
+        if itemList and itemList:size() > 0 then
+            local player_tpb = itemList:get(0) -- Assume only one instance since we remove all and re-add on save.
+            if ZSpaceship.tpb and ZSpaceship.tpb ~= player_tpb then
+                -- merge inventories
+                local srcCont = player_tpb:getItemContainer()
+                local dstCont = ZSpaceship.tpb:getItemContainer()
+                if srcCont and dstCont and srcCont.getItems and dstCont.AddItem then
+                    local items = srcCont:getItems()
+                    if items then
+                        for i = 0, items:size() - 1 do
+                            local it = items:get(i)
+                            if it then
+                                dstCont:AddItem(it)
+                            end
+                        end
+                    end
+                end
+            end
+        end
+
+        if ZSpaceship.tpb and zsInSpace(player) then
+            ZSRooms.updateAllSlow()
+            ZSpaceship.flushBeamBufferToShip(nil, player)
+        end
+    end
+
+    Events.EveryTenMinutes.Add( fallbackCheck )
+end
