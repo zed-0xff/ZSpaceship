@@ -1,5 +1,3 @@
-require 'zHook'
-
 local function resolveItem(entry)
     if instanceof(entry, "InventoryItem") or instanceof(entry, "IsoDeadBody") then
         return entry
@@ -60,20 +58,22 @@ local function maybeAddTeleportOption(context, playerNum, animalbody)
 end
 
 -- right-clicking an animal body in the world
-zHook( AnimalContextMenu, {
-    -- playerObj here
-    doAnimalBodyMenuFromInv = function(orig, context, playerObj, animalbody, ...)
-        local result = orig(context, playerObj, animalbody, ...)
-        maybeAddTeleportOption(context, playerObj:getPlayerNum(), animalbody)
-        return result
-    end,
+zbHook({
+    AnimalContextMenu = {
+        -- playerObj here
+        doAnimalBodyMenuFromInv = function(orig, context, playerObj, animalbody, ...)
+            local result = orig(context, playerObj, animalbody, ...)
+            maybeAddTeleportOption(context, playerObj:getPlayerNum(), animalbody)
+            return result
+        end,
 
-    -- playerNum here
-    doAnimalBodyMenu = function(orig, context, player, animalbody, ...)
-        local result = orig(context, player, animalbody, ...)
-        maybeAddTeleportOption(context, player, animalbody)
-        return result
-    end,
+        -- playerNum here
+        doAnimalBodyMenu = function(orig, context, player, animalbody, ...)
+            local result = orig(context, player, animalbody, ...)
+            maybeAddTeleportOption(context, player, animalbody)
+            return result
+        end,
+    }
 })
 
 Events.OnFillInventoryObjectContextMenu.Add(doBeamUpInventoryContextMenu)

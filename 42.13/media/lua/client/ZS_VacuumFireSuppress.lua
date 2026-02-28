@@ -1,6 +1,5 @@
 -- Vacuum fire suppression for ZSpaceship mod
 -- Prevents fires, stoves, and campfires from working in vacuum (no oxygen)
-require 'zHook'
 require "ZS_Utils"
 
 -- Extinguish fires when created in vacuum (no oxygen)
@@ -33,15 +32,17 @@ Events.EveryTenMinutes.Add(checkFiresInVacuum)
 
 
 -- Prevent stoves from being activated in vacuum
-zHook(ISToggleStoveAction, {
-    isValid = function(orig, self)
-        if not orig(self) then return false end
-        -- original isValid() returned true
-        local stove = self.object
-        if not stove then return true end -- ISToggleStoveAction changed?
-        if stove.Activated and stove:Activated() then return true end -- Allow turning OFF
-        return not zsInVacuum(stove)
-    end
+zbHook({
+    ISToggleStoveAction = {
+        isValid = function(orig, self)
+            if not orig(self) then return false end
+            -- original isValid() returned true
+            local stove = self.object
+            if not stove then return true end -- ISToggleStoveAction changed?
+            if stove.Activated and stove:Activated() then return true end -- Allow turning OFF
+            return not zsInVacuum(stove)
+        end
+    }
 })
 
 -- Check if a campfire/target can be lit
@@ -114,58 +115,60 @@ end
 
 local function onGameStart()
     -- Hook campfire lighting functions
-    zHook(ISCampingMenu, {
-        onLightFromLiterature = function(orig, playerObj, itemType, lighter, target, ...)
-            if not canLightFire(target, playerObj) then return end
-            return orig(playerObj, itemType, lighter, target, ...)
-        end,
-        onLightFromKindle = function(orig, playerObj, percedWood, stickOrBranch, target, ...)
-            if not canLightFire(target, playerObj) then return end
-            return orig(playerObj, percedWood, stickOrBranch, target, ...)
-        end,
-        onLightFromPetrol = function(orig, playerObj, lighter, petrol, target, ...)
-            if not canLightFire(target, playerObj) then return end
-            return orig(playerObj, lighter, petrol, target, ...)
-        end
-    })
+    zbHook({
+        ISCampingMenu = {
+            onLightFromLiterature = function(orig, playerObj, itemType, lighter, target, ...)
+                if not canLightFire(target, playerObj) then return end
+                return orig(playerObj, itemType, lighter, target, ...)
+            end,
+            onLightFromKindle = function(orig, playerObj, percedWood, stickOrBranch, target, ...)
+                if not canLightFire(target, playerObj) then return end
+                return orig(playerObj, percedWood, stickOrBranch, target, ...)
+            end,
+            onLightFromPetrol = function(orig, playerObj, lighter, petrol, target, ...)
+                if not canLightFire(target, playerObj) then return end
+                return orig(playerObj, lighter, petrol, target, ...)
+            end
+        },
     
-    zHook(ISBBQMenu, {
-        onToggle = function(orig, worldobjects, player, bbq, ...)
-            if bbq and not bbq:isLit() then
-                local sq = bbq:getSquare()
-                if sq and zsInVacuum(sq) then
-                    local playerObj = getSpecificPlayer(player)
-                    if playerObj and playerObj.Say then
-                        playerObj:Say(getText("UI_ZS_NoOxygen"))
+        ISBBQMenu = {
+            onToggle = function(orig, worldobjects, player, bbq, ...)
+                if bbq and not bbq:isLit() then
+                    local sq = bbq:getSquare()
+                    if sq and zsInVacuum(sq) then
+                        local playerObj = getSpecificPlayer(player)
+                        if playerObj and playerObj.Say then
+                            playerObj:Say(getText("UI_ZS_NoOxygen"))
+                        end
+                        return
                     end
-                    return
                 end
+                return orig(worldobjects, player, bbq, ...)
             end
-            return orig(worldobjects, player, bbq, ...)
-        end
-    })
+        },
     
-    zHook(ISOpenCloseDoor, {
-        complete = function(orig, self, ...)
-            local result = orig(self, ...)
-            
-            -- Check if this door is in space and now causes a breach
-            local door = self.item
-            if door and door.IsOpen and door:IsOpen() then
-                checkBreachAtSquare(door:getSquare())
+        ISOpenCloseDoor = {
+            complete = function(orig, self, ...)
+                local result = orig(self, ...)
+                
+                -- Check if this door is in space and now causes a breach
+                local door = self.item
+                if door and door.IsOpen and door:IsOpen() then
+                    checkBreachAtSquare(door:getSquare())
+                end
+                
+                return result
             end
-            
-            return result
-        end
-    })
+        },
 
-    -- Hook campfire lightFire to prevent lighting in vacuum
-    zHook(SCampfireGlobalObject, {
-        lightFire = function(orig, self, ...)
-            if not zsInVacuum(self) then return orig(self, ...) end
-        end 
-    })
-end
+        -- Hook campfire lightFire to prevent lighting in vacuum
+        SCampfireGlobalObject = {
+            lightFire = function(orig, self, ...)
+                if not zsInVacuum(self) then return orig(self, ...) end
+            end 
+        },
+    }) -- zbHook
+end -- onGameStart
 
 Events.OnGameStart.Add(onGameStart)
 
