@@ -45,15 +45,24 @@ local function getShredderContainer(isoObject)
 	return cont
 end
 
--- Organic: ZS_Shredder.Items.DisplayCategory[itemDisplayCategory] == true.
+-- Organic: ZS_Shredder.Items.DisplayCategory[itemDisplayCategory] or FullType.
 local function isOrganic(item)
 	if not item then return false end
+	local ft = item.getFullType and item:getFullType()
+	if ft and ZS_Shredder and ZS_Shredder.Items and ZS_Shredder.Items.FullType and ZS_Shredder.Items.FullType[ft] == true then
+		return true
+	end
 	local cat = nil
 	if item.getScriptItem then
 		local si = item:getScriptItem()
 		if si and si.getDisplayCategory then cat = si:getDisplayCategory() end
 	end
 	return cat and ZS_Shredder and ZS_Shredder.Items and ZS_Shredder.Items.DisplayCategory and ZS_Shredder.Items.DisplayCategory[cat] == true
+end
+
+-- Unknown: not organic → leave in input.
+local function isKnownProcessable(item)
+	return isOrganic(item)
 end
 
 -- Get first item and its weight (kg); returns item, weightKg or nil.
@@ -164,6 +173,21 @@ function ZS_SShredderGlobalObject:tick(deltaSeconds)
 		self.progress = 0
 		self.processDurationSeconds = 0
 		self:updateOnClient()
+		return
+	end
+
+	-- Unknown how to process → leave in input container
+	if not isKnownProcessable(firstItem) then
+		if ZS_Shredder and ZS_Shredder.Debug then
+			local name = firstItem.getDisplayName and firstItem:getDisplayName() or firstItem:getType() or "?"
+			print("[ZS_Shredder] Unknown item '" .. tostring(name) .. "', leaving in input.")
+		end
+		if self.processing then
+			self.processing = false
+			self.progress = 0
+			self.processDurationSeconds = 0
+			self:updateOnClient()
+		end
 		return
 	end
 

@@ -6,9 +6,9 @@ ZS_Shredder.POWER_PER_MINUTE = 1
 ZS_Shredder.SOUND_NAME       = "zs_shredder"
 ZS_Shredder.Debug            = false
 
--- DisplayCategory entries set to true are treated as organic (processed into biomass fluid).
+-- Items not in organic list are unknown; they are left in the input container.
 ZS_Shredder.Items = {
-    -- means item:getDisplayCategory() returns one of the following strings.
+    -- Organic: processed into biomass fluid.
     DisplayCategory = {
         Animal     = true,
         AnimalPart = true,
