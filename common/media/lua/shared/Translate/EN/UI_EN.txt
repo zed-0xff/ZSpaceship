@@ -31,4 +31,5 @@ UI_EN = {
     UI_quick_tip_ZS_7 = "Spaceship Tip: If you got lost in open space, you can use the Communicator to teleport back to your spaceship.",
     UI_quick_tip_ZS_8 = "Spaceship Tip: Space Suit has limited durability. Avoid taking damage to prevent it from breaking and exposing you to the vacuum of space.",
     UI_quick_tip_ZS_9 = "Spaceship Tip: Space Suit has integrated refillable water tank. Use it to stay hydrated during your space adventures!",
+    UI_quick_tip_ZS_A = "Spaceship Tip: Space Suit offers great protection, but limits your mobility.",
 }
