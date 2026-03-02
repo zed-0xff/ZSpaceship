@@ -23,6 +23,11 @@ local function onNewGame(player, square)
         if fluidContainer and fluidContainer.addFluid then
             fluidContainer:addFluid(FluidType.Water, 1.0)
         end
+
+        -- HAVE to add the shoes because updateFootInjuries() checks getWornItems().getItem(ItemBodyLocation.SHOES)
+        -- and ItemBodyLocation.setExclusive() does not affect returned item
+        local shoes = inv:AddItem("Base.Shoes_WorkBoots")
+        player:setWornItem(shoes:getBodyLocation(), shoes)
         
         -- Add Screwdriver to inventory
         inv:AddItem("Base.Screwdriver")
