@@ -71,12 +71,24 @@ local function maybeToggleRunning(player, suit)
     end
 end
 
+local function onPlayerUpdate(player)
+    if not player then return end
+
+    local suit = ZSpaceship.getWornSuit(player)
+    maybeToggleRunning(player, suit)
+end
+
 local function updateSuit()
+    local was_suit = false
     forEachPlayer(function(player)
         if not player then return end
 
         local suit = ZSpaceship.getWornSuit(player)
         if suit then
+            if not was_suit then
+                Events.OnPlayerUpdate.Add(onPlayerUpdate)
+                was_suit = true
+            end
             maybeToggleRunning(player, suit)
             if suit:hasTag(ZSpaceship.Tags.Wetness2Water) then
                 convertWetnessToSuitWater(player, suit)
@@ -86,6 +98,10 @@ local function updateSuit()
             end
         end
     end)
+
+    if not was_suit then
+        Events.OnPlayerUpdate.Remove(onPlayerUpdate)
+    end
 end
 
 Events.EveryOneMinute.Add(updateSuit)

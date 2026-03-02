@@ -1,7 +1,10 @@
 [ ] lol: earth
 [ ] lol: moon - isa_moon.png from ISA
 
-[ ] science 3: beam up arbitrary items
+[ ] bugfix: TP sound
+
+[ ] science 4: beam up arbitrary items
+    [ ] test
 
 [ ] UX: invisible border
 [ ] UX: hide generator

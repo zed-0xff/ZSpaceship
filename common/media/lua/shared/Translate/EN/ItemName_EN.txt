@@ -5,6 +5,6 @@ ItemName_EN = {
     ItemName_ZSpaceship.Communicator_Right = "Communicator",
     ItemName_ZSpaceship.Teleporter = "Spaceship Teleporter",
     ItemName_ZSpaceship.PowerStorageUnit_Schematic = "Power Storage Manual",
-    ItemName_ZSpaceship.SolarPanel_Schematic = "Solar Panel Manual",
+    ItemName_ZSpaceship.SolarPanel_Schematic = "Solar Panels Manual",
     ItemName_ZSpaceship.SpaceSuitA = "Space Suit",
 }

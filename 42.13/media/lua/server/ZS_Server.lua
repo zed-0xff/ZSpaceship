@@ -184,15 +184,28 @@ Events.OnFillContainer.Add(function(a, b, container)
     if not container then return end
     if not instanceof(container, "ItemContainer") then return end -- it may be a java class: zombie.inventory.ItemPickerJava$ItemPickerContainer
 
-    -- Zombie	            ZSpaceship_SpaceSuit	ItemContainer:[type:inventorymale, parent:IsoDeadBody{  Name:null,  ID:68,  wasZombie:true,  deathTime:2.087947 }]
-    if a == "Zombie" and b == ZSpaceship.ZOMBIE_OUTFIT_ID then
-        print("[ZSpaceship] Filling container for space zombie: " .. tostring(container))
-        container:AddItem("ZSpaceship.Communicator_Left")
-        local suit = container:getItemFromTag(ZSpaceship.Tags.SpaceSuit, false, true)
-        if suit and suit.setTankType and suit.setUsedDelta then
-            -- add oxygen tank
-            suit:setTankType("Base.Oxygen_Tank")
-            suit:setUsedDelta(ZombRandFloat(0,1))
+    -- Zombie	            ZSpaceship_SpaceSuit	ItemContainer:[type:inventorymale, parent:IsoDeadBody{ ... }]
+    -- Only add Communicator when outfit is space suit AND container already has the space suit (from loot roll), so vanilla zombies never get it.
+    if a == "Zombie" then
+        local outfit_id = b
+        if outfit_id == ZSpaceship.ZOMBIE_OUTFIT_ID then
+            local hasSuit = container:getItemFromTag(ZSpaceship.Tags.SpaceSuit, false, true) ~= nil
+            if hasSuit then
+                if ZSpaceship and ZSpaceship.Debug then
+                    print("[ZSpaceship] Filling container for space zombie: " .. tostring(container))
+                end
+                container:AddItem("ZSpaceship.Communicator_Left")
+                local suit = container:getItemFromTag(ZSpaceship.Tags.SpaceSuit, false, true)
+                if suit and suit.setTankType and suit.setUsedDelta then
+                    suit:setTankType("Base.Oxygen_Tank")
+                    suit:setUsedDelta(ZombRandFloat(0,1))
+                end
+            end
+        else
+            if container.RemoveAll then
+                container:RemoveAll("ZSpaceship.Communicator_Left")
+                container:RemoveAll("ZSpaceship.Communicator_Right")
+            end
         end
         return
     end
