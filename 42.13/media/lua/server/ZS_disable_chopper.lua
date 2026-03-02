@@ -18,4 +18,4 @@ local function checkChopperInSpace()
     end
 end
 
-Events.EveryTenMinutes.Add(checkChopperInSpace)
+Events.EveryOneMinute.Add(checkChopperInSpace)
