@@ -196,23 +196,20 @@ elements:
 
       B: [industry_02_Simon_MD_100, location_community_medical_01_22, location_community_medical_01_117]
       b: [industry_02_Simon_MD_98,  location_community_medical_01_23]
-      -: [industry_02_Simon_MD_102]
 
       X: [location_community_medical_01_76]
       x: [location_community_medical_01_77]
 
-      d: [fixtures_counters_01_37, location_community_medical_01_55, location_community_medical_01_156]
       e: [fixtures_counters_01_37, location_community_medical_01_55, location_community_medical_01_157]
       f: [fixtures_counters_01_37, location_community_medical_01_55, location_community_medical_01_166]
 
       m: [fixtures_counters_01_33, location_community_medical_01_139]
-      s: [fixtures_counters_01_33, fixtures_sinks_01_19]
       c: [fixtures_counters_01_33]
     map: |
       ┌─═──═──═─┓
-      │S27Bb-def┃
+      │S27Bb  ef┃
       ║C        >
-      │P  Xx msc┃
+      │P  Xx  mc┃
       ┗━┷━━┷━━┷━┛
 
   library:
