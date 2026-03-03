@@ -6,6 +6,8 @@ require "ZS_Recycler/CRecyclerGlobalObject"
 
 ZS_CRecyclerSystem = CGlobalObjectSystem:derive("ZS_CRecyclerSystem")
 
+local logger = ZSLogger.new("ZS_Recycler")
+
 function ZS_CRecyclerSystem:new()
 	local o = CGlobalObjectSystem.new(self, "zs_recycler")
 	return o
@@ -16,9 +18,7 @@ function ZS_CRecyclerSystem:isValidIsoObject(isoObject)
 end
 
 function ZS_CRecyclerSystem:newLuaObject(globalObject)
-    if ZS_Recycler.Debug then
-        print("[ZS_Recycler] Creating new LuaObject for GlobalObject " .. tostring(globalObject))
-    end
+    logger:debug("Creating new LuaObject for GlobalObject %s", tostring(globalObject))
 	return ZS_CRecyclerGlobalObject:new(self, globalObject)
 end
 
@@ -34,10 +34,9 @@ local function updateRecyclerSounds()
 
 	for i = 1, instance:getLuaObjectCount() do
 		local luaObject = instance:getLuaObjectByIndex(i)
+        logger:debug("updateRecyclerSounds: luaObject = %s", tostring(luaObject))
 		if luaObject then
-            if ZS_Recycler.Debug then
-                print("[ZS_Recycler] updateRecyclerSounds: processing=" .. tostring(luaObject.processing) .. " at (" .. luaObject.x .. "," .. luaObject.y .. "," .. luaObject.z .. ")")
-            end
+            logger:debug("updateRecyclerSounds: processing=%s at (%d,%d,%d)", tostring(luaObject.processing), luaObject.x or -1, luaObject.y or -1, luaObject.z or -1)
 			local key = luaObject.x .. "," .. luaObject.y .. "," .. luaObject.z
 			if luaObject.processing then
 				if not sounds[key] then

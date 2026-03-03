@@ -8,6 +8,8 @@ require "Moveables/ISMoveableDefinitions"
 
 ZS_SRecyclerGlobalObject = SGlobalObject:derive("ZS_SRecyclerGlobalObject")
 
+local logger = ZSLogger.new("ZS_Recycler")
+
 function ZS_SRecyclerGlobalObject:new(luaSystem, globalObject)
 	local o = SGlobalObject.new(self, luaSystem, globalObject)
 	return o
@@ -74,9 +76,21 @@ local function isScrapablePlaceable(item)
 	return moveProps and moveProps.canScrap == true
 end
 
--- Unknown: not organic and not scrapable placeable → leave in input.
+-- Item has a reverse recipe defined (result fullType -> recipe(s) -> ingredients).
+local function isReverseRecipe(item)
+	if not item then return false end
+	local ft = item.getFullType and item:getFullType()
+	if not ft then return false end
+	local rr = ZS_Recycler.reverse_recipes
+	if not rr or not rr[ft] then return false end
+	local recipes = rr[ft]
+	for _ in pairs(recipes) do return true end
+	return false
+end
+
+-- Unknown: not organic, not scrapable placeable, not reverse recipe → leave in input.
 local function isKnownProcessable(item)
-	return isOrganic(item) or isScrapablePlaceable(item)
+	return isOrganic(item) or isScrapablePlaceable(item) or isReverseRecipe(item)
 end
 
 -- Find first processable item by iterating; returns item, weightKg or nil.
@@ -110,7 +124,7 @@ end
 
 -- Processing time: ZS_Recycler.KG_PER_MINUTE kg per game-minute, minimum 1 minute. Returns seconds.
 local function durationSecondsForWeight(weightKg)
-	local kgPerMin = (ZS_Recycler and ZS_Recycler.KG_PER_MINUTE) or 2
+	local kgPerMin = ZS_Recycler.KG_PER_MINUTE or 2
 	local minutes = math.max(1, weightKg / kgPerMin)
 	return math.max(60, math.ceil(minutes * 60))
 end
@@ -233,221 +247,181 @@ local function getScrapItemsListNoSkill(moveProps)
 	return items
 end
 
--- Place scrap item list into container or on square. moveProps optional (for keyId/Wire; recycler has no keyId).
-local function placeScrapItems(containerOrSquare, scrapList, moveProps, isContainer)
-	if not scrapList then return 0 end
-	local n = 0
-	for _, fullType in ipairs(scrapList.usable or {}) do
-		local item = instanceItem(fullType)
-		if item then
-			if moveProps and moveProps.keyId and moveProps.keyId ~= -1 and item.getType and item:getType() == "Doorknob" then
-				item:setKeyId(moveProps.keyId)
-			end
-			if item.getType and item:getType() == "Wire" and item.setUsedDelta then
-				item:setUsedDelta(0.1)
-			end
-			if isContainer then
-				containerOrSquare:AddItem(item)
-			else
-				containerOrSquare:AddWorldInventoryItem(item, ZombRandFloat(0.1, 0.9), ZombRandFloat(0.1, 0.9), 0)
-			end
-			n = n + 1
+-- Get ingredients from reverse recipe for item: pick one recipe at random when multiple, apply EFFICIENCY. Returns { { fullType, count }, ... } or nil.
+local function getReverseRecipeIngredients(item)
+	if not item then return nil end
+	local ft = item.getFullType and item:getFullType()
+	local rr = ZS_Recycler.reverse_recipes
+	if not rr or not ft or not rr[ft] then return nil end
+	local recipes = rr[ft]
+	local keys = {}
+	for k in pairs(recipes) do keys[#keys + 1] = k end
+	if #keys == 0 then return nil end
+	local recipeName = keys[ZombRand(1, #keys + 1)]
+	local ingredients = recipes[recipeName]
+	if not ingredients then return nil end
+	local eff = ZS_Recycler.EFFICIENCY or 0.5
+	local list = {}
+	for fullType, count in pairs(ingredients) do
+		local n = math.max(0, math.floor(count * eff + 0.5))
+		if n >= 1 then
+			list[#list + 1] = { fullType = fullType, count = n }
 		end
 	end
-	for _, fullType in ipairs(scrapList.unusable or {}) do
-		local item = instanceItem(fullType)
-		if item then
-			if isContainer then
-				containerOrSquare:AddItem(item)
-			else
-				containerOrSquare:AddWorldInventoryItem(item, ZombRandFloat(0.1, 0.9), ZombRandFloat(0.1, 0.9), 0)
+	return (#list > 0) and list or nil
+end
+
+-- Place item list into container or on square. list: { { fullType, count }, ... } or scrapList { usable = { fullType,... }, unusable = { ... } }. setupFn(item, fullType) optional (e.g. for scrap Doorknob/Wire).
+local function placeItemList(containerOrSquare, list, isContainer, setupFn)
+	if not list then return 0 end
+	local items = {}
+	if list.usable then
+		for _, ft in ipairs(list.usable or {}) do items[#items + 1] = { fullType = ft, count = 1 } end
+		for _, ft in ipairs(list.unusable or {}) do items[#items + 1] = { fullType = ft, count = 1 } end
+	else
+		for _, e in ipairs(list) do items[#items + 1] = { fullType = e.fullType, count = e.count or 1 } end
+	end
+	local n = 0
+	for _, entry in ipairs(items) do
+		for _ = 1, entry.count do
+			local item = instanceItem(entry.fullType)
+			if item then
+				if setupFn then setupFn(item, entry.fullType) end
+				if isContainer then
+					containerOrSquare:AddItem(item)
+				else
+					containerOrSquare:AddWorldInventoryItem(item, ZombRandFloat(0.1, 0.9), ZombRandFloat(0.1, 0.9), 0)
+				end
+				n = n + 1
 			end
-			n = n + 1
 		end
 	end
 	return n
 end
 
-function ZS_SRecyclerGlobalObject:tick(deltaSeconds)
-	if ZS_Recycler.Debug then
-		print("[ZS_Recycler] tick() called")
-	end
-	local isoObject = self:getIsoObject()
-	if not isoObject then
-		if ZS_Recycler.Debug then
-			print("[ZS_Recycler] tick: no isoObject (cell not loaded?)")
-		end
-		return
-	end
-	local square = self:getSquare()
-	if not square then
-		if ZS_Recycler.Debug then
-			print("[ZS_Recycler] tick: no square")
-		end
-		return
-	end
+-- Clear processing state and notify client.
+local function stopProcessing(self)
+	self.processing = false
+	self.progress = 0
+	self.processDurationSeconds = 0
+	self.processingItemId = nil
+	self:updateOnClient()
+end
 
-	-- No ship power or can't consume -> stop
-	if not hasPowerAndConsume() then
-		if ZS_Recycler.Debug then
-			print("[ZS_Recycler] tick: no power (ZSpaceship.Power.getAmount < POWER_PER_MINUTE)")
-		end
-		if self.processing then
-			self.processing = false
-			self.progress = 0
-			self.processDurationSeconds = 0
-			self.processingItemId = nil
-			self:updateOnClient()
-		end
-		return
-	end
-
-	local recyclerCont = getRecyclerContainer(isoObject)
-	local itemCount = recyclerCont and recyclerCont:getItems() and recyclerCont:getItems():size() or 0
-	if not recyclerCont or itemCount == 0 then
-		if ZS_Recycler.Debug then
-			print("[ZS_Recycler] tick: no container or empty (itemCount=" .. tostring(itemCount) .. ")")
-		end
-		if self.processing then
-			self.processing = false
-			self.progress = 0
-			self.processDurationSeconds = 0
-			self.processingItemId = nil
-			self:updateOnClient()
-		end
-		return
-	end
-
-	-- Resolve current item: either one we're already processing (by ID) or first processable from iteration.
-	local currentItem, weightKg = nil, 0
+-- Resolve current item: by processingItemId or first processable. May clear state if item was removed. Returns currentItem, weightKg or nil, 0.
+local function resolveCurrentItem(self, recyclerCont)
+	local item, weightKg = nil, 0
 	if self.processingItemId then
-		currentItem = findItemById(recyclerCont, self.processingItemId)
-		if currentItem then
-			weightKg = (currentItem.getActualWeight and currentItem:getActualWeight()) or (currentItem.getWeight and currentItem:getWeight()) or 0
+		item = findItemById(recyclerCont, self.processingItemId)
+		if item then
+			weightKg = (item.getActualWeight and item:getActualWeight()) or (item.getWeight and item:getWeight()) or 0
 		else
-			-- Item was removed (e.g. by player); clear state and pick next
-			self.processingItemId = nil
-			self.processing = false
-			self.progress = 0
-			self.processDurationSeconds = 0
+			logger:debug("Item ID %s no longer in container (removed?), picking next.", tostring(self.processingItemId))
+			stopProcessing(self)
+			return nil, 0
 		end
 	end
-	if not currentItem then
-		currentItem, weightKg = findFirstProcessableItem(recyclerCont)
+	if not item then
+		item, weightKg = findFirstProcessableItem(recyclerCont)
 	end
-	if not currentItem then
-		if self.processing then
-			self.processing = false
-			self.progress = 0
-			self.processDurationSeconds = 0
-			self.processingItemId = nil
-			self:updateOnClient()
-		end
-		return
+	return item, weightKg
+end
+
+-- If item is organic, return biomass container with room; else return any adjacent biomass container. Returns nil when organic but no room (wait).
+local function getBiomassContainerForOrganic(currentItem, square)
+	local biomassCont = ZS_Utils and ZS_Utils.findAdjacentBiomassContainer and ZS_Utils.findAdjacentBiomassContainer(square)
+	if not isOrganic(currentItem) then
+		return biomassCont
 	end
-
-	local organic = isOrganic(currentItem)
-	local biomassCont = ZS_Utils.findAdjacentBiomassContainer(square)
-
-	-- Organic items need biomass storage object with room for fluid
-	if organic then
-		local noRoom = not biomassCont or biomassCont:getFreeCapacity() == 0
-		if noRoom then
-			if ZS_Recycler.Debug then
-				local name = currentItem.getDisplayName and currentItem:getDisplayName() or currentItem:getType() or "?"
-				print("[ZS_Recycler] Organic item '" .. tostring(name) .. "' but no biomass container with room, waiting.")
-			end
-			if self.processing then
-				self.processing = false
-				self.progress = 0
-				self.processDurationSeconds = 0
-				self.processingItemId = nil
-				self:updateOnClient()
-			end
-			return
-		end
+	if not biomassCont or biomassCont:getFreeCapacity() == 0 then
+		return nil
 	end
-	-- Non-organic needs east square for scrap (always exists if we have a square)
+	return biomassCont
+end
 
-	-- Start or continue current item
+-- Start or continue processing current item; advance progress. Returns true if still in progress (progress < duration), false if complete.
+local function startOrContinueItem(self, currentItem, weightKg, organic, deltaSeconds)
 	if not self.processing or not self.processDurationSeconds then
 		self.processingItemId = currentItem.getID and currentItem:getID() or nil
 		self.processDurationSeconds = durationSecondsForWeight(weightKg)
 		self.progress = 0
-		if ZS_Recycler.Debug then
-			local name = currentItem.getDisplayName and currentItem:getDisplayName() or currentItem:getType() or "?"
-			print("[ZS_Recycler] Start processing '" .. tostring(name) .. "' organic=" .. tostring(organic) .. " weight=" .. tostring(weightKg) .. "kg duration=" .. tostring(self.processDurationSeconds) .. "s")
-		end
+		logger:debug("Start processing '%s' organic=%s weight=%s kg duration=%s s",
+			currentItem.getDisplayName and currentItem:getDisplayName() or currentItem:getType() or "?", tostring(organic), tostring(weightKg), tostring(self.processDurationSeconds))
 	end
 	self.processing = true
 	self.progress = (self.progress or 0) + (deltaSeconds or 60)
+	return self.progress < (self.processDurationSeconds or 60)
+end
 
-	if self.progress < (self.processDurationSeconds or 60) then
-		self:updateOnClient()
-		return
-	end
-
-	-- Re-resolve item by ID (may have shifted after nested transfer) and transfer nested items before consuming.
-	local consumed = findItemById(recyclerCont, self.processingItemId)
-	if consumed then
-		local innerCont = consumed.getItemContainer and consumed:getItemContainer()
-		if innerCont then
-			local n = innerCont:getItems() and innerCont:getItems():size() or 0
-			transferAllTo(innerCont, recyclerCont)
-			if ZS_Recycler.Debug and n > 0 then
-				local name = consumed.getDisplayName and consumed:getDisplayName() or consumed:getType() or "?"
-				print("[ZS_Recycler] Transferred " .. tostring(n) .. " nested items from '" .. tostring(name) .. "'")
-			end
-			consumed = findItemById(recyclerCont, self.processingItemId)
+-- Re-resolve item by ID after transferring nested items to recycler. Returns consumed item or nil.
+local function resolveConsumedAfterNestedTransfer(recyclerCont, processingItemId)
+	local consumed = findItemById(recyclerCont, processingItemId)
+	if not consumed then return nil end
+	local innerCont = consumed.getItemContainer and consumed:getItemContainer()
+	if innerCont then
+		local n = innerCont:getItems() and innerCont:getItems():size() or 0
+		transferAllTo(innerCont, recyclerCont)
+		if n > 0 then
+			logger:debug("Transferred %d nested items from '%s'", n, consumed.getDisplayName and consumed:getDisplayName() or consumed:getType() or "?")
 		end
+		consumed = findItemById(recyclerCont, processingItemId)
 	end
-	if not consumed then
-		if ZS_Recycler.Debug then
-			print("[ZS_Recycler] Item no longer in container.")
-		end
-		self.processing = false
-		self.progress = 0
-		self.processDurationSeconds = 0
-		self.processingItemId = nil
-		self:updateOnClient()
-		return
-	end
-	recyclerCont:DoRemoveItem(consumed)
+	return consumed
+end
 
+-- Route consumed item to biomass, reverse recipe, scrap, or drop east. Caller must already have removed item from container.
+local function dispatchConsumed(consumed, organic, biomassCont, square)
 	local w = (consumed.getActualWeight and consumed:getActualWeight()) or (consumed.getWeight and consumed:getWeight()) or 0
-	-- Use organic from start of processing (same item we timed); isOrganic(consumed) can differ after transfer.
+	local name = consumed.getDisplayName and consumed:getDisplayName() or consumed:getType() or "?"
 	if organic and biomassCont then
 		local amount = math.max(1, w * ZS_Recycler.EFFICIENCY)
-        biomassCont:addFluid(Fluid.Get("Biomass"), amount)
-		if ZS_Recycler.Debug then
-            local cName = consumed.getDisplayName and consumed:getDisplayName() or consumed:getType() or "?"
-			print("[ZS_Recycler] Consumed organic '" .. tostring(cName) .. "' -> biomass +" .. tostring(amount))
+		biomassCont:addFluid(Fluid.Get("Biomass"), amount)
+		logger:info("Consumed organic '%s' -> biomass +%s", name, tostring(amount))
+	elseif isReverseRecipe(consumed) then
+		local ingredientList = getReverseRecipeIngredients(consumed)
+		if not ingredientList then
+			logger:warn("Reverse recipe '%s' but no ingredients returned (empty recipe?).", name)
+		else
+			local cont, parentObj, dropSq = findContainerOrEmptySquare(square)
+			if cont then
+				local placed = placeItemList(cont, ingredientList, true, nil)
+				if parentObj and parentObj.sync then parentObj:sync() end
+				logger:info("Reverse recipe '%s' -> %d items into container", name, placed)
+			elseif dropSq then
+				local placed = placeItemList(dropSq, ingredientList, false, nil)
+				logger:info("Reverse recipe '%s' -> %d items on floor", name, placed)
+			else
+				logger:warn("Reverse recipe '%s' but no container or square for output, item destroyed.", name)
+			end
 		end
 	elseif isScrapablePlaceable(consumed) then
-		-- Placeable with canScrap: use ISMoveableSpriteProps scrap logic (no tools/skills), output to nearby container or floor.
 		local spriteName = consumed.getWorldSprite and consumed:getWorldSprite()
 		local moveProps = spriteName and ISMoveableSpriteProps.new(spriteName)
 		local scrapList = moveProps and getScrapItemsListNoSkill(moveProps)
-		if scrapList and (#(scrapList.usable or {}) > 0 or #(scrapList.unusable or {}) > 0) then
-			local cont, parentObj, dropSq = findContainerOrEmptySquare(square)
-			if cont then
-				local placed = placeScrapItems(cont, scrapList, moveProps, true)
-				if parentObj and parentObj.sync then parentObj:sync() end
-				if ZS_Recycler.Debug then
-					local cName = consumed.getDisplayName and consumed:getDisplayName() or consumed:getType() or "?"
-					print("[ZS_Recycler] Scrapped placeable '" .. tostring(cName) .. "' -> " .. tostring(placed) .. " items into container")
+		if not scrapList or (#(scrapList.usable or {}) == 0 and #(scrapList.unusable or {}) == 0) then
+			logger:warn("Scrapable placeable '%s' but no scrap output (empty list), item destroyed.", name)
+		else
+			local function scrapSetup(item)
+				if moveProps and moveProps.keyId and moveProps.keyId ~= -1 and item.getType and item:getType() == "Doorknob" then
+					item:setKeyId(moveProps.keyId)
 				end
-			elseif dropSq then
-				local placed = placeScrapItems(dropSq, scrapList, moveProps, false)
-				if ZS_Recycler.Debug then
-					local cName = consumed.getDisplayName and consumed:getDisplayName() or consumed:getType() or "?"
-					print("[ZS_Recycler] Scrapped placeable '" .. tostring(cName) .. "' -> " .. tostring(placed) .. " items on floor")
+				if item.getType and item:getType() == "Wire" and item.setUsedDelta then
+					item:setUsedDelta(0.1)
 				end
 			end
+			local cont, parentObj, dropSq = findContainerOrEmptySquare(square)
+			if cont then
+				local placed = placeItemList(cont, scrapList, true, scrapSetup)
+				if parentObj and parentObj.sync then parentObj:sync() end
+				logger:info("Scrapped placeable '%s' -> %d items into container", name, placed)
+			elseif dropSq then
+				local placed = placeItemList(dropSq, scrapList, false, scrapSetup)
+				logger:info("Scrapped placeable '%s' -> %d items on floor", name, placed)
+			else
+				logger:warn("Scrapable placeable '%s' but no container or square for output, item destroyed.", name)
+			end
 		end
-		-- If no scrap list or no container/square, item is still consumed (destroyed).
 	else
-		-- Non-organic, not scrapable placeable: drop item on the tile to the east.
 		local eastSq = getEastSquare(square)
 		if eastSq and consumed then
 			local dir = IsoDirections and IsoDirections.East
@@ -456,28 +430,83 @@ function ZS_SRecyclerGlobalObject:tick(deltaSeconds)
 			else
 				eastSq:AddWorldInventoryItem(consumed, 0.5, 0.5, 0)
 			end
-		end
-		if ZS_Recycler.Debug then
-            local cName = consumed.getDisplayName and consumed:getDisplayName() or consumed:getType() or "?"
-			print("[ZS_Recycler] Consumed non-organic '" .. tostring(cName) .. "' -> dropped east")
+			logger:info("Consumed non-organic '%s' -> dropped east", name)
+		else
+			logger:warn("Consumed non-organic '%s' but no east square, item destroyed.", name)
 		end
 	end
+end
 
+-- Reset item state; stop if recycler empty; sync and update client.
+local function finishTick(self, recyclerCont, isoObject)
 	self.progress = 0
 	self.processDurationSeconds = 0
 	self.processingItemId = nil
-
-	-- More items? Next tick will find first processable and set new duration.
 	if recyclerCont:getItems():size() == 0 then
-		if ZS_Recycler.Debug then
-			print("[ZS_Recycler] Recycler empty, stopping.")
-		end
+		logger:info("Recycler empty, stopping.")
 		self.processing = false
 	end
-
-	-- Sync recycler inventory to clients after container changes
 	if isoObject and isoObject.sync then
 		isoObject:sync()
 	end
 	self:updateOnClient()
+end
+
+function ZS_SRecyclerGlobalObject:tick(deltaSeconds)
+	logger:debug("tick() called")
+	local isoObject = self:getIsoObject()
+	if not isoObject then
+		logger:debug("tick: no isoObject (cell not loaded?)")
+		return
+	end
+	local square = self:getSquare()
+	if not square then
+		logger:debug("tick: no square")
+		return
+	end
+	if not hasPowerAndConsume() then
+		logger:warn("tick: no power (ZSpaceship.Power.getAmount < POWER_PER_MINUTE)")
+		if self.processing then stopProcessing(self) end
+		return
+	end
+	local recyclerCont = getRecyclerContainer(isoObject)
+	local itemCount = recyclerCont and recyclerCont:getItems() and recyclerCont:getItems():size() or 0
+	if not recyclerCont or itemCount == 0 then
+		logger:debug("tick: no container or empty (itemCount=%s)", tostring(itemCount))
+		if self.processing then stopProcessing(self) end
+		return
+	end
+
+	local currentItem, weightKg = resolveCurrentItem(self, recyclerCont)
+	if not currentItem then
+		if itemCount > 0 then
+			logger:info("No processable item in container (%d items, all unknown?), stopping.", itemCount)
+		end
+		if self.processing then stopProcessing(self) end
+		return
+	end
+
+	local organic = isOrganic(currentItem)
+	local biomassCont = getBiomassContainerForOrganic(currentItem, square)
+	if organic and not biomassCont then
+		logger:info("Organic item '%s' but no biomass container with room, waiting.",
+			currentItem.getDisplayName and currentItem:getDisplayName() or currentItem:getType() or "?")
+		if self.processing then stopProcessing(self) end
+		return
+	end
+
+	if startOrContinueItem(self, currentItem, weightKg, organic, deltaSeconds) then
+		self:updateOnClient()
+		return
+	end
+
+	local consumed = resolveConsumedAfterNestedTransfer(recyclerCont, self.processingItemId)
+	if not consumed then
+		logger:warn("Item no longer in container.")
+		stopProcessing(self)
+		return
+	end
+	recyclerCont:DoRemoveItem(consumed)
+	dispatchConsumed(consumed, organic, biomassCont, square)
+	finishTick(self, recyclerCont, isoObject)
 end

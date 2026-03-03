@@ -10,6 +10,8 @@ require "ZS_Recycler/SRecyclerGlobalObject"
 
 ZS_SRecyclerSystem = SGlobalObjectSystem:derive("ZS_SRecyclerSystem")
 
+local logger = ZSLogger.new("ZS_Recycler")
+
 function ZS_SRecyclerSystem:new()
 	local o = SGlobalObjectSystem.new(self, "zs_recycler")
 	return o
@@ -65,15 +67,11 @@ Events.LoadGridsquare.Add(onLoadGridsquare)
 local function updateRecyclers()
 	local instance = ZS_SRecyclerSystem.instance
 	if not instance then
-        if ZS_Recycler.Debug then
-            print("[ZS_Recycler] updateRecyclers: no instance")
-        end
+        logger:debug("updateRecyclers: no instance")
 		return
 	end
 	local n = instance:getLuaObjectCount()
-    if ZS_Recycler.Debug then
-        print("[ZS_Recycler] updateRecyclers: " .. tostring(n) .. " recycler(s)")
-    end
+    logger:debug("updateRecyclers: %d recycler(s)", n)
 	for i = 1, n do
 		local luaObject = instance:getLuaObjectByIndex(i)
 		if luaObject and luaObject.tick then

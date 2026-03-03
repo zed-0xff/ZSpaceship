@@ -74,8 +74,7 @@ function ZSpaceship.Teleport.getMass(obj)
 
     -- Inventory item
     if instanceof(obj, "InventoryItem") then
-        local w = (obj.getActualWeight and obj:getActualWeight()) or (obj.getWeight and obj:getWeight()) or 0
-        return w
+        return obj:getUnequippedWeight()
     end
 
     -- World inventory object (wrapper around InventoryItem)
@@ -90,7 +89,7 @@ function ZSpaceship.Teleport.getMass(obj)
     if obj.getItemContainer then
         local cont = obj:getItemContainer()
         if cont and cont.getCapacityWeight then
-            return cont:getCapacityWeight()
+            return cont:getCapacityWeight() -- TODO: check
         end
     end
 
