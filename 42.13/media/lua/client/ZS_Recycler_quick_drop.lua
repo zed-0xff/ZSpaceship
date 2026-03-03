@@ -1,35 +1,35 @@
---- CLIENT: drop dragged corpse into shredder when "Interact" key is held for 500ms
+--- CLIENT: drop dragged corpse into recycler when "Interact" key is held for 500ms
 
 local KEYSTATE = {}
 
-local function find_shredder_at(playerObj, square)
+local function find_recycler_at(playerObj, square)
     if not square then return end
 
     local squareContainers = playerObj:getSuitableContainersToDropCorpseInSquare(square) -- works even if reachable diagonally
     if squareContainers:size() > 0 then
         for i=0, squareContainers:size()-1 do
             local container = squareContainers:get(i)
-            if container and ZS_Utils.isShredder(container) then
+            if container and ZS_Utils.isRecycler(container) then
                 return container
             end
         end
     end
 end
 
-local function find_shredder(playerObj)
+local function find_recycler(playerObj)
     local square = playerObj:getCurrentSquare()
-    return find_shredder_at(playerObj, square) or
-           find_shredder_at(playerObj, square:getAdjacentSquare(IsoDirections.W)) or
-           find_shredder_at(playerObj, square:getAdjacentSquare(IsoDirections.N)) or
-           find_shredder_at(playerObj, square:getAdjacentSquare(IsoDirections.E)) or
-           find_shredder_at(playerObj, square:getAdjacentSquare(IsoDirections.S)) or
-           find_shredder_at(playerObj, square:getAdjacentSquare(IsoDirections.NW)) or
-           find_shredder_at(playerObj, square:getAdjacentSquare(IsoDirections.NE)) or
-           find_shredder_at(playerObj, square:getAdjacentSquare(IsoDirections.SE)) or
-           find_shredder_at(playerObj, square:getAdjacentSquare(IsoDirections.SW))
+    return find_recycler_at(playerObj, square) or
+           find_recycler_at(playerObj, square:getAdjacentSquare(IsoDirections.W)) or
+           find_recycler_at(playerObj, square:getAdjacentSquare(IsoDirections.N)) or
+           find_recycler_at(playerObj, square:getAdjacentSquare(IsoDirections.E)) or
+           find_recycler_at(playerObj, square:getAdjacentSquare(IsoDirections.S)) or
+           find_recycler_at(playerObj, square:getAdjacentSquare(IsoDirections.NW)) or
+           find_recycler_at(playerObj, square:getAdjacentSquare(IsoDirections.NE)) or
+           find_recycler_at(playerObj, square:getAdjacentSquare(IsoDirections.SE)) or
+           find_recycler_at(playerObj, square:getAdjacentSquare(IsoDirections.SW))
 end
 
-local function try_shred_corpse(playerObj)
+local function try_recycle_corpse(playerObj)
     -- guaranteed input:
     --  * player is not nil
     --  * player is alive
@@ -38,10 +38,10 @@ local function try_shred_corpse(playerObj)
     --  * player is not currently busy (not in action queue or current action is not "busy")
     --  * player is pressing "Interact" key for at least 500ms
 
-    local shredder = find_shredder(playerObj)
-    if not shredder then return end
+    local recycler = find_recycler(playerObj)
+    if not recycler then return end
 
-    ISTimedActionQueue.add(ISDropCorpseIntoContainer:new(playerObj, shredder))
+    ISTimedActionQueue.add(ISDropCorpseIntoContainer:new(playerObj, recycler))
     return true
 end
 
@@ -83,7 +83,7 @@ local function onKeyKeepPressed(key)
 
     local delay = 500
     if (getTimestampMs() - KEYSTATE.keyPressedMS >= delay) then
-        if try_shred_corpse(getSpecificPlayer(0)) then
+        if try_recycle_corpse(getSpecificPlayer(0)) then
             KEYSTATE.keyPressedMS = nil
         end
     end

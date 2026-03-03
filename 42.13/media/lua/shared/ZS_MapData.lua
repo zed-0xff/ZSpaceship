@@ -102,7 +102,7 @@ ZSpaceship.MapData.Tiles = {
     ["walls_garage_02_57"] = true,
     ["walls_garage_02_60"] = true,
   },
-  ["Shredder"] = {
+  ["Recycler"] = {
     ["zspaceship_8"] = true,
   },
   ["SolarPanel"] = {

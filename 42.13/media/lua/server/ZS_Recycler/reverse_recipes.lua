@@ -1,8 +1,8 @@
-ZS_Shredder = ZS_Shredder or {}
+ZS_Recycler = ZS_Recycler or {}
 
-ZS_Shredder.reverse_recipes = ZS_Shredder.reverse_recipes or {}
+ZS_Recycler.reverse_recipes = ZS_Recycler.reverse_recipes or {}
 
-local tbl = ZS_Shredder.reverse_recipes
+local tbl = ZS_Recycler.reverse_recipes
 
 local function process_recipe(recipe)
     if recipe:getCategory() == "Packing" then return end

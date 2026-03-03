@@ -1,13 +1,13 @@
-ZS_Shredder = ZS_Shredder or {}
+ZS_Recycler = ZS_Recycler or {}
 
-ZS_Shredder.BIOMASS_COEFF    = 0.75
-ZS_Shredder.KG_PER_MINUTE    = 2
-ZS_Shredder.POWER_PER_MINUTE = 1
-ZS_Shredder.SOUND_NAME       = "zs_shredder"
-ZS_Shredder.Debug            = false
+ZS_Recycler.BIOMASS_COEFF    = 0.75
+ZS_Recycler.KG_PER_MINUTE    = 2
+ZS_Recycler.POWER_PER_MINUTE = 1
+ZS_Recycler.SOUND_NAME       = "zs_recycler"
+ZS_Recycler.Debug            = false
 
 -- Items not in organic list are unknown; they are left in the input container.
-ZS_Shredder.Items = {
+ZS_Recycler.Items = {
     -- Organic: processed into biomass fluid.
     DisplayCategory = {
         Animal     = true,

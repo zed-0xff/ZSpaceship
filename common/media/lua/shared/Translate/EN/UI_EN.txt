@@ -20,7 +20,7 @@ UI_EN = {
     UI_ZS_SynchronizeClone = "Synchronize Clone",
     UI_ZS_NoClone = "No clone exists",
 
-    UI_ZS_Shredder = "Shredder",
+    UI_ZS_Recycler = "Recycler",
 
     UI_quick_tip_ZS_1 = "Spaceship Tip: Use the teleporter to quickly move between the surface and your spaceship.",
     UI_quick_tip_ZS_2 = "Spaceship Tip: Keep an eye on your oxygen levels to avoid suffocating in space.",

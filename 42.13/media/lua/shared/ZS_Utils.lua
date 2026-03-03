@@ -118,7 +118,7 @@ function ZSpaceship.getWornSuit(player)
 end
 
 -- obj can be a tile or a container
-function ZS_Utils.isShredder(obj)
+function ZS_Utils.isRecycler(obj)
     if not obj.getSprite then
       obj = obj.getParent and obj:getParent()
       if not obj then return false end
@@ -130,7 +130,7 @@ function ZS_Utils.isShredder(obj)
     local name = sprite.getName and sprite:getName()
     if not name then return false end
 
-    return ZSpaceship.MapData.Tiles.Shredder[name]
+    return ZSpaceship.MapData.Tiles.Recycler[name]
 end
 
 -- obj can be a tile or the parent object of a container
@@ -149,11 +149,11 @@ end
 
 -- Returns the first adjacent ItemContainer that is a biomass storage, or nil.
 -- Uses IsoDirections for getAdjacentSquare (Java expects enum, not number).
-function ZS_Utils.findAdjacentBiomassContainer(shredderSquare)
-    if not shredderSquare then return nil end
+function ZS_Utils.findAdjacentBiomassContainer(recyclerSquare)
+    if not recyclerSquare then return nil end
     local adjSquares = {}
     for _, dir in ipairs({ IsoDirections.N, IsoDirections.E, IsoDirections.S, IsoDirections.W }) do
-        local adj = shredderSquare:getAdjacentSquare(dir)
+        local adj = recyclerSquare:getAdjacentSquare(dir)
         if adj then adjSquares[#adjSquares + 1] = adj end
     end
     for _, adj in ipairs(adjSquares) do

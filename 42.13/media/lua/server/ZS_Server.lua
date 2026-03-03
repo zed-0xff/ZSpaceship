@@ -219,10 +219,10 @@ Events.OnFillContainer.Add(function(a, b, container)
         return
     end
 
-    if room_name == "medical" and ZS_Utils.isShredder(container) then
+    if room_name == "medical" and ZS_Utils.isRecycler(container) then
         container:removeAllItems()
         if container.setCustomName then
-            container:setCustomName(getText("UI_ZS_Shredder")) -- XXX TODO: check in MP
+            container:setCustomName(getText("UI_ZS_Recycler")) -- XXX TODO: check in MP
         end
         return
     end

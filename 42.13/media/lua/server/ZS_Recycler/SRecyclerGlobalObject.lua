@@ -1,36 +1,36 @@
--- ZSpaceship Shredder: server GlobalObject (per-shredder state and processing).
+-- ZSpaceship Recycler: server GlobalObject (per-recycler state and processing).
 
 if isClient() then return end
 
 require "Map/SGlobalObject"
 
-ZS_SShredderGlobalObject = SGlobalObject:derive("ZS_SShredderGlobalObject")
+ZS_SRecyclerGlobalObject = SGlobalObject:derive("ZS_SRecyclerGlobalObject")
 
-function ZS_SShredderGlobalObject:new(luaSystem, globalObject)
+function ZS_SRecyclerGlobalObject:new(luaSystem, globalObject)
 	local o = SGlobalObject.new(self, luaSystem, globalObject)
 	return o
 end
 
-function ZS_SShredderGlobalObject:initNew()
+function ZS_SRecyclerGlobalObject:initNew()
 	self.processing = false
 	self.progress = 0
 	self.processDurationSeconds = 0
 end
 
-function ZS_SShredderGlobalObject:stateFromIsoObject(isoObject)
+function ZS_SRecyclerGlobalObject:stateFromIsoObject(isoObject)
 	self.processing = false
 	self.progress = 0
 	self.processDurationSeconds = 0
 end
 
-function ZS_SShredderGlobalObject:stateToIsoObject(isoObject)
+function ZS_SRecyclerGlobalObject:stateToIsoObject(isoObject)
 	-- No sprite/state to push to iso; state lives in GlobalObject modData.
 end
 
 -- Check ship power and consume for this minute. Uses ZSpaceship.Power.getAmount/consume.
 local function hasPowerAndConsume()
 	local power = ZSpaceship and ZSpaceship.Power and ZSpaceship.Power.getAmount and ZSpaceship.Power.getAmount()
-	local need = (ZS_Shredder and ZS_Shredder.POWER_PER_MINUTE) or 1
+	local need = ZS_Recycler.POWER_PER_MINUTE
 	if not power or power < need then return false end
 	if ZSpaceship.Power.consume then
 		ZSpaceship.Power.consume(need)
@@ -38,18 +38,18 @@ local function hasPowerAndConsume()
 	return true
 end
 
--- Get shredder's input container (first container on the thumpable).
-local function getShredderContainer(isoObject)
+-- Get recycler's input container (first container on the thumpable).
+local function getRecyclerContainer(isoObject)
 	if not isoObject then return nil end
 	local cont = isoObject.getItemContainer and isoObject:getItemContainer()
 	return cont
 end
 
--- Organic: ZS_Shredder.Items.DisplayCategory[itemDisplayCategory] or FullType.
+-- Organic: ZS_Recycler.Items.DisplayCategory[itemDisplayCategory] or FullType.
 local function isOrganic(item)
 	if not item then return false end
 	local ft = item.getFullType and item:getFullType()
-	if ft and ZS_Shredder and ZS_Shredder.Items and ZS_Shredder.Items.FullType and ZS_Shredder.Items.FullType[ft] == true then
+	if ft and ZS_Recycler.Items and ZS_Recycler.Items.FullType and ZS_Recycler.Items.FullType[ft] == true then
 		return true
 	end
 	local cat = nil
@@ -57,7 +57,7 @@ local function isOrganic(item)
 		local si = item:getScriptItem()
 		if si and si.getDisplayCategory then cat = si:getDisplayCategory() end
 	end
-	return cat and ZS_Shredder and ZS_Shredder.Items and ZS_Shredder.Items.DisplayCategory and ZS_Shredder.Items.DisplayCategory[cat] == true
+	return cat and ZS_Recycler.Items and ZS_Recycler.Items.DisplayCategory and ZS_Recycler.Items.DisplayCategory[cat] == true
 end
 
 -- Unknown: not organic → leave in input.
@@ -85,9 +85,9 @@ local function consumeFirstItem(container)
 	return item
 end
 
--- Processing time: ZS_Shredder.KG_PER_MINUTE kg per game-minute, minimum 1 minute. Returns seconds.
+-- Processing time: ZS_Recycler.KG_PER_MINUTE kg per game-minute, minimum 1 minute. Returns seconds.
 local function durationSecondsForWeight(weightKg)
-	local kgPerMin = (ZS_Shredder and ZS_Shredder.KG_PER_MINUTE) or 2
+	local kgPerMin = (ZS_Recycler and ZS_Recycler.KG_PER_MINUTE) or 2
 	local minutes = math.max(1, weightKg / kgPerMin)
 	return math.max(60, math.ceil(minutes * 60))
 end
@@ -108,37 +108,37 @@ local function transferAllTo(fromCont, toCont)
 	end
 end
 
--- East square from shredder (for non-organic drop). Use coordinates to avoid getE() IsoDirections issues.
-local function getEastSquare(shredderSquare)
-	if not shredderSquare then return nil end
-	local x, y, z = shredderSquare:getX(), shredderSquare:getY(), shredderSquare:getZ()
+-- East square from recycler (for non-organic drop). Use coordinates to avoid getE() IsoDirections issues.
+local function getEastSquare(recyclerSquare)
+	if not recyclerSquare then return nil end
+	local x, y, z = recyclerSquare:getX(), recyclerSquare:getY(), recyclerSquare:getZ()
 	local cell = getCell()
 	return cell and cell:getGridSquare(x + 1, y, z) or nil
 end
 
-function ZS_SShredderGlobalObject:tick(deltaSeconds)
-	if ZS_Shredder and ZS_Shredder.Debug then
-		print("[ZS_Shredder] tick() called")
+function ZS_SRecyclerGlobalObject:tick(deltaSeconds)
+	if ZS_Recycler.Debug then
+		print("[ZS_Recycler] tick() called")
 	end
 	local isoObject = self:getIsoObject()
 	if not isoObject then
-		if ZS_Shredder and ZS_Shredder.Debug then
-			print("[ZS_Shredder] tick: no isoObject (cell not loaded?)")
+		if ZS_Recycler.Debug then
+			print("[ZS_Recycler] tick: no isoObject (cell not loaded?)")
 		end
 		return
 	end
 	local square = self:getSquare()
 	if not square then
-		if ZS_Shredder and ZS_Shredder.Debug then
-			print("[ZS_Shredder] tick: no square")
+		if ZS_Recycler.Debug then
+			print("[ZS_Recycler] tick: no square")
 		end
 		return
 	end
 
 	-- No ship power or can't consume -> stop
 	if not hasPowerAndConsume() then
-		if ZS_Shredder and ZS_Shredder.Debug then
-			print("[ZS_Shredder] tick: no power (ZSpaceship.Power.getAmount < POWER_PER_MINUTE)")
+		if ZS_Recycler.Debug then
+			print("[ZS_Recycler] tick: no power (ZSpaceship.Power.getAmount < POWER_PER_MINUTE)")
 		end
 		if self.processing then
 			self.processing = false
@@ -149,11 +149,11 @@ function ZS_SShredderGlobalObject:tick(deltaSeconds)
 		return
 	end
 
-	local shredderCont = getShredderContainer(isoObject)
-	local itemCount = shredderCont and shredderCont:getItems() and shredderCont:getItems():size() or 0
-	if not shredderCont or itemCount == 0 then
-		if ZS_Shredder and ZS_Shredder.Debug then
-			print("[ZS_Shredder] tick: no container or empty (itemCount=" .. tostring(itemCount) .. ")")
+	local recyclerCont = getRecyclerContainer(isoObject)
+	local itemCount = recyclerCont and recyclerCont:getItems() and recyclerCont:getItems():size() or 0
+	if not recyclerCont or itemCount == 0 then
+		if ZS_Recycler.Debug then
+			print("[ZS_Recycler] tick: no container or empty (itemCount=" .. tostring(itemCount) .. ")")
 		end
 		if self.processing then
 			self.processing = false
@@ -164,10 +164,10 @@ function ZS_SShredderGlobalObject:tick(deltaSeconds)
 		return
 	end
 
-	local firstItem, weightKg = peekFirstItem(shredderCont)
+	local firstItem, weightKg = peekFirstItem(recyclerCont)
 	if not firstItem then
-		if ZS_Shredder and ZS_Shredder.Debug then
-			print("[ZS_Shredder] No first item, stopping.")
+		if ZS_Recycler.Debug then
+			print("[ZS_Recycler] No first item, stopping.")
 		end
 		self.processing = false
 		self.progress = 0
@@ -178,9 +178,9 @@ function ZS_SShredderGlobalObject:tick(deltaSeconds)
 
 	-- Unknown how to process → leave in input container
 	if not isKnownProcessable(firstItem) then
-		if ZS_Shredder and ZS_Shredder.Debug then
+		if ZS_Recycler.Debug then
 			local name = firstItem.getDisplayName and firstItem:getDisplayName() or firstItem:getType() or "?"
-			print("[ZS_Shredder] Unknown item '" .. tostring(name) .. "', leaving in input.")
+			print("[ZS_Recycler] Unknown item '" .. tostring(name) .. "', leaving in input.")
 		end
 		if self.processing then
 			self.processing = false
@@ -198,9 +198,9 @@ function ZS_SShredderGlobalObject:tick(deltaSeconds)
 	if organic then
 		local noRoom = not biomassCont or biomassCont:getFreeCapacity() == 0
 		if noRoom then
-			if ZS_Shredder and ZS_Shredder.Debug then
+			if ZS_Recycler.Debug then
 				local name = firstItem.getDisplayName and firstItem:getDisplayName() or firstItem:getType() or "?"
-				print("[ZS_Shredder] Organic item '" .. tostring(name) .. "' but no biomass container with room, waiting.")
+				print("[ZS_Recycler] Organic item '" .. tostring(name) .. "' but no biomass container with room, waiting.")
 			end
 			if self.processing then
 				self.processing = false
@@ -217,9 +217,9 @@ function ZS_SShredderGlobalObject:tick(deltaSeconds)
 	if not self.processing or not self.processDurationSeconds then
 		self.processDurationSeconds = durationSecondsForWeight(weightKg)
 		self.progress = 0
-		if ZS_Shredder and ZS_Shredder.Debug then
+		if ZS_Recycler.Debug then
 			local name = firstItem.getDisplayName and firstItem:getDisplayName() or firstItem:getType() or "?"
-			print("[ZS_Shredder] Start processing '" .. tostring(name) .. "' organic=" .. tostring(organic) .. " weight=" .. tostring(weightKg) .. "kg duration=" .. tostring(self.processDurationSeconds) .. "s")
+			print("[ZS_Recycler] Start processing '" .. tostring(name) .. "' organic=" .. tostring(organic) .. " weight=" .. tostring(weightKg) .. "kg duration=" .. tostring(self.processDurationSeconds) .. "s")
 		end
 	end
 	self.processing = true
@@ -230,24 +230,24 @@ function ZS_SShredderGlobalObject:tick(deltaSeconds)
 		return
 	end
 
-	-- Peek first item and transfer nested items into shredder before consuming (so they are processed separately).
-	local firstItem = peekFirstItem(shredderCont)
+	-- Peek first item and transfer nested items into recycler before consuming (so they are processed separately).
+	local firstItem = peekFirstItem(recyclerCont)
 	if firstItem then
 		local innerCont = firstItem.getItemContainer and firstItem:getItemContainer()
 		if innerCont then
 			local n = innerCont:getItems() and innerCont:getItems():size() or 0
-			transferAllTo(innerCont, shredderCont)
-			if ZS_Shredder and ZS_Shredder.Debug and n > 0 then
+			transferAllTo(innerCont, recyclerCont)
+			if ZS_Recycler.Debug and n > 0 then
 				local name = firstItem.getDisplayName and firstItem:getDisplayName() or firstItem:getType() or "?"
-				print("[ZS_Shredder] Transferred " .. tostring(n) .. " nested items from '" .. tostring(name) .. "'")
+				print("[ZS_Recycler] Transferred " .. tostring(n) .. " nested items from '" .. tostring(name) .. "'")
 			end
 		end
 	end
 
-	local consumed = consumeFirstItem(shredderCont)
+	local consumed = consumeFirstItem(recyclerCont)
 	if not consumed then
-		if ZS_Shredder and ZS_Shredder.Debug then
-			print("[ZS_Shredder] consumeFirstItem returned nil.")
+		if ZS_Recycler.Debug then
+			print("[ZS_Recycler] consumeFirstItem returned nil.")
 		end
 		self.processing = false
 		self.progress = 0
@@ -259,11 +259,11 @@ function ZS_SShredderGlobalObject:tick(deltaSeconds)
 	local w = (consumed.getActualWeight and consumed:getActualWeight()) or (consumed.getWeight and consumed:getWeight()) or 0
 	-- Use organic from start of processing (same item we timed); isOrganic(consumed) can differ after transfer.
 	if organic and biomassCont then
-		local amount = math.max(1, w * ZS_Shredder.BIOMASS_COEFF)
+		local amount = math.max(1, w * ZS_Recycler.BIOMASS_COEFF)
         biomassCont:addFluid(Fluid.Get("Biomass"), amount)
-		if ZS_Shredder and ZS_Shredder.Debug then
+		if ZS_Recycler.Debug then
             local cName = consumed.getDisplayName and consumed:getDisplayName() or consumed:getType() or "?"
-			print("[ZS_Shredder] Consumed organic '" .. tostring(cName) .. "' -> biomass +" .. tostring(amount))
+			print("[ZS_Recycler] Consumed organic '" .. tostring(cName) .. "' -> biomass +" .. tostring(amount))
 		end
 	else
 		-- Non-organic: drop item on the tile to the east. API expects (item, direction, offsetX, offsetY) - direction must be IsoDirections, not a number.
@@ -276,9 +276,9 @@ function ZS_SShredderGlobalObject:tick(deltaSeconds)
 				eastSq:AddWorldInventoryItem(consumed, 0.5, 0.5, 0)
 			end
 		end
-		if ZS_Shredder and ZS_Shredder.Debug then
+		if ZS_Recycler.Debug then
             local cName = consumed.getDisplayName and consumed:getDisplayName() or consumed:getType() or "?"
-			print("[ZS_Shredder] Consumed non-organic '" .. tostring(cName) .. "' -> dropped east")
+			print("[ZS_Recycler] Consumed non-organic '" .. tostring(cName) .. "' -> dropped east")
 		end
 	end
 
@@ -286,14 +286,14 @@ function ZS_SShredderGlobalObject:tick(deltaSeconds)
 	self.processDurationSeconds = 0
 
 	-- More items? Next tick will peek and set new duration.
-	if shredderCont:getItems():size() == 0 then
-		if ZS_Shredder and ZS_Shredder.Debug then
-			print("[ZS_Shredder] Shredder empty, stopping.")
+	if recyclerCont:getItems():size() == 0 then
+		if ZS_Recycler.Debug then
+			print("[ZS_Recycler] Recycler empty, stopping.")
 		end
 		self.processing = false
 	end
 
-	-- Sync shredder inventory to clients after container changes
+	-- Sync recycler inventory to clients after container changes
 	if isoObject and isoObject.sync then
 		isoObject:sync()
 	end

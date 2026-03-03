@@ -41,7 +41,7 @@ flags:
   - DoorW
   - DoorN
   - OpenDoor
-  - Shredder
+  - Recycler
   - SolarPanel
   - Storage
   - WaterStorage
@@ -183,11 +183,11 @@ elements:
       location_community_medical_01_*:
       fixtures_counters_*:
       fixtures_sinks_01_19:
-      zspaceship_8:                       { flags: [Shredder], alias: shredder }
+      zspaceship_8:                       { flags: [Recycler], alias: recycler }
       zspaceship_9:                       { flags: [CloningPod], alias: cloning_pod }
       quarantine_Simon_MD_63:             { flags: [BiomassStorage], alias: biomass_container }
     palette:
-      S: [industry_02_Simon_MD_96,  industry_02_Simon_MD_97, shredder]
+      S: [industry_02_Simon_MD_96,  industry_02_Simon_MD_97, recycler]
       C: [industry_02_Simon_MD_101, biomass_container]
       P: [industry_02_Simon_MD_103, cloning_pod]
 
