@@ -73,6 +73,13 @@ zbHook({
             maybeAddTeleportOption(context, player, animalbody)
             return result
         end,
+
+        -- playerNum here
+        doInventoryMenu = function(orig, player, context, animalInv, ...)
+            local result = orig(player, context, animalInv, ...)
+            maybeAddTeleportOption(context, player, animalInv)
+            return result
+        end,
     }
 })
 
