@@ -3,6 +3,8 @@
 if isClient() then return end
 
 require "Map/SGlobalObject"
+require "Moveables/ISMoveableSpriteProps"
+require "Moveables/ISMoveableDefinitions"
 
 ZS_SRecyclerGlobalObject = SGlobalObject:derive("ZS_SRecyclerGlobalObject")
 
@@ -62,9 +64,19 @@ local function isOrganic(item)
 	return cat and ZS_Recycler.Items and ZS_Recycler.Items.DisplayCategory and ZS_Recycler.Items.DisplayCategory[cat] == true
 end
 
--- Unknown: not organic → leave in input.
+-- Placeable (moveable) item with CanScrap sprite property: use ISMoveableSpriteProps scrap logic (no tools/skills).
+local function isScrapablePlaceable(item)
+	if not item then return false end
+	if not instanceof(item, "Moveable") then return false end
+	local spriteName = item.getWorldSprite and item:getWorldSprite()
+	if not spriteName then return false end
+	local moveProps = ISMoveableSpriteProps.new(spriteName)
+	return moveProps and moveProps.canScrap == true
+end
+
+-- Unknown: not organic and not scrapable placeable → leave in input.
 local function isKnownProcessable(item)
-	return isOrganic(item)
+	return isOrganic(item) or isScrapablePlaceable(item)
 end
 
 -- Find first processable item by iterating; returns item, weightKg or nil.
@@ -125,6 +137,135 @@ local function getEastSquare(recyclerSquare)
 	local x, y, z = recyclerSquare:getX(), recyclerSquare:getY(), recyclerSquare:getZ()
 	local cell = getCell()
 	return cell and cell:getGridSquare(x + 1, y, z) or nil
+end
+
+-- Adjacent squares in order E, S, W, N (for container / drop search).
+local function getAdjacentSquaresESWN(recyclerSquare)
+	if not recyclerSquare then return {} end
+	local x, y, z = recyclerSquare:getX(), recyclerSquare:getY(), recyclerSquare:getZ()
+	local cell = getCell()
+	if not cell then return {} end
+	return {
+		cell:getGridSquare(x + 1, y, z), -- E
+		cell:getGridSquare(x, y + 1, z), -- S
+		cell:getGridSquare(x - 1, y, z), -- W
+		cell:getGridSquare(x, y - 1, z), -- N
+	}
+end
+
+-- Find first object on square that has getItemContainer(); returns container, parentObj (for sync) or nil, nil.
+local function findContainerOnSquare(square)
+	if not square then return nil, nil end
+	local wobs = square:getWorldObjects()
+	if not wobs then return nil, nil end
+	for i = 0, wobs:size() - 1 do
+		local obj = wobs:get(i)
+		if obj and obj.getItemContainer then
+			local cont = obj:getItemContainer()
+			if cont then
+				return cont, obj
+			end
+		end
+	end
+	return nil, nil
+end
+
+-- Find nearby container (E, S, W, N) or first empty tile in that order for floor drop. Returns (container, parentObj, nil), (nil, nil, dropSquare), or (nil, nil, nil).
+local function findContainerOrEmptySquare(recyclerSquare)
+	local adj = getAdjacentSquaresESWN(recyclerSquare)
+	for _, sq in ipairs(adj) do
+		if sq then
+			local cont, parentObj = findContainerOnSquare(sq)
+			if cont then
+				return cont, parentObj, nil
+			end
+		end
+	end
+	-- No container: use first adjacent as drop tile (E then S then W then N).
+	for _, sq in ipairs(adj) do
+		if sq then
+			return nil, nil, sq
+		end
+	end
+	return nil, nil, nil
+end
+
+-- Build scrap output list from moveable sprite props (no tools/skills: use chance 100). Returns { usable = { fullType, ... }, unusable = { ... } } or nil.
+local function getScrapItemsListNoSkill(moveProps)
+	if not moveProps or not moveProps.canScrap then return nil end
+	local materials = {}
+	if moveProps.material then table.insert(materials, moveProps.material) end
+	if moveProps.material2 then table.insert(materials, moveProps.material2) end
+	if moveProps.material3 then table.insert(materials, moveProps.material3) end
+	if #materials == 0 then return nil end
+
+	local items = { usable = {}, unusable = {} }
+	local defs = ISMoveableDefinitions:getInstance()
+	local chance = 100
+
+	for _, mat in ipairs(materials) do
+		local scrapDef = defs.getScrapDefinition and defs:getScrapDefinition(mat)
+		if scrapDef then
+			local returnItems = scrapDef.returnItemsStatic or scrapDef.returnItems
+			if returnItems and #returnItems > 0 then
+				for _, v in ipairs(returnItems) do
+					local amount = v.maxAmount or 0
+					if moveProps.scrapSize == "Small" then
+						amount = (amount / 2 >= 1) and (amount / 2) or 1
+					elseif moveProps.scrapSize == "Large" then
+						amount = amount * 2
+					end
+					local rollChance = v.chancePerRoll or 100
+					for _ = 1, amount do
+						if ZombRandFloat(0, 101) < rollChance then
+							table.insert(items.usable, v.returnItem)
+						end
+					end
+				end
+			end
+			if #items.usable == 0 and scrapDef.unusableItem then
+				for _ = 1, ZombRand(1, 3) do
+					table.insert(items.unusable, scrapDef.unusableItem)
+				end
+			end
+		end
+	end
+	return items
+end
+
+-- Place scrap item list into container or on square. moveProps optional (for keyId/Wire; recycler has no keyId).
+local function placeScrapItems(containerOrSquare, scrapList, moveProps, isContainer)
+	if not scrapList then return 0 end
+	local n = 0
+	for _, fullType in ipairs(scrapList.usable or {}) do
+		local item = instanceItem(fullType)
+		if item then
+			if moveProps and moveProps.keyId and moveProps.keyId ~= -1 and item.getType and item:getType() == "Doorknob" then
+				item:setKeyId(moveProps.keyId)
+			end
+			if item.getType and item:getType() == "Wire" and item.setUsedDelta then
+				item:setUsedDelta(0.1)
+			end
+			if isContainer then
+				containerOrSquare:AddItem(item)
+			else
+				containerOrSquare:AddWorldInventoryItem(item, ZombRandFloat(0.1, 0.9), ZombRandFloat(0.1, 0.9), 0)
+			end
+			n = n + 1
+		end
+	end
+	for _, fullType in ipairs(scrapList.unusable or {}) do
+		local item = instanceItem(fullType)
+		if item then
+			if isContainer then
+				containerOrSquare:AddItem(item)
+			else
+				containerOrSquare:AddWorldInventoryItem(item, ZombRandFloat(0.1, 0.9), ZombRandFloat(0.1, 0.9), 0)
+			end
+			n = n + 1
+		end
+	end
+	return n
 end
 
 function ZS_SRecyclerGlobalObject:tick(deltaSeconds)
@@ -282,8 +423,31 @@ function ZS_SRecyclerGlobalObject:tick(deltaSeconds)
             local cName = consumed.getDisplayName and consumed:getDisplayName() or consumed:getType() or "?"
 			print("[ZS_Recycler] Consumed organic '" .. tostring(cName) .. "' -> biomass +" .. tostring(amount))
 		end
+	elseif isScrapablePlaceable(consumed) then
+		-- Placeable with canScrap: use ISMoveableSpriteProps scrap logic (no tools/skills), output to nearby container or floor.
+		local spriteName = consumed.getWorldSprite and consumed:getWorldSprite()
+		local moveProps = spriteName and ISMoveableSpriteProps.new(spriteName)
+		local scrapList = moveProps and getScrapItemsListNoSkill(moveProps)
+		if scrapList and (#(scrapList.usable or {}) > 0 or #(scrapList.unusable or {}) > 0) then
+			local cont, parentObj, dropSq = findContainerOrEmptySquare(square)
+			if cont then
+				local placed = placeScrapItems(cont, scrapList, moveProps, true)
+				if parentObj and parentObj.sync then parentObj:sync() end
+				if ZS_Recycler.Debug then
+					local cName = consumed.getDisplayName and consumed:getDisplayName() or consumed:getType() or "?"
+					print("[ZS_Recycler] Scrapped placeable '" .. tostring(cName) .. "' -> " .. tostring(placed) .. " items into container")
+				end
+			elseif dropSq then
+				local placed = placeScrapItems(dropSq, scrapList, moveProps, false)
+				if ZS_Recycler.Debug then
+					local cName = consumed.getDisplayName and consumed:getDisplayName() or consumed:getType() or "?"
+					print("[ZS_Recycler] Scrapped placeable '" .. tostring(cName) .. "' -> " .. tostring(placed) .. " items on floor")
+				end
+			end
+		end
+		-- If no scrap list or no container/square, item is still consumed (destroyed).
 	else
-		-- Non-organic: drop item on the tile to the east. API expects (item, direction, offsetX, offsetY) - direction must be IsoDirections, not a number.
+		-- Non-organic, not scrapable placeable: drop item on the tile to the east.
 		local eastSq = getEastSquare(square)
 		if eastSq and consumed then
 			local dir = IsoDirections and IsoDirections.East

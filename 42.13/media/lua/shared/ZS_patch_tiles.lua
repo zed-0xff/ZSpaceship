@@ -32,6 +32,16 @@ local function onGameStart()
     end
 end
 
-
 Events.OnGameStart.Add(onGameStart)
 Events.OnServerStarted.Add(onGameStart)
+
+if CustomTileProps_SetPair then
+    for i = 24, 27 do
+        -- [Recycler] vanilla "IV Stand" tile has the "CanScrap" flag, but no materials
+        local tileName = "location_community_medical_01_" .. tostring(i)
+        CustomTileProps_SetPair[tileName] = {
+            Material  = "MetalPipe",
+            Material2 = "MetalScrap",
+        }
+    end
+end
