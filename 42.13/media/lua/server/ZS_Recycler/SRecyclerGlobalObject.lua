@@ -15,12 +15,14 @@ function ZS_SRecyclerGlobalObject:initNew()
 	self.processing = false
 	self.progress = 0
 	self.processDurationSeconds = 0
+	self.processingItemId = nil
 end
 
 function ZS_SRecyclerGlobalObject:stateFromIsoObject(isoObject)
 	self.processing = false
 	self.progress = 0
 	self.processDurationSeconds = 0
+	self.processingItemId = nil
 end
 
 function ZS_SRecyclerGlobalObject:stateToIsoObject(isoObject)
@@ -65,24 +67,33 @@ local function isKnownProcessable(item)
 	return isOrganic(item)
 end
 
--- Get first item and its weight (kg); returns item, weightKg or nil.
-local function peekFirstItem(container)
+-- Find first processable item by iterating; returns item, weightKg or nil.
+local function findFirstProcessableItem(container)
 	if not container then return nil, 0 end
 	local items = container:getItems()
-	if not items or items:size() == 0 then return nil, 0 end
-	local item = items:get(0)
-	local w = (item.getActualWeight and item:getActualWeight()) or (item.getWeight and item:getWeight()) or 0
-	return item, w
+	if not items then return nil, 0 end
+	for i = 0, items:size() - 1 do
+		local item = items:get(i)
+		if item and isKnownProcessable(item) then
+			local w = (item.getActualWeight and item:getActualWeight()) or (item.getWeight and item:getWeight()) or 0
+			return item, w
+		end
+	end
+	return nil, 0
 end
 
--- Remove first item from container; returns the item (before remove) or nil.
-local function consumeFirstItem(container)
-	if not container then return nil end
+-- Find item in container by ID; returns item or nil.
+local function findItemById(container, itemId)
+	if not container or not itemId then return nil end
 	local items = container:getItems()
-	if not items or items:size() == 0 then return nil end
-	local item = items:get(0)
-	container:DoRemoveItem(item)
-	return item
+	if not items then return nil end
+	for i = 0, items:size() - 1 do
+		local item = items:get(i)
+		if item and item.getID and item:getID() == itemId then
+			return item
+		end
+	end
+	return nil
 end
 
 -- Processing time: ZS_Recycler.KG_PER_MINUTE kg per game-minute, minimum 1 minute. Returns seconds.
@@ -144,6 +155,7 @@ function ZS_SRecyclerGlobalObject:tick(deltaSeconds)
 			self.processing = false
 			self.progress = 0
 			self.processDurationSeconds = 0
+			self.processingItemId = nil
 			self:updateOnClient()
 		end
 		return
@@ -159,39 +171,41 @@ function ZS_SRecyclerGlobalObject:tick(deltaSeconds)
 			self.processing = false
 			self.progress = 0
 			self.processDurationSeconds = 0
+			self.processingItemId = nil
 			self:updateOnClient()
 		end
 		return
 	end
 
-	local firstItem, weightKg = peekFirstItem(recyclerCont)
-	if not firstItem then
-		if ZS_Recycler.Debug then
-			print("[ZS_Recycler] No first item, stopping.")
+	-- Resolve current item: either one we're already processing (by ID) or first processable from iteration.
+	local currentItem, weightKg = nil, 0
+	if self.processingItemId then
+		currentItem = findItemById(recyclerCont, self.processingItemId)
+		if currentItem then
+			weightKg = (currentItem.getActualWeight and currentItem:getActualWeight()) or (currentItem.getWeight and currentItem:getWeight()) or 0
+		else
+			-- Item was removed (e.g. by player); clear state and pick next
+			self.processingItemId = nil
+			self.processing = false
+			self.progress = 0
+			self.processDurationSeconds = 0
 		end
-		self.processing = false
-		self.progress = 0
-		self.processDurationSeconds = 0
-		self:updateOnClient()
-		return
 	end
-
-	-- Unknown how to process → leave in input container
-	if not isKnownProcessable(firstItem) then
-		if ZS_Recycler.Debug then
-			local name = firstItem.getDisplayName and firstItem:getDisplayName() or firstItem:getType() or "?"
-			print("[ZS_Recycler] Unknown item '" .. tostring(name) .. "', leaving in input.")
-		end
+	if not currentItem then
+		currentItem, weightKg = findFirstProcessableItem(recyclerCont)
+	end
+	if not currentItem then
 		if self.processing then
 			self.processing = false
 			self.progress = 0
 			self.processDurationSeconds = 0
+			self.processingItemId = nil
 			self:updateOnClient()
 		end
 		return
 	end
 
-	local organic = isOrganic(firstItem)
+	local organic = isOrganic(currentItem)
 	local biomassCont = ZS_Utils.findAdjacentBiomassContainer(square)
 
 	-- Organic items need biomass storage object with room for fluid
@@ -199,13 +213,14 @@ function ZS_SRecyclerGlobalObject:tick(deltaSeconds)
 		local noRoom = not biomassCont or biomassCont:getFreeCapacity() == 0
 		if noRoom then
 			if ZS_Recycler.Debug then
-				local name = firstItem.getDisplayName and firstItem:getDisplayName() or firstItem:getType() or "?"
+				local name = currentItem.getDisplayName and currentItem:getDisplayName() or currentItem:getType() or "?"
 				print("[ZS_Recycler] Organic item '" .. tostring(name) .. "' but no biomass container with room, waiting.")
 			end
 			if self.processing then
 				self.processing = false
 				self.progress = 0
 				self.processDurationSeconds = 0
+				self.processingItemId = nil
 				self:updateOnClient()
 			end
 			return
@@ -215,10 +230,11 @@ function ZS_SRecyclerGlobalObject:tick(deltaSeconds)
 
 	-- Start or continue current item
 	if not self.processing or not self.processDurationSeconds then
+		self.processingItemId = currentItem.getID and currentItem:getID() or nil
 		self.processDurationSeconds = durationSecondsForWeight(weightKg)
 		self.progress = 0
 		if ZS_Recycler.Debug then
-			local name = firstItem.getDisplayName and firstItem:getDisplayName() or firstItem:getType() or "?"
+			local name = currentItem.getDisplayName and currentItem:getDisplayName() or currentItem:getType() or "?"
 			print("[ZS_Recycler] Start processing '" .. tostring(name) .. "' organic=" .. tostring(organic) .. " weight=" .. tostring(weightKg) .. "kg duration=" .. tostring(self.processDurationSeconds) .. "s")
 		end
 	end
@@ -230,31 +246,32 @@ function ZS_SRecyclerGlobalObject:tick(deltaSeconds)
 		return
 	end
 
-	-- Peek first item and transfer nested items into recycler before consuming (so they are processed separately).
-	local firstItem = peekFirstItem(recyclerCont)
-	if firstItem then
-		local innerCont = firstItem.getItemContainer and firstItem:getItemContainer()
+	-- Re-resolve item by ID (may have shifted after nested transfer) and transfer nested items before consuming.
+	local consumed = findItemById(recyclerCont, self.processingItemId)
+	if consumed then
+		local innerCont = consumed.getItemContainer and consumed:getItemContainer()
 		if innerCont then
 			local n = innerCont:getItems() and innerCont:getItems():size() or 0
 			transferAllTo(innerCont, recyclerCont)
 			if ZS_Recycler.Debug and n > 0 then
-				local name = firstItem.getDisplayName and firstItem:getDisplayName() or firstItem:getType() or "?"
+				local name = consumed.getDisplayName and consumed:getDisplayName() or consumed:getType() or "?"
 				print("[ZS_Recycler] Transferred " .. tostring(n) .. " nested items from '" .. tostring(name) .. "'")
 			end
+			consumed = findItemById(recyclerCont, self.processingItemId)
 		end
 	end
-
-	local consumed = consumeFirstItem(recyclerCont)
 	if not consumed then
 		if ZS_Recycler.Debug then
-			print("[ZS_Recycler] consumeFirstItem returned nil.")
+			print("[ZS_Recycler] Item no longer in container.")
 		end
 		self.processing = false
 		self.progress = 0
 		self.processDurationSeconds = 0
+		self.processingItemId = nil
 		self:updateOnClient()
 		return
 	end
+	recyclerCont:DoRemoveItem(consumed)
 
 	local w = (consumed.getActualWeight and consumed:getActualWeight()) or (consumed.getWeight and consumed:getWeight()) or 0
 	-- Use organic from start of processing (same item we timed); isOrganic(consumed) can differ after transfer.
@@ -284,8 +301,9 @@ function ZS_SRecyclerGlobalObject:tick(deltaSeconds)
 
 	self.progress = 0
 	self.processDurationSeconds = 0
+	self.processingItemId = nil
 
-	-- More items? Next tick will peek and set new duration.
+	-- More items? Next tick will find first processable and set new duration.
 	if recyclerCont:getItems():size() == 0 then
 		if ZS_Recycler.Debug then
 			print("[ZS_Recycler] Recycler empty, stopping.")

@@ -22,10 +22,10 @@ function ZS_SRecyclerSystem:initSystem()
 	self.system:setModDataKeys(nil)
 
     -- Specify GlobalObject fields that should be saved.
-	self.system:setObjectModDataKeys({'processing', 'progress', 'processDurationSeconds'})
+	self.system:setObjectModDataKeys({'processing', 'progress', 'processDurationSeconds', 'processingItemId'})
 
     -- Specify GlobalObject fields that should be synced on clients.
-	self.system:setObjectSyncKeys({'processing', 'progress', 'processDurationSeconds'})
+	self.system:setObjectSyncKeys({'processing', 'progress', 'processDurationSeconds', 'processingItemId'})
 end
 
 function ZS_SRecyclerSystem:newLuaObject(globalObject)
