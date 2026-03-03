@@ -3,12 +3,12 @@ module ZSpaceship
     item TPBufferContainer
     {
         DisplayCategory = Hidden,
+        Hidden = true,
         WorldRender = false,
-        hidden = true,
         Weight = 0,
         WeightReduction = 100,
         ItemType = base:container,
-        Capacity = 49,
+        Capacity = 1,
         Tags = base:keyring,
     }
 

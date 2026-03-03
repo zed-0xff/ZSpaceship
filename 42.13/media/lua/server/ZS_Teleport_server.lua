@@ -32,23 +32,24 @@ local function findTeleportRoomCrateContainer(player)
     return nil
 end
 
--- Get or create the hidden TPBufferContainer in the player's inventory.
-local function getOrCreateBufferContainer(player)
-    if not ZSpaceship.tpb then
-        ZSpaceship.tpb = instanceItem(TPB_ITEM_ID)
-        if not ZSpaceship.tpb then
-            print("[ZSpaceship] ERROR: Failed to create buffer item of type " .. TPB_ITEM_ID)
-            return nil
-        end
-    end
-
-    return ZSpaceship.tpb:getItemContainer()
-end
-
 -- Find the buffer container for player (nil if not present).
 local function getBufferContainer(player)
-    return ZSpaceship.tpb and ZSpaceship.tpb:getItemContainer() or nil
+    local items = player:getInventory():getItemsFromFullType(TPB_ITEM_ID)
+    if items:size() > 0 then
+        return items:get(0):getItemContainer()
+    end
 end
+
+-- Get or create the hidden TPBufferContainer in the player's inventory.
+local function getOrCreateBufferContainer(player)
+    local container = getBufferContainer(player)
+    if container then return container end
+
+    local item = instanceItem(TPB_ITEM_ID)
+    player:getInventory():AddItem(item)
+    return item:getItemContainer()
+end
+
 
 local function bufferItem(player, item)
     local bufCont = getOrCreateBufferContainer(player)
@@ -84,7 +85,7 @@ local function flushBeamBuffer(targetCont, player)
 
     -- If the buffer container is now empty, remove the hidden item from the player's inventory.
     if bufCont.isEmpty and bufCont:isEmpty() then
-        ZSpaceship.tpb = nil
+        player:getInventory():RemoveAll(TPB_ITEM_ID)
     end
 end
 
@@ -286,65 +287,4 @@ end
 -- when Space cell loads after player teleported to it, flush any buffered items into the teleporter room crate
 for tileName in pairs(ZSpaceship.MapData.Tiles.Storage) do
     MapObjects.OnLoadWithSprite(tileName, onLoadStorage, 100)
-end
-
--- TODO: MP
-if not isMultiplayer() then
-    local function add_tpb_to_player_inventory()
-        if not getPlayer() or not ZSpaceship.tpb then return end
-
-        local inv = getPlayer():getInventory()
-        if not inv then return end
-
-        inv:AddItem(ZSpaceship.tpb)
-    end
-
-    local function remove_tpb_from_player_inventory()
-        if not getPlayer() then return end
-        local inv = getPlayer():getInventory()
-        local itemList = inv:RemoveAll(TPB_ITEM_ID)
-        if itemList and itemList:size() > 0 then
-            ZSpaceship.tpb = itemList:get(0) -- Assume only one instance since we remove all and re-add on save.
-        end
-    end
-
-    Events.OnSave.Add( add_tpb_to_player_inventory )
-    Events.OnPostSave.Add( remove_tpb_from_player_inventory )
-    Events.OnLoad.Add( remove_tpb_from_player_inventory )
-
-    local function fallbackCheck()
-        local player = getPlayer()
-        if not player then return end
-
-        local inv = player:getInventory()
-        if not inv then return end
-
-        local itemList = inv:RemoveAll(TPB_ITEM_ID)
-        if itemList and itemList:size() > 0 then
-            local player_tpb = itemList:get(0) -- Assume only one instance since we remove all and re-add on save.
-            if ZSpaceship.tpb and ZSpaceship.tpb ~= player_tpb then
-                -- merge inventories
-                local srcCont = player_tpb:getItemContainer()
-                local dstCont = ZSpaceship.tpb:getItemContainer()
-                if srcCont and dstCont and srcCont.getItems and dstCont.AddItem then
-                    local items = srcCont:getItems()
-                    if items then
-                        for i = 0, items:size() - 1 do
-                            local it = items:get(i)
-                            if it then
-                                dstCont:AddItem(it)
-                            end
-                        end
-                    end
-                end
-            end
-        end
-
-        if ZSpaceship.tpb and zsInSpace(player) then
-            ZSRooms.updateAllSlow()
-            ZSpaceship.flushBeamBufferToShip(nil, player)
-        end
-    end
-
-    Events.EveryTenMinutes.Add( fallbackCheck )
 end
