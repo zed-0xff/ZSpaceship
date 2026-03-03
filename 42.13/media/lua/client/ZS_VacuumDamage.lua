@@ -72,7 +72,7 @@ end
 -- Apply vacuum damage to any creature (zombie, animal, player)
 local function applyVacuumDamage(creature, mult)
     if not creature or creature:isDead() then return false end
-    mult = mult or 100 -- should scale with the frequency on applyVacuumDamage() calls
+    mult = mult or 50 -- should scale with the frequency on applyVacuumDamage() calls
 
     print("Applying vacuum damage", creature, mult)
     
