@@ -54,7 +54,13 @@ local function process_recipe(recipe)
     end
 end
 
-local recipes = CraftRecipeManager.queryRecipes("*")
-for i = 0, recipes:size() - 1 do
-    process_recipe(recipes:get(i))
+local function init_recipes()
+    local recipes = CraftRecipeManager.queryRecipes("*")
+    for i = 0, recipes:size() - 1 do
+        process_recipe(recipes:get(i))
+    end
 end
+
+-- TODO: check if this file should be in shared?
+Events.OnGameStart.Add(init_recipes)
+Events.OnServerStarted.Add(init_recipes)

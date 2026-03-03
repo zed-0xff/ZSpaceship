@@ -417,7 +417,7 @@ function ZS_SRecyclerGlobalObject:tick(deltaSeconds)
 	local w = (consumed.getActualWeight and consumed:getActualWeight()) or (consumed.getWeight and consumed:getWeight()) or 0
 	-- Use organic from start of processing (same item we timed); isOrganic(consumed) can differ after transfer.
 	if organic and biomassCont then
-		local amount = math.max(1, w * ZS_Recycler.BIOMASS_COEFF)
+		local amount = math.max(1, w * ZS_Recycler.EFFICIENCY)
         biomassCont:addFluid(Fluid.Get("Biomass"), amount)
 		if ZS_Recycler.Debug then
             local cName = consumed.getDisplayName and consumed:getDisplayName() or consumed:getType() or "?"

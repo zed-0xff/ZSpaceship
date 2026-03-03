@@ -1,6 +1,6 @@
 ZS_Recycler = ZS_Recycler or {}
 
-ZS_Recycler.BIOMASS_COEFF    = 0.75
+ZS_Recycler.EFFICIENCY       = 0.5 -- percentage of original materials restored / weight converted to biomass
 ZS_Recycler.KG_PER_MINUTE    = 2
 ZS_Recycler.POWER_PER_MINUTE = 1
 ZS_Recycler.SOUND_NAME       = "zs_recycler"
