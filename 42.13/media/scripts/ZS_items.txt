@@ -96,7 +96,6 @@ module ZSpaceship
         Tags = base:hazmatsuit; base:scba; base:ignorezombiedensity; base:isdisguise; base:OmitEmptyFromName; base:pickaramidthread; base:HeavyItem; base:WeldingMask; base:HasMetal; base:CanEat; ZSpaceship:SpaceSuitTag; ZSpaceship:Wetness2WaterTag; ZSpaceship:SuppressRunningTag; ZSpaceship:AutoReplenishTag,
         KeepOnDeplete = true,
         ActivatedItem = true,
-        OnCreate = SpecialLootSpawns.OnCreateSCBA,
         Tooltip = Tooltip_item_SCBA_NoBackpack,
         VisionModifier = 0.5,
         HearingModifier = 0.5,

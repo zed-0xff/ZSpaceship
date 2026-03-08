@@ -5,7 +5,7 @@ ZSLogger.INFO  = 2
 ZSLogger.WARN  = 3
 ZSLogger.ERROR = 4
 
-ZSLogger.DEFAULT_LEVEL = ZSLogger.DEBUG
+ZSLogger.DEFAULT_LEVEL = ZSLogger.INFO
 
 local prefix_tbl = {
     [ZSLogger.DEBUG] = "[d] ",
