@@ -93,6 +93,17 @@ function ZSRoom:isValid()
     return false
 end
 
+-- checks if any of cached squares was reused. TODO: better name
+function ZSRoom:checkSquares()
+    for k, sq in pairs(self.squares) do
+        local actualKey = ZSRoom.getSquareKey(sq)
+        if actualKey ~= k then
+            return false
+        end
+    end
+    return true
+end
+
 -- Update room properties (open space, missing walls, airtight, connections)
 function ZSRoom:update()
     if self.isoRoom and self.isoRoom.getSquares and self.isoRoom:getSquares():size() > 0 then
@@ -844,7 +855,6 @@ function ZSRoom:isBreached()
     end
     
     -- Return cached vacuum state (calculated by updateAllFast)
-    -- If not calculated yet, default to false (sealed)
     return self.vacuumState == ZSRoom.State.BREACHED
 end
 

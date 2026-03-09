@@ -86,8 +86,13 @@ function zsInVacuum(obj)
             end
         end
     end
+
     -- No room (or could not resolve): treat as vacuum
     if not room then return true end
+
+    if not room:checkSquares() then
+        ZSRooms.updateAllSlow()
+    end
 
     return room:isBreached()
 end
