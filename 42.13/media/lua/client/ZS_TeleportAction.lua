@@ -117,7 +117,8 @@ function ISZSpaceshipTeleportAction:complete()
         Events.OnTick.Remove(finalizeTeleport)
 
         ZSpaceship.checkAndUpdateVacuumState(character)
-        character:DoFootstepSound(2.0)
+        local sndVolume = 2.0 - character:getPerkLevel(Perks.Science) * 0.2
+        character:DoFootstepSound(sndVolume)
     end
 
     -- Delay teleport to next tick, or it doesn't work

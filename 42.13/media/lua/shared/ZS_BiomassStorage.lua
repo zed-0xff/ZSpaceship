@@ -39,6 +39,7 @@ end
 local biomass_storage_tiles = ZSpaceship.MapData and ZSpaceship.MapData.Tiles and ZSpaceship.MapData.Tiles.BiomassStorage or {}
 for tile_name in pairs(biomass_storage_tiles) do
     MapObjects.OnNewWithSprite(tile_name, initBiomassStorage, 10)
+    MapObjects.OnLoadWithSprite(tile_name, initBiomassStorage, 10)
 end
 
 --- client
