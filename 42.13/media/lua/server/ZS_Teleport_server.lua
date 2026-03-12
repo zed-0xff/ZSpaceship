@@ -288,3 +288,11 @@ end
 for tileName in pairs(ZSpaceship.MapData.Tiles.Storage) do
     MapObjects.OnLoadWithSprite(tileName, onLoadStorage, 100)
 end
+
+-- fallback
+Events.EveryTenMinutes.Add(function()
+    local player = getPlayer()
+    if zsInSpace(player) then
+        ZSpaceship.flushBeamBufferToShip(nil, player)
+    end
+end)

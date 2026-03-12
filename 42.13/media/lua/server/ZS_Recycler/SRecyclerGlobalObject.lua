@@ -465,7 +465,7 @@ function ZS_SRecyclerGlobalObject:tick(deltaSeconds)
 		return
 	end
 	if not hasPowerAndConsume() then
-		logger:warn("tick: no power (ZSpaceship.Power.getAmount < POWER_PER_MINUTE)")
+		logger:debug("tick: no power (ZSpaceship.Power.getAmount < POWER_PER_MINUTE)")
 		if self.processing then stopProcessing(self) end
 		return
 	end
@@ -480,7 +480,7 @@ function ZS_SRecyclerGlobalObject:tick(deltaSeconds)
 	local currentItem, weightKg = resolveCurrentItem(self, recyclerCont)
 	if not currentItem then
 		if itemCount > 0 then
-			logger:info("No processable item in container (%d items, all unknown?), stopping.", itemCount)
+			logger:debug("No processable item in container (%d items, all unknown?), stopping.", itemCount)
 		end
 		if self.processing then stopProcessing(self) end
 		return
