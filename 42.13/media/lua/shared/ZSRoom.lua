@@ -14,12 +14,7 @@ ZSRoom.State = {
 
 -- Static helper: Generate string key from square coordinates
 function ZSRoom.getSquareKey(sq)
-    if not sq then return nil end
-    local x, y, z = sq:getX(), sq:getY(), sq:getZ()
-    if x and y and z then
-        return x .. ":" .. y .. ":" .. z
-    end
-    return nil
+    return zsSquareToString(sq)
 end
 
 -- Static helper: Generate string key from coordinates

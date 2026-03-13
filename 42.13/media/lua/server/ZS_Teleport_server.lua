@@ -54,7 +54,7 @@ end
 local function bufferItem(player, item)
     local bufCont = getOrCreateBufferContainer(player)
     if not bufCont or not item then return end
-    bufCont:AddItem(item)
+    ISTransferAction:transferItem( player, item, item:getContainer(), bufCont )
 end
 
 local function flushBeamBuffer(targetCont, player)
@@ -117,22 +117,6 @@ function ZSpaceship.beamItemToShip(player, item)
         -- Teleporter room not loaded yet: remove the item from the world and stash it in the hidden buffer.
         if item.becomeCorpseItem then
             item = item:becomeCorpseItem() -- convert IsoDeadBody to InventoryItem
-        else
-            local srcCont = item.getItemContainer and item:getItemContainer() or nil
-            if srcCont and srcCont.DoRemoveItem then
-                srcCont:DoRemoveItem(item)
-                local parent = srcCont.getParent and srcCont:getParent()
-                if parent and parent.sync then parent:sync() end
-            else
-                local worldItem = item.getWorldItem and item:getWorldItem() or nil
-                if worldItem and worldItem.getSquare then
-                    local sq = worldItem:getSquare()
-                    if sq and sq.transmitRemoveItemFromSquare then
-                        sq:transmitRemoveItemFromSquare(worldItem)
-                        if sq.flagForHotSave then sq:flagForHotSave() end
-                    end
-                end
-            end
         end
 
         bufferItem(player, item)
@@ -171,83 +155,69 @@ function ZSpaceship.beamItemToShip(player, item)
     return true
 end
 
+local function tryFindItem(cont, itemID)
+    if not cont or not itemID then return nil end
+
+    if cont.getID and cont:getID() == itemID then
+        return cont
+    end
+    if cont.getItemById and cont:getItemById(itemID) then
+        return cont:getItemById(itemID)
+    end
+    if cont.getItem then
+        local it = cont:getItem()
+        if it and it.getID and it:getID() == itemID then
+            return it
+        end
+    end
+    if cont.getItemContainer then
+        local subCont = cont:getItemContainer()
+        if subCont then
+            local it = tryFindItem(subCont, itemID)
+            if it then return it end
+        end
+    end
+    if cont.getItems then
+        local items = cont:getItems()
+        if items then
+            local it = tryFindItem(items, itemID)
+            if it then return it end
+        end
+    end
+
+    if cont.size and cont.get then
+        for i = 0, cont:size() - 1 do
+            local it = tryFindItem(cont:get(i), itemID)
+            if it then return it end
+        end
+    end
+    if zsIsArray(cont) then
+        for _, v in ipairs(cont) do
+            local it = tryFindItem(v, itemID)
+            if it then return it end
+        end
+    end
+end
+
 -- Find an InventoryItem by ID, optionally scoped to a specific square table; falls back to near player.
 local function findItemById(player, itemID, square)
     if not player or not itemID or not square then return nil end
 
-    local function searchSquare(sq)
-        if not sq then return nil end
+    local searchables = {
+        square.getWorldObjects and square:getWorldObjects(),
+        square.getObjects and square:getObjects(),
+        square.getStaticMovingObjects and square:getStaticMovingObjects(),
+        square.getMovingObjects and square:getMovingObjects(),
+        VehicleUtils.getContainers and VehicleUtils.getContainers(player:getPlayerNum()), -- TODO: test on MP. (includes player inventory)
+    }
 
-        -- World inventory objects on the square
-        local worldObjs = sq.getWorldObjects and sq:getWorldObjects()
-        if worldObjs then
-            for i = 0, worldObjs:size() - 1 do
-                local wo = worldObjs:get(i)
-                if wo and wo.getItem then
-                    local it = wo:getItem()
-                    if it and it.getID and it:getID() == itemID then
-                        return it
-                    end
-                end
-            end
-        end
-
-        -- Items inside containers on the square (e.g. corpses, crates, movables)
-        local objects = sq.getObjects and sq:getObjects()
-        if objects then
-            for i = 0, objects:size() - 1 do
-                local obj = objects:get(i)
-                if obj and obj.getItemContainer then
-                    local cont = obj:getItemContainer()
-                    if cont and cont.getItems then
-                        local items = cont:getItems()
-                        if items then
-                            for j = 0, items:size() - 1 do
-                                local it = items:get(j)
-                                if it and it.getID and it:getID() == itemID then
-                                    return it
-                                end
-                            end
-                        end
-                    end
-                end
-            end
-        end
-
-        local objects = sq.getStaticMovingObjects and sq:getStaticMovingObjects()
-        if objects then
-            for i = 0, objects:size() - 1 do
-                local obj = objects:get(i)
-                if obj and obj.getID and obj:getID() == itemID then
-                    return obj
-                end
-            end
-        end
-
-        local objects = sq.getMovingObjects and sq:getMovingObjects()
-        if objects then
-            for i = 0, objects:size() - 1 do
-                local obj = objects:get(i)
-                if obj and obj.getID and obj:getID() == itemID then
-                    return obj
-                end
-            end
-        end
-
-        return nil
+    for _, cont in ipairs(searchables) do
+        local it = tryFindItem(cont, itemID)
+        if it then return it end
     end
-
-    local found = searchSquare(square)
-    if found then return found end
 
     -- Fallback: player inventory
-    local inv = player:getInventory()
-    if inv and inv.getItemById then
-        local item = inv:getItemById(itemID)
-        if item then return item end
-    end
-
-    return nil
+    return tryFindItem(player:getInventory(), itemID)
 end
 
 -- Handle client commands (MP/SP): beam items to the ship's teleporter-room crate.
@@ -255,13 +225,14 @@ Events.OnClientCommand.Add(function(module, command, player, args)
     if module ~= "ZSpaceship" then return end
 
     if command == "BeamItemToShip" then
-        if not player or not args or not args.itemID then return end
-
-        local item = findItemById(player, args.itemID, ZS_Utils.tableToSquare(args.square))
-        if item then
-            ZSpaceship.beamItemToShip(player, item)
-        else
-            print("[ZSpaceship] Failed to find item by ID: " .. serialize(args))
+        if not player or not args then return end
+        for sqID, itemID in pairs(args) do
+            local item = findItemById(player, itemID, zsSquareFromString(sqID))
+            if item then
+                ZSpaceship.beamItemToShip(player, item)
+            else
+                print("[ZSpaceship] Failed to find item " .. tostring(itemID) .. " at " .. tostring(sqID))
+            end
         end
     elseif command == "FlushBeamBuffer" then
         ZSpaceship.flushBeamBufferToShip(nil, player)

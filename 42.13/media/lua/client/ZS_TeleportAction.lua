@@ -53,8 +53,8 @@ function ISZSpaceshipTeleportAction:start()
     self.sound = emitter:playSound("modem")
     emitter:setVolume(self.sound, 0.5)
     -- Pitch scales with duration: short (50) = 1.5x, long (400) = 0.7x
-    local t = (self.maxTime - 50) / 350  -- 0..1 (fast..slow)
-    emitter:setPitch(self.sound, 1.5 - t * 0.8)
+    --local t = (self.maxTime - 50) / 350  -- 0..1 (fast..slow)
+    --emitter:setPitch(self.sound, 1.5 - t * 0.8)
 end
 
 function ISZSpaceshipTeleportAction:stop()
@@ -77,33 +77,38 @@ function ISZSpaceshipTeleportAction:complete()
 
     -- If this action was started for an object (e.g., item/movable) instead of a player teleport,
     -- just beam that object via server command and skip character repositioning.
-    if self.object ~= self.character and self.object and self.object.getID then
-        local sq = nil
-        -- Try container parent square first
-        local cont = self.object.getContainer and self.object:getContainer() or nil
-        if cont and cont.getParent then
-            local parent = cont:getParent()
-            if parent and parent.getSquare then
-                sq = parent:getSquare()
+    if self.objects then
+        local args = {}
+        for _, obj in ipairs(self.objects) do
+            local sq = nil
+            -- Try container parent square first
+            local cont = obj.getContainer and obj:getContainer() or nil
+            if cont and cont.getParent then
+                local parent = cont:getParent()
+                if parent and parent.getSquare then
+                    sq = parent:getSquare()
+                end
             end
-        end
-        -- Fallback: world inventory object square
-        if not sq and self.object.getWorldItem then
-            local wi = self.object:getWorldItem()
-            if wi and wi.getSquare then
-                sq = wi:getSquare()
+            -- Fallback: world inventory object square
+            if not sq and obj.getWorldItem then
+                local wi = obj:getWorldItem()
+                if wi and wi.getSquare then
+                    sq = wi:getSquare()
+                end
             end
+            -- Final fallback: player's current square
+            if not sq and self.character.getCurrentSquare then
+                sq = self.character:getCurrentSquare()
+            end
+
+            args[zsSquareToString(sq)] = obj:getID()
         end
-        -- Final fallback: player's current square
-        if not sq and self.character.getCurrentSquare then
-            sq = self.character:getCurrentSquare()
+        sendClientCommand(self.character, "ZSpaceship", "BeamItemToShip", args)
+
+        if ISInventoryPage then
+            ISInventoryPage.renderDirty = true
         end
 
-        local args = {
-            itemID = self.object:getID(),
-            square = ZS_Utils.squareToTable(sq),
-        }
-        sendClientCommand(self.character, "ZSpaceship", "BeamItemToShip", args)
         return true
     end
 
@@ -202,7 +207,7 @@ function ISZSpaceshipTeleportAction:getDuration()
     return zsClamp(duration, 50, 1000)
 end
 
-function ISZSpaceshipTeleportAction:new(character, targetX, targetY, targetZ, startMessage, timeMult, findFreeTile, toBuilding, object)
+function ISZSpaceshipTeleportAction:new(character, targetX, targetY, targetZ, startMessage, timeMult, findFreeTile, toBuilding, obj)
     local o = ISBaseTimedAction.new(self, character)
     o.targetX = targetX
     o.targetY = targetY
@@ -210,7 +215,13 @@ function ISZSpaceshipTeleportAction:new(character, targetX, targetY, targetZ, st
     o.timeMult = timeMult
     o.startMessage = startMessage
     o.findFreeTile = findFreeTile or false
-    o.object = object or character  -- generic source object (player, item, movable, etc.)
+    if obj then
+        if zsIsArray(obj) then
+            o.objects = obj  -- array of objects, for teleporting stacks of items
+        else
+            o.objects = { obj }  -- single object wrapped in array for uniform handling
+        end
+    end
     o.stopOnWalk = true
     o.stopOnRun = true
     o.stopOnAim = false
@@ -220,7 +231,7 @@ function ISZSpaceshipTeleportAction:new(character, targetX, targetY, targetZ, st
     if toBuilding then
         o.requiredPerkLevel = math.max(o.requiredPerkLevel, ZSpaceship.Teleport.SCIENCE_LEVEL_BUILDING)
     end
-    if o.object ~= character then
+    if o.objects then
         o.requiredPerkLevel = math.max(o.requiredPerkLevel, ZSpaceship.Teleport.SCIENCE_LEVEL_ITEM)
     end
     
@@ -228,7 +239,7 @@ function ISZSpaceshipTeleportAction:new(character, targetX, targetY, targetZ, st
     -- Check if teleporting from/to space
     o.fromSpace = zsInSpace(character)
     local toSpace = zsInSpaceXY(targetX, targetY)
-    o.powerCost = ZSpaceship.Teleport.getCost(character, o.fromSpace, toSpace, toBuilding or false, object)
+    o.powerCost = ZSpaceship.Teleport.getCost(character, o.fromSpace, toSpace, toBuilding or false, o.objects)
     
     o.maxTime = o:getDuration()
     

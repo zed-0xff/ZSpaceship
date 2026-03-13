@@ -28,6 +28,39 @@ function zsInSpaceXY(x, y)
            y >= ZSpaceship.SpaceMinY and y < ZSpaceship.SpaceMaxY
 end
 
+function zsIsArray(obj)
+    if type(obj) ~= "table" then return false end
+    local count = 0
+    for k, _ in pairs(obj) do
+        if type(k) ~= "number" then return false end
+        count = count + 1
+    end
+    return count == #obj
+end
+
+function zsSquareToString(sq)
+    if not sq then return nil end
+    local x, y, z = sq:getX(), sq:getY(), sq:getZ()
+    if x and y and z then
+        return x .. ":" .. y .. ":" .. z
+    end
+    return nil
+end
+
+function zsSquareFromString(str)
+    if type(str) ~= "string" then return nil end
+    local a = str:split(":")
+    if #a == 3 then
+        local x = tonumber(a[1])
+        local y = tonumber(a[2])
+        local z = tonumber(a[3])
+        if x and y and z then
+            return getSquare(x, y, z)
+        end
+    end
+    return nil
+end
+
 -- Resolve IsoGridSquare from player, square, room, or object with getX/getY/getZ (same order as zsInSpace).
 local function getSquareFromObj(obj)
     if not obj then return nil end
@@ -171,14 +204,4 @@ function ZS_Utils.findAdjacentBiomassContainer(recyclerSquare)
         end
     end
     return nil
-end
-
-function ZS_Utils.squareToTable(sq)
-    if not sq then return nil end
-    return { x = sq:getX(), y = sq:getY(), z = sq:getZ() }
-end
-
-function ZS_Utils.tableToSquare(table)
-    if not table then return nil end
-    return getSquare(table.x, table.y, table.z)
 end

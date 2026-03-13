@@ -11,7 +11,7 @@ local function addTeleportOption(context, player, cost, textKey, cb, comm, requi
         currentPower = ZSpaceship.Power.getAmount()
     end
     local scienceLevel = player:getPerkLevel(Perks.Science)
-    local text = getText(textKey, cost, currentPower)
+    local text = getText(textKey) .. getText("UI_ZS_TeleportCostSuffix", cost, currentPower)
     local opt = context:addOption(text, player, cb)
     
     -- Check perk level and power requirements
@@ -57,6 +57,14 @@ end
 function ZSpaceship.Teleport.getMass(obj)
     if not obj then return 0 end
 
+    if zsIsArray(obj) then
+        local total = 0
+        for i = 1, #obj do
+            total = total + ZSpaceship.Teleport.getMass(obj[i])
+        end
+        return total
+    end
+
     -- Player or any character with nutrition + inventory
     if obj.getNutrition and obj.getInventory then
         local bodyWeight = 0
@@ -98,6 +106,8 @@ function ZSpaceship.Teleport.getMass(obj)
 end
 
 function ZSpaceship.Teleport.isInBuilding(obj)
+    if zsIsArray(obj) then return ZSpaceship.Teleport.isInBuilding(obj[1]) end
+
     local sq = ZS_Utils.getSquare(obj)
     if not sq then return nil end
 
@@ -112,6 +122,7 @@ end
 -- @param fromSpace: Whether teleporting FROM space (spaceship)
 -- @param toSpace: Whether teleporting TO space (spaceship)
 -- @param toBuilding: Whether teleporting TO a building (only valid when toSpace is false)
+-- @param object: Optional object or array of objects being teleported (for item teleport cost)
 function ZSpaceship.Teleport.getCost(player, fromSpace, toSpace, toBuilding, object)
     object = object or player
     toBuilding = toBuilding or false
