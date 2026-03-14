@@ -8,7 +8,7 @@ require "Moveables/ISMoveableDefinitions"
 
 ZS_SRecyclerGlobalObject = SGlobalObject:derive("ZS_SRecyclerGlobalObject")
 
-local logger = ZSLogger.new("ZS_Recycler")
+local logger = ZBLogger.new("ZS_Recycler")
 
 function ZS_SRecyclerGlobalObject:new(luaSystem, globalObject)
 	local o = SGlobalObject.new(self, luaSystem, globalObject)

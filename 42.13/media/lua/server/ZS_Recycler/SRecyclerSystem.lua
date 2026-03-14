@@ -10,7 +10,7 @@ require "ZS_Recycler/SRecyclerGlobalObject"
 
 ZS_SRecyclerSystem = SGlobalObjectSystem:derive("ZS_SRecyclerSystem")
 
-local logger = ZSLogger.new("ZS_Recycler")
+local logger = ZBLogger.new("ZS_Recycler")
 
 function ZS_SRecyclerSystem:new()
 	local o = SGlobalObjectSystem.new(self, "zs_recycler")
