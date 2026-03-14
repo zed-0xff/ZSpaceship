@@ -1,10 +1,10 @@
 {
-    "ItemName_ZSpaceship.Spaceship_SolarPanel": "Spaceship Solar Panel",
-    "ItemName_ZSpaceship.Spaceship_SolarPanel_Broken": "Broken Spaceship Solar Panel",
-    "ItemName_ZSpaceship.Communicator_Left": "Communicator",
-    "ItemName_ZSpaceship.Communicator_Right": "Communicator",
-    "ItemName_ZSpaceship.Teleporter": "Spaceship Teleporter",
-    "ItemName_ZSpaceship.PowerStorageUnit_Schematic": "Power Storage Manual",
-    "ItemName_ZSpaceship.SolarPanel_Schematic": "Solar Panels Manual",
-    "ItemName_ZSpaceship.SpaceSuitA": "Space Suit"
+    "ZSpaceship.Spaceship_SolarPanel": "Spaceship Solar Panel",
+    "ZSpaceship.Spaceship_SolarPanel_Broken": "Broken Spaceship Solar Panel",
+    "ZSpaceship.Communicator_Left": "Communicator",
+    "ZSpaceship.Communicator_Right": "Communicator",
+    "ZSpaceship.Teleporter": "Spaceship Teleporter",
+    "ZSpaceship.PowerStorageUnit_Schematic": "Power Storage Manual",
+    "ZSpaceship.SolarPanel_Schematic": "Solar Panels Manual",
+    "ZSpaceship.SpaceSuitA": "Space Suit"
 }
