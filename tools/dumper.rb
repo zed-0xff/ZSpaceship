@@ -21,19 +21,33 @@ end
 def process_file(fname)
   magic = File.binread(fname, 4)
   case magic
-  when "LOTH"
-    process_LOTH_file(fname)
-  when "LOTP"
+  when LotHeader::LOTHEADER_MAGIC
+    @was_B42 = true
+    process_LOTH_file(fname, GameVersion::DEFAULT)
+  when LotHeader::LOTPACK_MAGIC
+    @was_B42 = true
     process_LOTP_file(fname)
   when "tdef"
     process_tdef_file(fname)
   when 'PZPK'
+    @was_B42 = true
     process_PACK_file(fname)
   else
     case fname
     when /\.bin\z/
-      process_BIN_file(fname)
+      if @was_B41
+        process_BIN_file(fname, GameVersion::B41)
+      else
+        process_BIN_file(fname, GameVersion::DEFAULT)
+      end
+    when /\.lotheader\z/
+      @was_B41 = true
+      process_LOTH_file(fname, GameVersion::B41)
+    when /\.lotpack\z/
+      @was_B41 = true
+      process_LOTP_file(fname)
     when /\.pack\z/
+      @was_B41 = true
       process_PACK_file(fname)
     end
   end
@@ -153,10 +167,10 @@ def process_tdef_file(fname)
   end
 end
 
-def process_BIN_file(fname)
+def process_BIN_file(fname, game_version = GameVersion::DEFAULT)
   puts "Processing #{fname} (#{File.size(fname)} bytes)".cyan
   coords = fname2coords(fname)
-  cdata = POTChunkData.new(*coords.split("_").map(&:to_i), true)
+  cdata = POTChunkData.new(*coords.split("_").map(&:to_i), game_version > GameVersion::B41)
   cdata.load(fname)
   p cdata
 
@@ -253,6 +267,7 @@ def fname2coords(fname)
   nil
 end
 
+# game_version is inherited from LOTHeader
 def process_LOTP_file(fname)
   puts "Processing #{fname}".cyan
   coords = fname2coords(fname)
@@ -279,10 +294,10 @@ end
 @outdir = "out"
 @extract_tiles = {}
 
-def process_LOTH_file(fname)
+def process_LOTH_file(fname, game_version = GameVersion::DEFAULT)
   puts "Processing #{fname}".cyan
   coords = fname2coords(fname)
-  hdr = POTLotHeader.new(*coords.split("_").map(&:to_i), true)
+  hdr = POTLotHeader.new(*coords.split("_").map(&:to_i), game_version > GameVersion::B41)
   hdr.load(fname)
   @headers[coords] = hdr
   pp hdr.buildings

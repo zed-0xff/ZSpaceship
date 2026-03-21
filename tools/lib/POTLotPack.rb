@@ -1,19 +1,24 @@
+require_relative 'LotHeader'
+
 class POTLotPack
   attr_reader :lotHeader, :pot, :x, :y, :chunkDim, :chunksPerCell, :cellDim, :loadedChunks, :offsetInData
 
   include BetterInspect
 
+  # pot = true for B42+, false for B41
   def initialize(lotHeader)
     @data = []
-    @lotHeader = lotHeader
-    @pot = lotHeader.pot;
-    @x = lotHeader.x;
-    @y = lotHeader.y;
-    @chunkDim = @pot ? 8 : 10;
-    @chunksPerCell = @pot ? 32 : 30;
-    @cellDim = @pot ? 256 : 300;
+
+    @lotHeader     = lotHeader
+    @pot           = lotHeader.pot
+    @x             = lotHeader.x
+    @y             = lotHeader.y
+    @chunkDim      = @pot ?   8 :  10
+    @chunksPerCell = @pot ?  32 :  30
+    @cellDim       = @pot ? 256 : 300
+
     # @loadedChunks = [false] * (@chunksPerCell * @chunksPerCell) # unused
-    @offsetInData = [-1] * (@cellDim * @cellDim * ((lotHeader.maxLevel - lotHeader.minLevel) + 1))
+    @offsetInData  = [-1] * (@cellDim * @cellDim * ((lotHeader.maxLevel - lotHeader.minLevel) + 1))
   end
 
   def set_square_data(x, y, z, tiles)
@@ -27,7 +32,7 @@ class POTLotPack
 
   def save(fname)
     File.open(fname, "wb") do |f|
-      f.write("LOTP")
+      f.write(LotHeader::LOTPACK_MAGIC)
       f.write([1].pack("L")) # Version 1
       # Build 42 expects an extra 4 bytes here (chunkDim in squares, typically 8)
       # because IsoLot seeks to (8 + 4 + index*8) when version >= 1.
@@ -94,16 +99,17 @@ class POTLotPack
   def load(fname)
     File.open(fname, "rb") do |f|
       @in = f
+      @version = nil
       magic = f.read(4)
-      if magic != "LOTP"
-        puts "[?] unexpected magic #{magic.inspect}"
-        return
+      if magic == LotHeader::LOTPACK_MAGIC
+        @version = f.read(4).unpack1("L")
+      else
+        f.seek(0)
+        @version = 0
       end
 
-      version = f.read(4).unpack1("L")
-      puts "  Version: #{version}"
-      raise "unsupported version #{version}" if version != 0 && version != 1
-      @version = version
+      puts "  Version: #{@version}"
+      raise "unsupported version #{@version}" if @version != 0 && @version != 1
 
       @chunksPerCell.times do |chunkX|
         @chunksPerCell.times do |chunkY|
