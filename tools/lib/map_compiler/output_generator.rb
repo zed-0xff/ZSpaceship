@@ -127,7 +127,13 @@ class MapCompiler
       @spawnpoints.each do |prof_name, points|
         lines << "        #{prof_name} = {"
         points.each do |point|
-          lines << "            { posX = #{point[0]}, posY = #{point[1]}, posZ = #{point[2]} },"
+          if @game_version >= GameVersion::B42_0
+            lines << "            { posX = #{point[0]}, posY = #{point[1]}, posZ = #{point[2]} },"
+          else
+            wx, px = point[0].divmod(300)
+            wy, py = point[1].divmod(300)
+            lines << "            { worldX = #{wx}, worldY = #{wy}, posX = #{px}, posY = #{py}, posZ = #{point[2]} },"
+          end
           npoints += 1
         end
         lines << "        },"

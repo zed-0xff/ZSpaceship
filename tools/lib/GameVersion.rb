@@ -7,6 +7,14 @@ class GameVersion # verbatim
     @m_suffix = suffix
   end
 
+  def self.parse(str)
+    if str =~ /^(\d+)\.(\d+)(.*)$/
+      new($1.to_i, $2.to_i, $3)
+    else
+      raise "invalid game version \"#{str}\""
+    end
+  end
+
   def to_s
     "#{@m_major}.#{@m_minor}#{@m_suffix}"
   end
@@ -15,12 +23,16 @@ class GameVersion # verbatim
     @m_major * 1000 + @m_minor
   end
 
-  def isGreaterThan(other)
+  # non-verbatim
+  def > other
     getInt() > other.getInt()
   end
 
-  # non-verbatim
-  B41 = GameVersion.new(41, 0)
-  B42 = GameVersion.new(42, 0)
-  DEFAULT = B42
+  def >= other
+    getInt() >= other.getInt()
+  end
+
+  B41   = GameVersion.new(41, 0)
+  B42_0 = GameVersion.new(42, 0)
+  DEFAULT = B42_0
 end

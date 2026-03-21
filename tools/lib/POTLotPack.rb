@@ -1,5 +1,3 @@
-require_relative 'LotHeader'
-
 class POTLotPack
   attr_reader :lotHeader, :pot, :x, :y, :chunkDim, :chunksPerCell, :cellDim, :loadedChunks, :offsetInData
 
@@ -13,12 +11,15 @@ class POTLotPack
     @pot           = lotHeader.pot
     @x             = lotHeader.x
     @y             = lotHeader.y
-    @chunkDim      = @pot ?   8 :  10
-    @chunksPerCell = @pot ?  32 :  30
-    @cellDim       = @pot ? 256 : 300
+
+    @chunkDim      = @pot ?  8 : 10
+    @chunksPerCell = @pot ? 32 : 30
+    @cellDim       = @chunkDim * @chunksPerCell
 
     # @loadedChunks = [false] * (@chunksPerCell * @chunksPerCell) # unused
     @offsetInData  = [-1] * (@cellDim * @cellDim * ((lotHeader.maxLevel - lotHeader.minLevel) + 1))
+
+    @version = @pot ? 1 : 0
   end
 
   def set_square_data(x, y, z, tiles)
@@ -32,8 +33,11 @@ class POTLotPack
 
   def save(fname)
     File.open(fname, "wb") do |f|
-      f.write(LotHeader::LOTPACK_MAGIC)
-      f.write([1].pack("L")) # Version 1
+      if @version > 0
+        f.write(LotHeader::LOTPACK_MAGIC)
+        f.write([@version].pack("L"))
+      end
+
       # Build 42 expects an extra 4 bytes here (chunkDim in squares, typically 8)
       # because IsoLot seeks to (8 + 4 + index*8) when version >= 1.
       f.write([@chunkDim].pack("L"))

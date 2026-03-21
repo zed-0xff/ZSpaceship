@@ -1,5 +1,4 @@
 require 'iostruct'
-require_relative 'LotHeader'
 
 Rect = IOStruct.new("l4", :x, :y, :w, :h, inspect: to_s)
 
@@ -20,15 +19,18 @@ class POTLotHeader
     @tilesUsed = []
     @indexToTile = {}
 
-    @chunkDim      = pot ?   8 :  10
-    @chunksPerCell = pot ?  32 :  30
-    @cellDim       = pot ? 256 : 300
+    @chunkDim      = pot ?  8 : 10
+    @chunksPerCell = pot ? 32 : 30
+    @cellDim       = @chunkDim * @chunksPerCell
+
     @pot = pot
     @x = x
     @y = y
     @width = @chunkDim
     @height = @chunkDim
     @zombieDensity = [0] * (@chunksPerCell * @chunksPerCell)
+
+    @version = pot ? 1 : 0
   end
 
   def get_tile_index(name)
@@ -55,12 +57,18 @@ class POTLotHeader
 
   def save(fname)
     File.open(fname, "wb") do |f|
-      f.write(LotHeader::LOTHEADER_MAGIC)
-      f.write([@version || 1].pack("L"))
+      f.write(LotHeader::LOTHEADER_MAGIC)   if @version > 0
+      f.write([@version].pack("L"))
       f.write([@tilesUsed.size].pack("L"))
       @tilesUsed.each { |t| f.puts(t) }
+      f.write("\x00")                       if @version == 0
       f.write([@width, @height].pack("LL"))
-      f.write([@minLevel, @maxLevel].pack("ll"))
+
+      if @version > 0
+        f.write([@minLevel, @maxLevel].pack("ll")) # [v1] minLevel, maxLevel
+      else
+        f.write([@maxLevel-@minLevel+1].pack("l")) # [v0] number of levels
+      end
       
       rooms_array = @rooms.values
       f.write([rooms_array.size].pack("L"))
@@ -175,9 +183,9 @@ class POTLotHeader
 
       pos = f.tell
       data = f.read(0x1000)
-      if !data.empty? && data != "\x00" * 0x400
+      if !data.empty? && data != "\x00" * (@chunksPerCell * @chunksPerCell)
         puts
-        printf "Zombie Intensity Map (%x bytes):\n", data.size
+        printf "Zombie Intensity Map (%d bytes):\n", data.size
         ZHexdump.dump(data, add: pos, indent: 4, width: (@version == 0 ? 30 : 32))
       end
     end

@@ -26,8 +26,10 @@ class MapCompiler
   include MapCompiler::CorridorHandler
   include MapCompiler::OutputGenerator
 
-  def initialize(yaml_path)
-    @config = YAML.safe_load(File.read(yaml_path, encoding: "utf-8"), permitted_classes: [Symbol])
+  def initialize(yaml_path, game_version = GameVersion::DEFAULT)
+    @game_version = game_version
+
+    @config = YAML.safe_load(File.read(yaml_path, encoding: "utf-8"))
     @cell_x, @cell_y = @config['origin']
     @default_floor = @config['default_floor']
     
@@ -115,11 +117,11 @@ class MapCompiler
       end
     end
     
-    @header = POTLotHeader.new(@cell_x, @cell_y, true)
-    @header.minLevel = 0  # Always start from 0 for game compatibility
-    @header.maxLevel = max_level  # Include default_level and any roofs above
-    @pack = POTLotPack.new(@header)
-    @cdata = POTChunkData.new(@cell_x, @cell_y, true)
+    @header = POTLotHeader.new(@cell_x, @cell_y, @game_version >= GameVersion::B42_0)
+    @header.minLevel = 0            # cannot be greater than 0 ?
+    @header.maxLevel = max_level    # Include default_level and any roofs above
+    @pack = POTLotPack.new(@header) # inherits game version from the header
+    @cdata = POTChunkData.new(@cell_x, @cell_y, @game_version >= GameVersion::B42_0)
     
     # Compute element sizes (use explicit width/height if present, otherwise derive from map)
     @element_sizes = {}
@@ -227,13 +229,24 @@ class MapCompiler
 end
 
 if __FILE__ == $0
-  options = { output: "out" }
+  options = {
+    game_version: GameVersion::DEFAULT,
+    output: "out",
+  }
 
   OptionParser.new do |opts|
     opts.banner = "Usage: compiler.rb [options] <map.yaml>"
 
     opts.on("-o", "--output DIR", "Output directory (default: out)") do |o|
       options[:output] = o
+    end
+
+    opts.on("-V", "--game-version VERSION", "Target game version (e.g. '41.0', '42.15')") do |v|
+      # This option can be used to set version-specific defaults or validations in the future
+      # For now, we just print it out and store it in options for potential use
+      v = GameVersion.parse(v)
+      options[:game_version] = v
+      puts "Target game version set to: #{v}"
     end
 
     opts.on("-h", "--help", "Prints this help") do
@@ -249,6 +262,6 @@ if __FILE__ == $0
     exit 1
   end
 
-  compiler = MapCompiler.new(yaml_path)
+  compiler = MapCompiler.new(yaml_path, options[:game_version])
   compiler.compile(options[:output])
 end

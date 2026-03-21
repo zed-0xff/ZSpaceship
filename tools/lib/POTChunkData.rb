@@ -7,9 +7,10 @@ class POTChunkData
 
   # pot = true for B42+, false for B41
   def initialize(x, y, pot)
-    @chunkDim      = pot ?   8 :  10
-    @chunksPerCell = pot ?  32 :  30
-    @cellDim       = pot ? 256 : 300
+    @chunkDim      = pot ?  8 : 10
+    @chunksPerCell = pot ? 32 : 30
+    @cellDim       = @chunkDim * @chunksPerCell
+
     @pot = pot
     @x = x
     @y = y

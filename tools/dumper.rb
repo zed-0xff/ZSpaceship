@@ -170,7 +170,7 @@ end
 def process_BIN_file(fname, game_version = GameVersion::DEFAULT)
   puts "Processing #{fname} (#{File.size(fname)} bytes)".cyan
   coords = fname2coords(fname)
-  cdata = POTChunkData.new(*coords.split("_").map(&:to_i), game_version.isGreaterThan(GameVersion::B41))
+  cdata = POTChunkData.new(*coords.split("_").map(&:to_i), game_version >= GameVersion::B42_0)
   cdata.load(fname)
   p cdata
 
@@ -297,7 +297,7 @@ end
 def process_LOTH_file(fname, game_version = GameVersion::DEFAULT)
   puts "Processing #{fname}".cyan
   coords = fname2coords(fname)
-  hdr = POTLotHeader.new(*coords.split("_").map(&:to_i), game_version.isGreaterThan(GameVersion::B41))
+  hdr = POTLotHeader.new(*coords.split("_").map(&:to_i), game_version >= GameVersion::B42_0)
   hdr.load(fname)
   @headers[coords] = hdr
   pp hdr.buildings
