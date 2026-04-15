@@ -1,0 +1,78 @@
+ZSpaceship = ZSpaceship or {}
+ZSpaceship.MapData = ZSpaceship.MapData or {}
+
+-- Cell coordinates
+ZSpaceship.MapData.CellX = <%= @cell_x %>
+ZSpaceship.MapData.CellY = <%= @cell_y %>
+
+ZSpaceship.MapData.Default = ZSpaceship.MapData.Default or {}
+
+-- Room centers
+ZSpaceship.MapData.Default.Rooms = {
+<% @all_rooms.each do |room| -%>
+  { x = <%= room[:x] %>, y = <%= room[:y] %>, z = <%= room[:z] %>, name = <%= room[:name].inspect %> },
+<% end %>
+}
+
+-- Location coordinates (grouped by type)
+ZSpaceship.MapData.Default.Locations = {
+<% @locations_by_type.sort.each do |location_type, coords| -%>
+  [<%= location_type.inspect %>] = {
+  <% coords.each do |c| -%>
+    { x = <%= c[:x] %>, y = <%= c[:y] %>, z = <%= c[:z] %> },
+  <% end %>
+  }
+<% end %>
+}
+
+<%
+  tiles_by_flag = {}
+  @tiles_with_flags.each do |tile_name, data|
+    data[:flags].each do |flag|
+      tiles_by_flag[flag] ||= []
+      tiles_by_flag[flag] << tile_name
+    end
+  end
+%>
+
+-- Tiles with flags, grouped by flag
+ZSpaceship.MapData.Tiles = {
+<% tiles_by_flag.sort.each do |flag, tile_names| -%>
+  [<%= flag.inspect %>] = {
+  <% tile_names.sort.each do |t| -%>
+    [<%= t.inspect %>] = true,
+  <% end -%>
+  },
+<% end -%>
+}
+
+-- Generate door sprites from MapData.Tiles (tiles with DoorN or DoorW flags)
+ZSpaceship.MapData.DoorSprites = {}
+for tile_name in pairs(ZSpaceship.MapData.Tiles.DoorN) do
+    ZSpaceship.MapData.DoorSprites[tile_name] = true
+end
+for tile_name in pairs(ZSpaceship.MapData.Tiles.DoorW) do
+    ZSpaceship.MapData.DoorSprites[tile_name] = true
+end
+
+local function buildAirtightLookupTable(direction_flag_list)
+    local lookup = {}
+    for tile_name in pairs(direction_flag_list) do
+        if ZSpaceship.MapData.Tiles.Airtight[tile_name] then
+            lookup[tile_name] = true
+        end
+    end
+    return lookup
+end
+
+-- North/South walls (getWall(true)) - from WallN flag, only if also Airtight
+ZSpaceship.MapData.AIRTIGHT_WALLS_NS_LOOKUP = buildAirtightLookupTable(ZSpaceship.MapData.Tiles["WallN"])
+
+-- East/West walls (getWall(false)) - from WallW flag, only if also Airtight
+ZSpaceship.MapData.AIRTIGHT_WALLS_EW_LOOKUP = buildAirtightLookupTable(ZSpaceship.MapData.Tiles["WallW"])
+
+-- Door tiles (North/South direction) - from DoorN flag, only if also Airtight
+ZSpaceship.MapData.AIRTIGHT_DOORS_NS_LOOKUP = buildAirtightLookupTable(ZSpaceship.MapData.Tiles["DoorN"])
+
+-- Door tiles (East/West direction) - from DoorW flag, only if also Airtight
+ZSpaceship.MapData.AIRTIGHT_DOORS_EW_LOOKUP = buildAirtightLookupTable(ZSpaceship.MapData.Tiles["DoorW"])
