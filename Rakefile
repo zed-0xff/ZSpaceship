@@ -2,7 +2,7 @@ task :default => [:tiles, :map]
 
 desc "build map"
 task :map do
-  sh "./tools/compiler.rb spaceship.yaml -o 42.13/media/maps/ZSpaceship/"
+  sh "./tools/compiler.rb map.yml -o 42.13/media/maps/ZSpaceship/"
 end
 
 desc "build tiles"
