@@ -1,11 +1,12 @@
 require 'ZS_MapData'
+require 'ZS_Utils'
 
 ZSpaceship = ZSpaceship or {}
 
 -- Initialize biomass storage objects with FluidContainer (server-only)
-local function initBiomassStorage(obj)
-    print("Initializing biomass storage for: " .. tostring(obj))
-    if not obj or not zsInSpace(obj) then return end
+ZS_Utils.initSpritesOnce("initBiomassStorage", ZSpaceship.MapData.Tiles.BiomassStorage, function(obj)
+    ZSpaceship.logger:debug("Initializing biomass storage for %s", tostring(obj))
+    if not zsInSpace(obj) then return end
 
     -- Skip if already has FluidContainer (avoid duplicates on reload)
     if obj:getFluidContainer() then return end
@@ -34,13 +35,8 @@ local function initBiomassStorage(obj)
     if isServer() then
         obj:sync()
     end
-end
-
-local biomass_storage_tiles = ZSpaceship.MapData and ZSpaceship.MapData.Tiles and ZSpaceship.MapData.Tiles.BiomassStorage or {}
-for tile_name in pairs(biomass_storage_tiles) do
-    MapObjects.OnNewWithSprite(tile_name, initBiomassStorage, 10)
-    MapObjects.OnLoadWithSprite(tile_name, initBiomassStorage, 10)
-end
+    return true
+end)
 
 --- client
 

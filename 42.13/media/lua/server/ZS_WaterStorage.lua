@@ -1,8 +1,8 @@
 -- Initialize water storage objects with FluidContainer (server-only)
 ZSpaceship = ZSpaceship or {}
 
-local function initWaterStorage(obj)
-    print("Initializing water storage for: " .. tostring(obj))
+ZS_Utils.initSpritesOnce("initWaterStorage", ZSpaceship.MapData.Tiles.WaterStorage, function(obj)
+    ZSpaceship.logger:debug("Initializing water storage for %s", tostring(obj))
     if not obj or not obj.getSquare then return end
 
     local sq = obj:getSquare()
@@ -33,13 +33,5 @@ local function initWaterStorage(obj)
     if isServer() then
         obj:sync()
     end
-end
-
-Events.OnNewGame.Add(function()
-    if not ZSpaceship.isInitialNewGame("WaterStorage") then return end
-
-    local water_storage_tiles = ZSpaceship.MapData and ZSpaceship.MapData.Tiles and ZSpaceship.MapData.Tiles["WaterStorage"] or {}
-    for tile_name in pairs(water_storage_tiles) do
-        MapObjects.OnNewWithSprite(tile_name, initWaterStorage, 10)
-    end
+    return true
 end)

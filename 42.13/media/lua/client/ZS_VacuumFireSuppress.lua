@@ -32,7 +32,7 @@ Events.EveryTenMinutes.Add(checkFiresInVacuum)
 
 
 -- Prevent stoves from being activated in vacuum
-zbHook({
+zdk.hook({
     ISToggleStoveAction = {
         isValid = function(orig, self)
             if not orig(self) then return false end
@@ -115,7 +115,7 @@ end
 
 local function onGameStart()
     -- Hook campfire lighting functions
-    zbHook({
+    zdk.hook({
         ISCampingMenu = {
             onLightFromLiterature = function(orig, playerObj, itemType, lighter, target, ...)
                 if not canLightFire(target, playerObj) then return end
@@ -167,7 +167,7 @@ local function onGameStart()
                 if not zsInVacuum(self) then return orig(self, ...) end
             end 
         },
-    }) -- zbHook
+    }) -- zdk.hook
 end -- onGameStart
 
 Events.OnGameStart.Add(onGameStart)

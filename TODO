@@ -2,6 +2,9 @@
 [ ] bugfix: TP dst buffer
 [ ] bugfix: update TP src container
 
+[ ] check OnPostMapLoad event
+[ ] check getDismantleRecipeFor
+
 [ ] lol: earth
 [ ] lol: moon - isa_moon.png from ISA
 
@@ -12,6 +15,8 @@
 
 [ ] UX: invisible border
 [ ] UX: hide generator
+[ ] UX: set suit name via setCustomName() ?
+[ ] UX: make base tiles like invisible water (it blocks movement)
 
 [ ] room: storage / workshop
 

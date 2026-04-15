@@ -6,7 +6,7 @@ require "ZS_Recycler/CRecyclerGlobalObject"
 
 ZS_CRecyclerSystem = CGlobalObjectSystem:derive("ZS_CRecyclerSystem")
 
-local logger = ZBLogger.new("ZS_Recycler")
+local logger = zdk.Logger.new("ZS_Recycler")
 
 function ZS_CRecyclerSystem:new()
 	local o = CGlobalObjectSystem.new(self, "zs_recycler")

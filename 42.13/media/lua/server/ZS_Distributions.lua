@@ -1,6 +1,11 @@
 require "Items/Distributions"
 require "Items/ProceduralDistributions"
 
+if ClutterTables and ClutterTables.BinItems then
+    table.insert(ClutterTables.BinItems, "ZSpaceship.Communicator_Left")
+    table.insert(ClutterTables.BinItems, 0.0005)
+end
+
 ProceduralDistributions.list["zsSpaceStuff"] = {
     ignoreZombieDensity = true,
     rolls = 2,

@@ -65,7 +65,7 @@ local function maybeAddTeleportOption(context, playerNum, animalbody)
 end
 
 -- right-clicking an animal body in the world
-zbHook({
+zdk.hook({
     AnimalContextMenu = {
         -- playerObj here
         doAnimalBodyMenuFromInv = function(orig, context, playerObj, animalbody, ...)

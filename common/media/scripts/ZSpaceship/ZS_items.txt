@@ -58,7 +58,7 @@ module ZSpaceship
         Icon = PaperReport1,
         BoredomChange = -20,
         StressChange = -15,
-        LearnedRecipes = PowerStorageUnit,
+        LearnedRecipes = ZS_PSU,
         StaticModel = ArmorMag7,
         WorldStaticModel = ArmorMag7,
         Tags = base:magazine
@@ -72,7 +72,7 @@ module ZSpaceship
         Icon = PaperReport1,
         BoredomChange = -20,
         StressChange = -15,
-        LearnedRecipes = SolarPanel,
+        LearnedRecipes = ZS_SolarPanel,
         StaticModel = ArmorMag7,
         WorldStaticModel = ArmorMag7,
         Tags = base:magazine

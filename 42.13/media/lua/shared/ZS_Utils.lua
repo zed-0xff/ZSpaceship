@@ -1,19 +1,7 @@
--- ZSpaceship Utilities - Shared functions for client and server
+local logger = zdk.Logger.new("ZSpaceship")
 
 ZS_Utils = ZS_Utils or {}
-
 ZSpaceship = ZSpaceship or {}
-ZSpaceship.MapData = ZSpaceship.MapData or {}
-
--- Space cell coordinates (use MapData if available, otherwise defaults)
-ZSpaceship.SpaceCellX = ZSpaceship.MapData.CellX or 78
-ZSpaceship.SpaceCellY = ZSpaceship.MapData.CellY or 78
-
--- Cell boundaries (cell is 256x256)
-ZSpaceship.SpaceMinX = ZSpaceship.SpaceCellX * 256
-ZSpaceship.SpaceMaxX = (ZSpaceship.SpaceCellX + 1) * 256
-ZSpaceship.SpaceMinY = ZSpaceship.SpaceCellY * 256
-ZSpaceship.SpaceMaxY = (ZSpaceship.SpaceCellY + 1) * 256
 
 function zsClamp(_value, _min, _max)
     if _min > _max then _min, _max = _max, _min; end;
@@ -87,6 +75,10 @@ ZS_Utils.getSquare = getSquareFromObj
 
 -- global function to check if object is in space
 function zsInSpace(obj)
+    if instanceof(obj, 'IsoCell') then
+        return zsInSpaceXY(obj:getMinX(), obj:getMinY()) and zsInSpaceXY(obj:getMaxX(), obj:getMaxY())
+    end
+
     if not obj then return false end
     local sq = getSquareFromObj(obj)
     if sq then
@@ -132,15 +124,66 @@ end
 
 ZSpaceship.isInVacuum = zsInVacuum
 
---- Returns true only on the very first new game for this world (not when a dead player respawns on the same save).
--- @param moduleName string Optional. If given, each module gets one run per save; if omitted, first caller sets a single flag.
-function ZSpaceship.isInitialNewGame(moduleName)
-    if not ModData or not ModData.getOrCreate then return true end
-    local modData = ModData.getOrCreate("ZSpaceship")
-    local key = moduleName and ("InitialGameSetup_" .. moduleName) or "InitialGameSetupDone"
-    if modData[key] then return false end
-    modData[key] = true
-    return true
+function ZS_Utils.IsInitialSetupDone(key)
+    local zsModData = ModData.getOrCreate("ZSpaceship")
+    zsModData.InitialSetupDone = zsModData.InitialSetupDone or {}
+    return zsModData.InitialSetupDone[key]
+end
+
+function ZS_Utils.SetInitialSetupDone(key)
+    local zsModData = ModData.getOrCreate("ZSpaceship")
+    zsModData.InitialSetupDone = zsModData.InitialSetupDone or {}
+    zsModData.InitialSetupDone[key] = true
+end
+
+local _wrappers = {}
+
+-- Runs task on EveryOneMinute until task() returns true, then unregisters.
+-- Use for one-shot setup that must wait for cell/conditions.
+function ZS_Utils.initOnce(key, func)
+    if ZS_Utils.IsInitialSetupDone(key) then
+        logger:debug("initOnce: %s already done", key)
+        return
+    end
+
+    logger:debug("initOnce: registering %s", key)
+
+    local wrapper = function()
+        if ZS_Utils.IsInitialSetupDone(key) then
+            logger:debug("initOnce: %s wrapper: already done (%s)", key, _wrappers[key])
+        elseif func(key) then
+            Events.EveryOneMinute.Remove(_wrappers[key])
+            ZS_Utils.SetInitialSetupDone(key)
+            logger:debug("initOnce: %s done", key)
+        end
+    end
+    _wrappers[key] = wrapper
+    Events.EveryOneMinute.Add(wrapper)
+end
+
+-- sprite names are KEYS of sprites tbl
+function ZS_Utils.initSpritesOnce(key, sprites, func)
+    if ZS_Utils.IsInitialSetupDone(key) then
+        logger:debug("initSpritesOnce: %s already done", key)
+        return
+    end
+
+    logger:debug("initSpritesOnce: registering %s for %s", key, sprites)
+
+    local wrapper = function(obj)
+        -- not checking IsInitialSetupDone here because it's expected to fire once per tile (square)
+        if func(obj, key) then
+            if not ZS_Utils.IsInitialSetupDone(key) then
+                ZS_Utils.SetInitialSetupDone(key)
+                logger:debug("initSpritesOnce: %s done", key)
+            end
+        end
+    end
+
+    for sprite in pairs(sprites) do
+        MapObjects.OnNewWithSprite(sprite, wrapper, 10)
+        MapObjects.OnLoadWithSprite(sprite, wrapper, 10)
+    end
 end
 
 -- gets the space suit, not any suit

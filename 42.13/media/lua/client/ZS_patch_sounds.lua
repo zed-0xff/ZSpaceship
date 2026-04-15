@@ -24,7 +24,7 @@ local function maybePlaySound(orig, self, name, ...)
 end
 
 Events.OnCreatePlayer.Add(function(playerIdx, playerObj)
-    zbHook({
+    zdk.hook({
         [playerObj] = {
             playSound = maybePlaySound
         },
