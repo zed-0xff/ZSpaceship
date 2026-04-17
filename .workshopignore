@@ -1,7 +1,9 @@
 *.erb
 *.kra
+Rakefile
 TODO
 
-/tiles
+ext
 out
+tiles
 tmp
