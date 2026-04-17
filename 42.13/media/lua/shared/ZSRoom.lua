@@ -90,6 +90,8 @@ end
 
 -- checks if any of cached squares was reused. TODO: better name
 function ZSRoom:checkSquares()
+    if not self.squares then return false end
+
     for k, sq in pairs(self.squares) do
         local actualKey = ZSRoom.getSquareKey(sq)
         if actualKey ~= k then

@@ -63,7 +63,7 @@ local function applyVacuumDamage(creature, mult)
     if not creature or creature:isDead() then return false end
     mult = mult or 50 -- should scale with the frequency on applyVacuumDamage() calls
 
-    print("Applying vacuum damage", creature, mult)
+    ZSpaceship.logger:debug("Applying vacuum damage x%s to %s", mult, creature)
     
     -- Damage multiplier based on creature type (zombies are tougher)
     local damageMult = 1.0

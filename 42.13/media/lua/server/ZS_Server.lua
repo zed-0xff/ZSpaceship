@@ -1,10 +1,12 @@
-local logger = zdk.Logger.new("ZSpaceship")
+local logger = zdk.Logger.new("ZSpaceship", zdk.Logger.DEBUG)
 
 -- Unlock a door/garage door object
 -- TODO: figure out if the door can be created initially unlocked
-ZS_Utils.initSpritesOnce("unlockDoor", ZSpaceship.MapData.DoorSprites, function(obj)
+-- XXX: make it run Always bc I got spawned in ship's cabin and the door was locked
+ZS_Utils.initSpritesAlways("unlockDoor", ZSpaceship.MapData.DoorSprites, function(obj)
     if not zsInSpace(obj) then return end
-    logger:debug("Unlocking door %s", tostring(obj))
+
+    logger:debug("Unlocking door %s at %s", tostring(obj), obj.getSquare and obj:getSquare())
     
     if obj.setLockedByKey then
         obj:setLockedByKey(false)

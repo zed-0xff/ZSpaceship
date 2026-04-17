@@ -7,6 +7,5 @@
   "Material": "MetalScrap",
   "Material2": "MetalPlates",
   "Material3": "ElectricWire",
-  "container": "dumpster",
-  "solidtrans": ""
+  "container": "dumpster"
 }

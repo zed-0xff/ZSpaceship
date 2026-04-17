@@ -55,24 +55,27 @@ for tile_name in pairs(ZSpaceship.MapData.Tiles.DoorW) do
     ZSpaceship.MapData.DoorSprites[tile_name] = true
 end
 
-local function buildAirtightLookupTable(direction_flag_list)
+local function buildAirtightLookupTable(...)
+    local dirs = {...}
     local lookup = {}
-    for tile_name in pairs(direction_flag_list) do
-        if ZSpaceship.MapData.Tiles.Airtight[tile_name] then
-            lookup[tile_name] = true
+    for _, dir in ipairs(dirs) do
+        for tile_name in pairs(ZSpaceship.MapData.Tiles[dir]) do
+            if ZSpaceship.MapData.Tiles.Airtight[tile_name] then
+                lookup[tile_name] = true
+            end
         end
     end
     return lookup
 end
 
 -- North/South walls (getWall(true)) - from WallN flag, only if also Airtight
-ZSpaceship.MapData.AIRTIGHT_WALLS_NS_LOOKUP = buildAirtightLookupTable(ZSpaceship.MapData.Tiles["WallN"])
+ZSpaceship.MapData.AIRTIGHT_WALLS_NS_LOOKUP = buildAirtightLookupTable("WallN", "WallSE")
 
 -- East/West walls (getWall(false)) - from WallW flag, only if also Airtight
-ZSpaceship.MapData.AIRTIGHT_WALLS_EW_LOOKUP = buildAirtightLookupTable(ZSpaceship.MapData.Tiles["WallW"])
+ZSpaceship.MapData.AIRTIGHT_WALLS_EW_LOOKUP = buildAirtightLookupTable("WallW", "WallSE")
 
 -- Door tiles (North/South direction) - from DoorN flag, only if also Airtight
-ZSpaceship.MapData.AIRTIGHT_DOORS_NS_LOOKUP = buildAirtightLookupTable(ZSpaceship.MapData.Tiles["DoorN"])
+ZSpaceship.MapData.AIRTIGHT_DOORS_NS_LOOKUP = buildAirtightLookupTable("DoorN")
 
 -- Door tiles (East/West direction) - from DoorW flag, only if also Airtight
-ZSpaceship.MapData.AIRTIGHT_DOORS_EW_LOOKUP = buildAirtightLookupTable(ZSpaceship.MapData.Tiles["DoorW"])
+ZSpaceship.MapData.AIRTIGHT_DOORS_EW_LOOKUP = buildAirtightLookupTable("DoorW")

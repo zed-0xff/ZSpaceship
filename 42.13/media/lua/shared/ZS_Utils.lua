@@ -161,6 +161,13 @@ function ZS_Utils.initOnce(key, func)
     Events.EveryOneMinute.Add(wrapper)
 end
 
+function ZS_Utils.initSpritesAlways(key, sprites, func)
+    for sprite in pairs(sprites) do
+        MapObjects.OnNewWithSprite(sprite, func, 10)
+        MapObjects.OnLoadWithSprite(sprite, func, 10)
+    end
+end
+
 -- sprite names are KEYS of sprites tbl
 function ZS_Utils.initSpritesOnce(key, sprites, func)
     if ZS_Utils.IsInitialSetupDone(key) then
@@ -180,10 +187,7 @@ function ZS_Utils.initSpritesOnce(key, sprites, func)
         end
     end
 
-    for sprite in pairs(sprites) do
-        MapObjects.OnNewWithSprite(sprite, wrapper, 10)
-        MapObjects.OnLoadWithSprite(sprite, wrapper, 10)
-    end
+    ZS_Utils.initSpritesAlways(key, sprites, wrapper)
 end
 
 -- gets the space suit, not any suit

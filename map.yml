@@ -1,6 +1,6 @@
-title: "Spaceship Z-001"
+title: SpaceBase Z-001
 origin: [78, 78]
-default_floor: invisible_floor
+default_floor: invisible_impassable_floor
 spawnpoints: auto
 single_building: true
 templates:
@@ -61,8 +61,9 @@ tiles:
   # containers
   zspaceship_0:                       { flags: [Storage], alias: space_crate }
   # floors
-  industry_01_Simon_MD_118:           { flags: [Floor], alias: grate_floor, replaces: [invisible_floor] }
-  floors_exterior_street_01_18:       { flags: [Floor], alias: invisible_floor }
+  zspaceship_10:                      { flags: [Floor], alias: invisible_impassable_floor }
+  industry_01_Simon_MD_118:           { flags: [Floor], alias: grate_floor,     replaces: [invisible_floor] }
+  floors_exterior_street_01_18:       { flags: [Floor], alias: invisible_floor, replaces: [invisible_impassable_floor] }
   floors_interior_tilesandwood_01_28: { flags: [Airtight, Floor], replaces: [grate_floor, invisible_floor] }
   floors_exterior_street_01_0:        { flags: [Airtight, Floor] }
   # walls
@@ -100,6 +101,8 @@ auto_corridors:
 elements:
   defaults:
     room: true
+    min_x_add: 1
+    min_y_add: 1
     level: 10
     floor: floors_interior_tilesandwood_01_28
     roof:  floors_exterior_street_01_0
@@ -337,7 +340,7 @@ elements:
       │  ☐┃
       ║   ┃
       │   ┃
-      ║b  ┃
+      ║   ┃
       │b  ┃
       ┗━━━┛
 

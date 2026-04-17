@@ -6,7 +6,7 @@ ZSpaceship.Power = {
     batteries = {},
 }
 
-local MIN_CAPACITY  = 1000 -- with 0 batteries
+local MIN_CAPACITY  = 2000 -- with 0 batteries
 local DEFAULT_POWER = 1000 -- Default power amount (used for new games)
 local BATTERY_SIZE  = 1000
 
@@ -121,7 +121,7 @@ if Events and Events.OnInitGlobalModData then
                     modData.currentAmount = DEFAULT_POWER
                 end
                 if modData.capacity then
-                    _capacity = modData.capacity
+                    _capacity = math.max(MIN_CAPACITY, modData.capacity)
                 end
             end
         end

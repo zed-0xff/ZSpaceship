@@ -1,7 +1,7 @@
 require 'ZS_MapData'
 
 ZSpaceship = ZSpaceship or {}
-ZSpaceship.logger = zdk.Logger.new("ZSpaceship", zdk.Logger.DEBUG)
+ZSpaceship.logger = zdk.Logger.new("ZSpaceship")
 
 ZSpaceship.ZOMBIE_OUTFIT_ID = "ZSpaceship_SpaceSuit"  -- defined in clothing.xml
 ZSpaceship.SPACE_SUIT_ID    = "ZSpaceship.SpaceSuitA" -- prefer using tags instead
