@@ -1,3 +1,6 @@
+*.erb
 *.kra
+TODO
 
 /tiles
+tmp

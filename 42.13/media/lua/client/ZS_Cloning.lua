@@ -1,4 +1,4 @@
--- ZSpaceship Cloning - Cloning functions and context menus
+--[[
 ZSpaceship = ZSpaceship or {}
 ZSpaceship.Cloning = ZSpaceship.Cloning or {}
 
@@ -147,3 +147,4 @@ local function doWorldContextMenu(playerNum, context, worldobjects, test)
 end
 
 Events.OnFillWorldObjectContextMenu.Add(doWorldContextMenu)
+]]--

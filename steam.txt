@@ -1,0 +1,47 @@
+[h1]SpaceBase Z-001[/h1]
+
+[b]You didn’t sign up for the void — but here you are.[/b]
+
+[i]Spaceship Z‑001[/i] hangs over Kentucky like a forgotten promise: corridors of chrome and shadow, airlocks that hiss, and windows where there should be nothing but black. Suit up. Watch your O₂. Step through light when the ship lets you — and remember the ground is far below.
+
+[h2]What you’re in for[/h2]
+[list]
+[*][b]The ship[/b] — A full orbital layer over [i]Muldraugh, KY[/i]. Explore, fortify, get lost in the hum of something that was never meant to feel like home.
+[*][b]Hard vacuum[/b] — Outside the hull there’s nothing to breathe. Step out unsealed and the void doesn’t negotiate — only rules you learn the hard way.
+[*][b]Suits & survival[/b] — Keep the helmet sealed, the tanks honest, and your eyes on the gauges. The UI doesn’t lie; the ship might.
+[*][b]Astronaut profession[/b] — Built for this life: pick [b]Astronaut[/b] at character creation if you want a start that matches the ship.
+[*][b]Teleporter[/b] — Jump when you’ve earned it. Science matters. Power isn’t free, especially when home is a tin can in the dark.
+[*][b]Power & life support[/b] — Flip breakers, manage water, keep the lights from becoming a memory.
+[*][b]Your outbreak, your rules[/b] — Tune how many of them wake up in the corridors — sandbox options for ship population.
+[/list]
+
+[h2]Required mods[/h2]
+[list]
+[*][url=https://steamcommunity.com/sharedfiles/filedetails/?id=3659195975]Science, Bitch![/url] — The skill spine for how this place plays (including teleports).
+[*][url=https://steamcommunity.com/sharedfiles/filedetails/?id=2852704777]Simon MDs Tiles[/url]
+[*][url=https://steamcommunity.com/sharedfiles/filedetails/?id=3708659103]Zed's Unfussy Trait[/url] — An astronaut has to be unfussy.
+[/list]
+
+[h2]Recommended mods[/h2]
+[list]
+[*][url=https://steamcommunity.com/sharedfiles/filedetails/?id=3707251461]Zed's Item Tiers[/url] — The same staples you already know — tools, clothes, clutter — showing up in [i]better[/i] tiers when luck and loot align.
+[*][url=https://steamcommunity.com/sharedfiles/filedetails/?id=3630525533]Zed's Watch Slots[/url] — Wear [b]forearm armor[/b] and [b]watches[/b] at the same time. [i]Tip:[/i] the Communicator counts as a wrist watch too.
+[*][url=https://steamcommunity.com/sharedfiles/filedetails/?id=3671173479]Glass Cutter[/url] — Strip glass from house windows cleanly; you’ll want that stockpile when solar panels need panes.
+[*][url=https://steamcommunity.com/sharedfiles/filedetails/?id=3615135168]Zombie Virus Vaccine[/url] - Guess the best place to set up the lab for this one.
+[/list]
+
+[h2]FAQ[/h2]
+[list]
+[*][b]Safe to add mid-game?[/b] No.
+[*][b]Multiplayer?[/b] Not yet.
+[*][b]Game version?[/b] [b]42.13+[/b]
+[/list]
+
+[h2]TODO / WIP[/h2]
+[list]
+[*][b]Cloning[/b] — A way back that isn’t scribbling in a journal.
+[*][b]Healing capsule[/b]
+[*][b]Solar[/b] — Buildable panels and conversion from gear you dragged in from other mods.
+[*][b]Precision teleports[/b] — Jump to specific ground locations; [i]RV interiors[/i] and similar vehicle-interior maps included when they’re part of your world.
+[*]More spaceship-like exterior.
+[/list]
