@@ -60,9 +60,8 @@ local function updateSpacePhysics()
     end
     
     -- Zero gravity: no fall damage
-    local isFalling = player:isbFalling() or 
-                      player:getVariableBoolean("bFalling") or
-                      player:getCurrentState() == PlayerFallingState.instance()
+    local isFalling = (player:isbFalling() or player:getVariableBoolean("bFalling") or player:getCurrentState() == PlayerFallingState.instance())
+        and not player:getSquare():getFloor()
     
     if isFalling then
         if not wasFallingInSpace[pid] then
