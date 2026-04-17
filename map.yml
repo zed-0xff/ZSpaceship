@@ -398,14 +398,21 @@ elements:
 
   solar_panel:
     room: false
+    tiles:
+      floors_broken_07_Simon_MD_*:
     palette:
       X: solar_panel
       _: grate_floor
+      0: floors_broken_07_Simon_MD_32
+      1: floors_broken_07_Simon_MD_33
+      2: floors_broken_07_Simon_MD_40
+      3: floors_broken_07_Simon_MD_45
+      4: floors_broken_07_Simon_MD_39
     map: |
-      _XXXXX
-      _XXXX
-      _XXXXX
-      _XXXXXX
+      _XXXX1
+      _X0XX2
+      _XXXX3
+      _XXXX4
 
   earth:
     room: false
