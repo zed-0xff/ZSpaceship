@@ -4,7 +4,7 @@ default_floor: invisible_impassable_floor
 spawnpoints: auto
 single_building: true
 templates:
-  map.erb: 42.13/media/lua/shared/ZS_MapData.lua
+  map.erb: common/media/lua/shared/ZS_MapData.lua
 
 metapalette:
   B: bathroom
